@@ -17,13 +17,13 @@ Convención de IDs:
 
 **HU-01:** Como **solicitante**, quiero registrar un ticket describiendo mi problema, para que el área de TI lo atienda dentro del tiempo comprometido.
 
-| ID | Criterio de aceptación 
-|---|---|
+| ID      | Criterio de aceptación                                                                                                                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | CA-01.1 | **Dado** un solicitante válido, **cuando** envía título, descripción, categoría y prioridad válidos, **entonces** se crea el ticket con estado `Abierto`, un código único (`HD-000001`) y respuesta `201 Created`. |
-| CA-01.2 | **Dado** un ticket recién creado, **entonces** su fecha de vencimiento es la fecha de creación más las horas de SLA de su prioridad (RN-10). |
-| CA-01.3 | **Dado** un título con menos de 5 o más de 150 caracteres, **cuando** se envía, **entonces** se responde `400 Bad Request` con el detalle del error y no se crea el ticket. |
-| CA-01.4 | **Dado** una categoría o prioridad inexistente, **cuando** se envía, **entonces** se responde `400 Bad Request`. |
-| CA-01.5 | **Dado** un usuario que no existe en el encabezado `X-Usuario-Id`, **cuando** intenta crear un ticket, **entonces** se responde `401 Unauthorized`. |
+| CA-01.2 | **Dado** un ticket recién creado, **entonces** su fecha de vencimiento es la fecha de creación más las horas de SLA de su prioridad (RN-10).                                                                       |
+| CA-01.3 | **Dado** un título con menos de 5 o más de 150 caracteres, **cuando** se envía, **entonces** se responde `400 Bad Request` con el detalle del error y no se crea el ticket.                                        |
+| CA-01.4 | **Dado** una categoría o prioridad inexistente, **cuando** se envía, **entonces** se responde `400 Bad Request`.                                                                                                   |
+| CA-01.5 | **Dado** un usuario que no existe en el encabezado `X-Usuario-Id`, **cuando** intenta crear un ticket, **entonces** se responde `401 Unauthorized`.                                                                |
 
 ---
 
@@ -37,14 +37,14 @@ Convención de IDs:
 
 **HU-03:** Como **solicitante**, quiero ver solo mis tickets y su estado, para saber cómo avanza mi solicitud.
 
-| ID      | Criterio de aceptación                                                                                                                                                            |
-|---|---|
-| CA-02.1 | **Dado** un ticket existente, **cuando** se consulta por su Id, **entonces** se devuelve con estado, prioridad, técnico asignado, fecha de vencimiento y estado del SLA.          |
-| CA-02.2 | **Dado** un Id inexistente, **cuando** se consulta, **entonces** se responde `404 Not Found`.                                                                                     |
-| CA-02.3 | **Dado** un listado, **cuando** se envían filtros (`estado`, `prioridad`, `tecnicoId`, `soloVencidos`), **entonces** solo se devuelven los tickets que cumplen todos los filtros. |
-| CA-02.4 | **Dado** un listado, **entonces** se pagina con `page` y `pageSize` (máximo 50), ordenado por fecha de creación descendente, e incluye el total de registros.                     |
-| CA-02.5 | **Dado** un solicitante, **cuando** lista tickets, **entonces** solo ve los suyos; un técnico solo ve los asignados a él; un supervisor ve todos (RN-04).                         |
-| CA-02.6 | **Dado** un solicitante, **cuando** consulta por Id un ticket que no es suyo, **entonces** se responde `403 Forbidden`.                                                           |
+| ID      | Criterio de aceptación                                                                                                                                                                                                            |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CA-02.1 | **Dado** un ticket existente, **cuando** se consulta por su Id, **entonces** se devuelve con estado, prioridad, técnico asignado, fecha de vencimiento y estado del SLA.                                                          |
+| CA-02.2 | **Dado** un Id inexistente, **cuando** se consulta, **entonces** se responde `404 Not Found`.                                                                                                                                     |
+| CA-02.3 | **Dado** un listado, **cuando** se envían filtros (`estado`, `prioridad`, `tecnicoId`, `soloVencidos`), **entonces** solo se devuelven los tickets que cumplen todos los filtros.                                                 |
+| CA-02.4 | **Dado** un listado, **entonces** se pagina con `page` y `pageSize` (máximo 50), ordenado por fecha de creación descendente, e incluye el total de registros. Si pageSize es mayor a 50 o menor a 1, se responde 400 Bad Request. |
+| CA-02.5 | **Dado** un solicitante, **cuando** lista tickets, **entonces** solo ve los suyos; un técnico solo ve los asignados a él; un supervisor ve todos (RN-04).                                                                         |
+| CA-02.6 | **Dado** un solicitante, **cuando** consulta por Id un ticket que no es suyo, **entonces** se responde `403 Forbidden`.                                                                                                           |
 
 ---
 
@@ -77,7 +77,7 @@ Convención de IDs:
 **HU-06:** Como **solicitante**, quiero confirmar el cierre de mi ticket resuelto o reabrirlo si el problema persiste, para asegurar que mi problema quede realmente solucionado.
 
 | ID      | Criterio de aceptación                                                                                                                                                                                  |
-|---|---|
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CA-04.1 | **Dado** un ticket `Asignado`, **cuando** su técnico asignado inicia la atención, **entonces** pasa a `En progreso`.                                                                                    |
 | CA-04.2 | **Dado** un ticket `En progreso`, **cuando** su técnico lo marca como resuelto con un comentario de solución, **entonces** pasa a `Resuelto` y se registra la fecha de resolución.                      |
 | CA-04.3 | **Dado** un intento de resolver sin comentario de solución, **entonces** se responde `400 Bad Request`.                                                                                                 |
@@ -97,7 +97,7 @@ Convención de IDs:
 **HU-07:** Como **supervisor**, quiero que cada ticket tenga una fecha de vencimiento según su prioridad y saber si se cumple, para medir la calidad del servicio.
 
 | ID      | Criterio de aceptación                                                                                                                                                                            |
-|---|---|
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CA-05.1 | **Dado** un ticket con prioridad Crítica / Alta / Media / Baja, **entonces** su vencimiento es creación + 2 / 4 / 8 / 24 horas respectivamente.                                                   |
 | CA-05.2 | **Dado** un ticket no resuelto cuya fecha actual supera el vencimiento, **cuando** se consulta, **entonces** su estado de SLA es `Vencido`; si no la supera, es `EnTiempo`.                       |
 | CA-05.3 | **Dado** un ticket resuelto, **entonces** su estado de SLA es `Cumplido` si se resolvió antes o en el vencimiento, e `Incumplido` si se resolvió después.                                         |
