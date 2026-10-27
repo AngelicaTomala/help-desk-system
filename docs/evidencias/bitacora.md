@@ -6,7 +6,7 @@ Registro de las acciones relevantes del proyecto y de las interacciones con asis
 
 ---
 
-## E-001 · 26/10/2026 · Creación del repositorio y estructura
+## E-001 · 26/10/2026 · Fase 0 Creación del repositorio y estructura
 
 **Herramienta:** Ninguna (acción manual)
 
@@ -14,7 +14,7 @@ Registro de las acciones relevantes del proyecto y de las interacciones con asis
 
 - Creación del repositorio `AngelicaTomala/help-desk-system` en GitHub.
 - Creación de la carpeta local del proyecto con la estructura definida por la guía del curso:
-  `src/`, `tests/`, `specs/functional/`, `specs/technical/`, `docs/`, `evidencia/`.
+  `src/`, `tests/`, `specs/functional/`, `specs/technical/`, `docs/`, `evidencias/`.
 - Creación del `.gitignore` basado en la plantilla de .NET, excluyendo además archivos
   locales del agente (`.claude/settings.local.json`, `CLAUDE.local.md`).
 
@@ -26,7 +26,7 @@ Registro de las acciones relevantes del proyecto y de las interacciones con asis
 
 ---
 
-## E-002 · 26/10/2026 · Especificaciones funcionales
+## E-002 · 26/10/2026 · Fase 1 Especificaciones funcionales
 
 **Herramienta:** Asistente de IA (Claude)
 
@@ -44,20 +44,20 @@ diagrama de estados), ubicados en `specs/functional/`.
 
 **Revisión humana:**
 
-| Elemento propuesto                                     | Decisión | Justificación                                                                                                                                     |
-| ------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SLA propuesto de 4 / 8 / 24 / 72 h (RN-10)             | ✏️       | Se ajustó a 2 / 4 / 8 / 24 h. _(completar: motivo del ajuste)_                                                                                    |
-| Comentario obligatorio para resolver el ticket (RN-09) | ✅       | Se podrá llevar una trazabilidad de las actividades que realizó el técnico.                                                                       |
-| Reasignar devuelve el ticket a `Asignado`              | ✅       | Se considera que debe quedar asignado porque el ticket pasa a un nuevo técnico.                                                                   |
-| Reabrir vuelve a `En progreso` con el mismo técnico    | ✅       | Estoy de acuerdo con que sea el mismo técnico porque conoce el problema y puede realizar una rápida revisión.                                     |
-| Cambio de prioridad recalcula el SLA (RN-12)           | ✅       | Si se cambia la prioridad, la fecha de vencimiento también debe recalcularse en base a la nueva prioridad.                                        |
-| Categorías fijas como enumeración (RN-02)              | ❌       | No estoy de acuerdo con que sea una enumeración porque los solicitantes se pueden equivocar al seleccionarla. _(completar: alternativa adoptada)_ |
+| Elemento propuesto                                     | Decisión | Justificación                                                                                                 |
+| ------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
+| SLA propuesto de 4 / 8 / 24 / 72 h (RN-10)             | ✏️       | Se ajustó a 2 / 4 / 8 / 24 h porque en un área de producción una falla crítica no puede esperar 4 horas.                 |
+| Comentario obligatorio para resolver el ticket (RN-09) | ✅       | Se podrá llevar una trazabilidad de las actividades que realizó el técnico.                                   |
+| Reasignar devuelve el ticket a `Asignado`              | ✅       | Se considera que debe quedar asignado porque el ticket pasa a un nuevo técnico.                               |
+| Reabrir vuelve a `En progreso` con el mismo técnico    | ✅       | Estoy de acuerdo con que sea el mismo técnico porque conoce el problema y puede realizar una rápida revisión. |
+| Cambio de prioridad recalcula el SLA (RN-12)           | ✅       | Si se cambia la prioridad, la fecha de vencimiento también debe recalcularse en base a la nueva prioridad.    |
+| Categorías fijas (RN-02)                               | ✅       | Estoy de acuerdo que sean fijas porque solo se van a manejar 5 categorias.                                    |
 
 **Commit relacionado:** (pendiente)
 
 ---
 
-## E-003 · 27/10/2026 · Configuración del agente y MCP
+## E-003 · 27/10/2026 · Fase 1.1 Configuración del agente y MCP
 
 **Herramienta:** Claude Code (VS Code)
 
@@ -87,7 +87,7 @@ Se revisó que `.mcp.json` no contuviera secretos antes de incluirlo en el commi
 
 ---
 
-## E-004 · 27/10/2026 · Vinculación del repositorio y primer commit
+## E-004 · 27/10/2026 · Fase 1.2 Vinculación del repositorio y primer commit
 
 **Herramienta:** Claude Code (VS Code) + MCP de GitHub
 
@@ -119,25 +119,28 @@ Muéstrame la lista de archivos incluidos en el commit y el hash confirmado desd
 
 **Resultado de la IA:**
 
-- Estado inicial de la carpeta:
-- Contenido del remoto según el MCP:
-- Revisión de secretos:
-- Archivos incluidos en el commit:
-- Hash confirmado por el MCP:
+- Estado inicial de la carpeta: No era un repositorio Git. Se ejecutó `git init -b main` y se configuró `origin` → `https://github.com/AngelicaTomala/help-desk-system.git`.
+- Contenido del remoto según el MCP: Un commit (`21ae3a5` "Initial commit", creado desde la web el 26/10/2026) con solo un `README.md` de 124 bytes.
+- Revisión de secretos:Sin hallazgos. `.mcp.json` solo referencia la variable `${GITHUB_TOKEN_MCP_HELP_DESK}`
+- Archivos incluidos en el commit:`.gitignore`, `.mcp.json`, `CLAUDE.md`, `docs/evidencias/bitacora.md`, `package.json`, `package-lock.json`, `specs/functional/00-vision.md`, `specs/functional/01-requisitos-funcionales.md`, `specs/functional/02-reglas-negocio.md`.
+- Comportamiento del agente: Se detuvo antes del push al detectar historiales distintos, como indicaba la restricción, y propuso tres opciones (merge, rebase, reset).
+- Hash confirmado por el MCP:61b123f21d2b8c3f6559737df3e5e4dea393a36d
 
 **Revisión humana:**
 
-| Acción propuesta por la IA                      | Decisión | Justificación |
-| ----------------------------------------------- | -------- | ------------- |
-| Inicializar Git y crear rama `main`             |          |               |
-| Configurar el remoto `origin` por HTTPS         |          |               |
-| Resultado de la revisión de secretos            |          |               |
-| Lista de archivos incluidos en el commit        |          |               |
-| _(si hubo conflicto)_ Forma de unir historiales |          |               |
+| Acción propuesta por la IA                               | Decisión | Justificación                                                                                                                   |
+| -------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Inicializar Git y crear rama `main`                      | ✅       | La carpeta no estaba versionada y `main` es la rama principal del repositorio remoto.                                           |
+| Configurar el remoto `origin` por HTTPS                  | ✅       | Coincide con el repositorio creado en GitHub; las credenciales las gestiona Windows, no el token del MCP.                       |
+| Resultado de la revisión de secretos                     | ✅       | Verifiqué que `.mcp.json` solo contiene la referencia a la variable de entorno.                                                 |
+| Unir historiales con merge                               | ✅       | Conserva el commit inicial de GitHub sin reescribir el historial                                                                |
+| Commit directo en `main` pese a la regla del `CLAUDE.md` | ✅       | Excepción justificada por ser el commit inicial. Desde el siguiente cambio se trabajará en una rama diferente con pull request. |
 
-**Incidencias:** _(completar, o escribir "Ninguna")_
+**Incidencias:**
+El repositorio remoto tenía un commit inicial creado desde la web, por lo que el push directo no era posible. Se resolvió con merge de historiales
 
 **Aprendizaje:**
 El MCP de GitHub no vincula la carpeta local con el repositorio remoto; solo da acceso a la API de GitHub. Fue necesario inicializar Git y configurar el remoto (`git remote add origin`). Desde entonces el flujo es: commit y push con Git, y verificación con el MCP.
 
-**Commit relacionado:** (pendiente)
+**Commit relacionado:**
+a69d28dd920a9046bbdc325bd3b4d5c7d11abc4b
