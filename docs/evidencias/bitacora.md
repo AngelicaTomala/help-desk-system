@@ -44,14 +44,17 @@ diagrama de estados), ubicados en `specs/functional/`.
 
 **Revisión humana:**
 
-| Elemento propuesto                                     | Decisión | Justificación                                                                                                 |
-| ------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
-| SLA propuesto de 4 / 8 / 24 / 72 h (RN-10)             | ✏️       | Se ajustó a 2 / 4 / 8 / 24 h porque en un área de producción una falla crítica no puede esperar 4 horas.      |
-| Comentario obligatorio para resolver el ticket (RN-09) | ✅       | Se podrá llevar una trazabilidad de las actividades que realizó el técnico.                                   |
-| Reasignar devuelve el ticket a `Asignado`              | ✅       | Se considera que debe quedar asignado porque el ticket pasa a un nuevo técnico.                               |
-| Reabrir vuelve a `En progreso` con el mismo técnico    | ✅       | Estoy de acuerdo con que sea el mismo técnico porque conoce el problema y puede realizar una rápida revisión. |
-| Cambio de prioridad recalcula el SLA (RN-12)           | ✅       | Si se cambia la prioridad, la fecha de vencimiento también debe recalcularse en base a la nueva prioridad.    |
-| Categorías fijas (RN-02)                               | ✅       | Estoy de acuerdo que sean fijas porque solo se van a manejar 5 categorias.                                    |
+| Elemento propuesto                                     | Decisión | Justificación                                                                                                                                                                      |
+| ------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SLA propuesto de 4 / 8 / 24 / 72 h (RN-10)             | ✏️       | Se ajustó a 2 / 4 / 8 / 24 h porque en un área de producción una falla crítica no puede esperar 4 horas.                                                                           |
+| Comentario obligatorio para resolver el ticket (RN-09) | ✅       | Se podrá llevar una trazabilidad de las actividades que realizó el técnico.                                                                                                        |
+| Reasignar devuelve el ticket a `Asignado`              | ✅       | Se considera que debe quedar asignado porque el ticket pasa a un nuevo técnico.                                                                                                    |
+| Reabrir vuelve a `En progreso` con el mismo técnico    | ✅       | Estoy de acuerdo con que sea el mismo técnico porque conoce el problema y puede realizar una rápida revisión.                                                                      |
+| Cambio de prioridad recalcula el SLA (RN-12)           | ✅       | Si se cambia la prioridad, la fecha de vencimiento también debe recalcularse en base a la nueva prioridad.                                                                         |
+| Categorías fijas (RN-02)                               | ✅       | Se mantiene la lista fija, pero se agrega la reclasificación (RN-13): el solicitante puede equivocarse al elegir la categoría y quien atiende el caso puede corregirla. Ver E-005. |
+
+**Incidencias:**
+Se evaluaron dos opciones: (A) lista fija y (B) tabla administrable con CRUD. Se eligió A porque resuelve el problema real (errores de clasificación del solicitante), frente a un CRUD completo.
 
 **Commit relacionado:** (pendiente)
 
@@ -209,6 +212,98 @@ Confirma que cada RNF se puede comprobar con una prueba o una revisión concreta
 - Se detectó una contradicción entre `CLAUDE.local.md` (pruebas de JWT) y el alcance del MVP.
 
 **Aprendizaje:**
-El agente señaló por iniciativa propia decisiones que las especificaciones no definían (comportamiento de `pageSize` fuera de rango) y una contradicción entre `CLAUDE.local.md` y el alcance del MVP. 
-Detectarlas antes de implementar evita corregir código después. 
+El agente señaló por iniciativa propia decisiones que las especificaciones no definían (comportamiento de `pageSize` fuera de rango) y una contradicción entre `CLAUDE.local.md` y el alcance del MVP.
+Detectarlas antes de implementar evita corregir código después.
 Desde ahora, los prompts de diseño incluirán en la Verificación: "Señala las decisiones que tomaste y que no estaban definidas en las especificaciones"
+
+**Commit relacionado:**
+d9fea13
+
+---
+
+## E-006 · 27/10/2026 · Modelo de dominio
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt Inicial:**
+
+**Contexto:**
+Lee la documentacion del proyecto Help Desk System que se encuentra dentro de specs/functional/
+
+**Tarea:**
+Propón el modelo de dominio y espera mi aprobación antes de crear el archivo.
+
+Debe incluir:
+
+1. Entidades con atributos y tipos (Ticket, Usuario, Comentario).
+2. Enumeraciones (Estado, Prioridad, Rol, EstadoSla).
+3. Relaciones y cardinalidades.
+4. Qué reglas de negocio (RN-xx) vive en cada entidad y cuáles en Application. Con sus respectivos responsables
+5. Diagrama de clases en Mermaid (classDiagram).
+6. Diagrama de estados del ticket en Mermaid, coherente con RN-08.
+
+**Restricciones:**
+
+- EstadoSla es un valor calculado, (RN-11).
+- Fechas en UTC (S-04). El Usuario necesita un indicador de activo (RN-06).
+- No escribas código C#; solo el documento.
+
+**Verificación:**
+Señala cualquier contradicción entre requisitos y reglas de negocio.
+
+**Resultado de la IA:**
+
+1. **Primera propuesta:** 3 entidades (Usuario, Ticket, Comentario), 6 enumeraciones, ubicación de RN-01 a RN-12, diagrama de clases, diagrama de estados y 9 hallazgos. No incluía la reclasificación.
+2. **Segunda propuesta** (tras agregar RN-13 a las especificaciones): incluyó `Ticket.Reclasificar`, la guarda común `EstaAbiertoParaCambios()`, la ubicación de RN-13 y 4 hallazgos nuevos (13 en total).
+3. **Ejecución:**
+   - Creó `specs/technical/01-modelo-dominio.md` con las secciones 1–7 y la columna "Decisión".
+   - Mostró el diff de `specs/functional/` antes de guardarlo; tras la aprobación, actualizó `00-vision`, `01-requisitos-funcionales`, `02-reglas-negocio` y `03-requisitos-no-funcionales`.
+   - Resultado: 9 HU, 36 CA y 13 RN, con los totales coherentes en los cuatro documentos.
+
+**Revisión humana — hallazgos del agente:**
+
+| #   | Hallazgo                                                   | Decisión | Justificación                                                                                                                                                                                                                                                                     |
+| --- | ---------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Técnico inexistente o inactivo sin código de respuesta     | ✅       | Se responde 400 y se amplía CA-03.3; RN-06 queda cubierta por una prueba.                                                                                                                                                                                                         |
+| 2   | La visión prometía "registrar comentarios" sin endpoint    | ✏️       | Se elimina el tipo `General` y la frase de la visión; no se promete lo que no se implementará.                                                                                                                                                                                    |
+| 3   | Falta el 403 al cambiar la prioridad                       | ✅       | Se agrega CA-05.6: toda regla de permiso necesita su prueba.                                                                                                                                                                                                                      |
+| 4   | Técnico consultando un ticket que no tiene asignado        | ✅       | Se extiende CA-02.6, coherente con RN-04.                                                                                                                                                                                                                                         |
+| 5   | Reabrir conserva el vencimiento original                   | ✅       | El SLA mide el tiempo hasta la solución real; si se reabre, la primera solución falló y el incumplimiento debe reflejarse. Recalcular ocultaría la falla y permitiría manipular las métricas. Se evaluaron como alternativas recalcular desde la reapertura y un plazo de gracia. |
+| 6   | Grafía `Critica` / "Crítica"                               | ✅       | Enum sin tilde; la tilde solo en textos.                                                                                                                                                                                                                                          |
+| 7   | La longitud de la descripción no tenía CA                  | ✅       | Se amplía CA-01.3 para cubrir RN-01 completa.                                                                                                                                                                                                                                     |
+| 8   | Sin límite para comentarios ni regla para `page` < 1       | ✅       | Texto ≤ 2000 y `page` < 1 → 400, mismo criterio que `pageSize`.                                                                                                                                                                                                                   |
+| 9   | Técnico desactivado con tickets asignados                  | ✅       | Fuera del MVP (usuarios semilla); se anota en la visión.                                                                                                                                                                                                                          |
+| 10  | Reclasificar con categoría inválida sin CA                 | ✅       | Se agrega CA-01.9; RN-13 queda cubierta completa.                                                                                                                                                                                                                                 |
+| 11  | En un ticket Abierto solo el supervisor puede reclasificar | ✅       | Es coherente: aún no hay técnico asignado.                                                                                                                                                                                                                                        |
+| 12  | El documento de RNF quedó desactualizado                   | ✅       | Se actualizan los totales y las referencias para que los documentos coincidan.                                                                                                                                                                                                    |
+| 13  | La visión daba al técnico más permiso que RN-13            | ✅       | Se precisa: "reclasificar sus tickets asignados".                                                                                                                                                                                                                                 |
+
+**Revisión humana — decisiones propias del agente:**
+
+| Decisión del agente                                                | Decisión | Justificación                                                                                               |
+| ------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------- |
+| Entidad Comentario con tipo (Solución, Reapertura)                 | ✅       | Registra la trazabilidad de RN-09 sin columnas extra en Ticket.                                             |
+| Email en Usuario (≤ 150, único)                                    | ✅       | Aunque el MVP no lo usa, identifica de forma única a cada usuario                                           |
+| SEQUENCE de SQL Server para el código del ticket                   | ✅       | Evita códigos duplicados ante creaciones simultáneas (RN-03).                                               |
+| Enumeraciones guardadas como texto                                 | ✅       | La base de datos es legible y coherente con OpenAPI (RNF-09).                                               |
+| Guarda común `EstaAbiertoParaCambios()`                            | ✅       | Reclasificar y cambiar prioridad comparten la misma condición; evita duplicar la regla.                     |
+| 409 desde Domain y 403 desde Application                           | ✅       | Las reglas del ticket viven en el dominio; los permisos dependen del usuario y se validan en la aplicación. |
+| Borrado en cascada de comentarios                                  | ✅       | Un comentario no existe sin su ticket.                                                                      |
+| "y no cambia" en CA-01.9 y CA-05.6                                 | ✅       | La prueba verifica también que el dato no se modificó ante el error.                                        |
+| RN-13 agregada a RNF-01, RNF-04 y RNF-05 (fuera del diff mostrado) | ✅       | Es coherente, porque esos RNF ya citan CA-01.7 a CA-01.9. Ver Incidencias.                                  |
+
+**Incidencias:**
+
+- La primera propuesta no incluía la reclasificación porque RN-13 aún no se había agregado a las especificaciones, aunque la decisión (opción A) ya estaba tomada en E-005. Se agregaron RN-13, HU-09 y CA-01.6 a CA-01.8, y se volvió a ejecutar el prompt.
+- El agente hizo un cambio que no estaba en el diff aprobado (agregar RN-13 en tres RNF), aunque lo informó por iniciativa propia. Se aceptó por ser coherente, pero se registra porque se desvió de lo aprobado.
+
+**Aprendizaje:**
+
+- Revisar el plan contra las decisiones propias detectó una regla omitida antes de llegar al código.
+- Pedir el diff antes de guardar permitió revisar cada criterio nuevo.
+- Los hallazgos del agente completaron criterios faltantes: cada regla de negocio quedó con al menos una prueba posible.
+
+**Commits relacionados:**
+
+- `9fe9cff` docs(specs): modelo de dominio
+- `f55293e` docs(specs): aplica decisiones del modelo de dominio en specs funcionales
