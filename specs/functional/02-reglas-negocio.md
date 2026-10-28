@@ -4,18 +4,19 @@ Cada regla está referenciada desde uno o más requisitos en `01-requisitos-func
 
 ## Registro y datos del ticket
 
-| ID    | Regla                                                                                                                                                | RF    |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| RN-01 | El título es obligatorio y tiene entre 5 y 150 caracteres. La descripción es obligatoria y tiene entre 10 y 2000 caracteres.                         | RF-01 |
-| RN-02 | La categoría debe ser una de: `Hardware`, `Software`, `Red`, `Accesos`, `Otros`. La prioridad debe ser una de: `Critica`, `Alta`, `Media`, `Baja`.   | RF-01 |
-| RN-03 | Todo ticket nuevo nace en estado `Abierto`, sin técnico asignado, con un código único y consecutivo con formato `HD-` + 6 dígitos (ej. `HD-000001`). | RF-01 |
+| ID    | Regla                                                                                                                                                                                                                     | RF    |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| RN-01 | El título es obligatorio y tiene entre 5 y 150 caracteres. La descripción es obligatoria y tiene entre 10 y 2000 caracteres.                                                                                              | RF-01 |
+| RN-02 | La categoría debe ser una de: `Hardware`, `Software`, `Red`, `Accesos`, `Otros`. La prioridad debe ser una de: `Critica`, `Alta`, `Media`, `Baja`.                                                                        | RF-01 |
+| RN-03 | Todo ticket nuevo nace en estado `Abierto`, sin técnico asignado, con un código único y consecutivo con formato `HD-` + 6 dígitos (ej. `HD-000001`).                                                                      | RF-01 |
+| RN-13 | La categoría de un ticket puede ser reclasificada por el **técnico asignado** o por un **supervisor**, siempre que el ticket no esté `Resuelto` ni `Cerrado`. La nueva categoría debe ser una de las permitidas en RN-02. | RF-01 |
 
 ## Visibilidad
 
 | ID    | Regla                                                                                                                          | RF    |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------ | ----- |
 | RN-04 | Un **solicitante** solo ve sus propios tickets. Un **técnico** solo ve los tickets asignados a él. Un **supervisor** ve todos. | RF-02 |
-| RN-05 | Los listados se paginan con un máximo de 50 registros por página y se ordenan por fecha de creación descendente.               | RF-02 |
+| RN-05 | Los listados se paginan con `page` desde 1 y `pageSize` entre 1 y 50, y se ordenan por fecha de creación descendente.          | RF-02 |
 
 ## Asignación
 
@@ -55,7 +56,7 @@ stateDiagram-v2
 
 | ID    | Regla                                                                                                                                                                        | RF    |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| RN-09 | Para **resolver** se exige un comentario de solución; para **reabrir** se exige un motivo. Al reabrir se borra la fecha de resolución y el ticket conserva el mismo técnico. | RF-04 |
+| RN-09 | Para **resolver** se exige un comentario de solución; para **reabrir** se exige un motivo. Al reabrir se borra la fecha de resolución y el ticket conserva el mismo técnico. El comentario de solución y el motivo de reapertura tienen como máximo 2000 caracteres. | RF-04 |
 
 ## SLA
 
@@ -101,3 +102,4 @@ stateDiagram-v2
 | RN-10 | ✔     |       |       |       | ✔     |       |
 | RN-11 |       | ✔     |       |       | ✔     | ✔     |
 | RN-12 |       |       |       |       | ✔     |       |
+| RN-13 | ✔     |       |       |       |       |       |

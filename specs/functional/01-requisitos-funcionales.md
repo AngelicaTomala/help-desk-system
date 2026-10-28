@@ -9,21 +9,27 @@ Convención de IDs:
 
 ---
 
-## RF-01 · Registrar ticket
+## RF-01 · Registrar y reclasificar el ticket
 
 **Prioridad:** Obligatorio ·
 
-**Reglas:** RN-01, RN-02, RN-03, RN-10
+**Reglas:** RN-01, RN-02, RN-03, RN-10, RN-13
 
 **HU-01:** Como **solicitante**, quiero registrar un ticket describiendo mi problema, para que el área de TI lo atienda dentro del tiempo comprometido.
+
+**HU-09:** Como **técnico** o **supervisor**, quiero corregir la categoría de un ticket mal clasificado, para que los reportes y la atención reflejen el tipo real de problema.
 
 | ID      | Criterio de aceptación                                                                                                                                                                                             |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | CA-01.1 | **Dado** un solicitante válido, **cuando** envía título, descripción, categoría y prioridad válidos, **entonces** se crea el ticket con estado `Abierto`, un código único (`HD-000001`) y respuesta `201 Created`. |
 | CA-01.2 | **Dado** un ticket recién creado, **entonces** su fecha de vencimiento es la fecha de creación más las horas de SLA de su prioridad (RN-10).                                                                       |
-| CA-01.3 | **Dado** un título con menos de 5 o más de 150 caracteres, **cuando** se envía, **entonces** se responde `400 Bad Request` con el detalle del error y no se crea el ticket.                                        |
+| CA-01.3 | **Dado** un título con menos de 5 o más de 150 caracteres, o una descripción con menos de 10 o más de 2000, **cuando** se envía, **entonces** se responde `400 Bad Request` con el detalle del error y no se crea el ticket.                                        |
 | CA-01.4 | **Dado** una categoría o prioridad inexistente, **cuando** se envía, **entonces** se responde `400 Bad Request`.                                                                                                   |
 | CA-01.5 | **Dado** un usuario que no existe en el encabezado `X-Usuario-Id`, **cuando** intenta crear un ticket, **entonces** se responde `401 Unauthorized`.                                                                |
+| CA-01.6 | **Dado** un ticket que no está `Resuelto` ni `Cerrado`, **cuando** su técnico asignado o un supervisor cambia la categoría por una válida, **entonces** la categoría se actualiza y se responde `200 OK`.          |
+| CA-01.7 | **Dado** un ticket `Resuelto` o `Cerrado`, **cuando** se intenta reclasificar, **entonces** se responde `409 Conflict` y la categoría no cambia.                                                                   |
+| CA-01.8 | **Dado** un solicitante o un técnico que no es el asignado, **cuando** intenta reclasificar, **entonces** se responde `403 Forbidden`.                                                                             |
+| CA-01.9 | **Dado** una categoría inexistente, **cuando** el técnico asignado o un supervisor intenta reclasificar, **entonces** se responde `400 Bad Request` y la categoría no cambia. |
 
 ---
 
@@ -42,9 +48,9 @@ Convención de IDs:
 | CA-02.1 | **Dado** un ticket existente, **cuando** se consulta por su Id, **entonces** se devuelve con estado, prioridad, técnico asignado, fecha de vencimiento y estado del SLA.                                                          |
 | CA-02.2 | **Dado** un Id inexistente, **cuando** se consulta, **entonces** se responde `404 Not Found`.                                                                                                                                     |
 | CA-02.3 | **Dado** un listado, **cuando** se envían filtros (`estado`, `prioridad`, `tecnicoId`, `soloVencidos`), **entonces** solo se devuelven los tickets que cumplen todos los filtros.                                                 |
-| CA-02.4 | **Dado** un listado, **entonces** se pagina con `page` y `pageSize` (máximo 50), ordenado por fecha de creación descendente, e incluye el total de registros. Si pageSize es mayor a 50 o menor a 1, se responde 400 Bad Request. |
+| CA-02.4 | **Dado** un listado, **entonces** se pagina con `page` y `pageSize` (máximo 50), ordenado por fecha de creación descendente, e incluye el total de registros. Si `page` es menor a 1, o `pageSize` es mayor a 50 o menor a 1, se responde `400 Bad Request`. |
 | CA-02.5 | **Dado** un solicitante, **cuando** lista tickets, **entonces** solo ve los suyos; un técnico solo ve los asignados a él; un supervisor ve todos (RN-04).                                                                         |
-| CA-02.6 | **Dado** un solicitante, **cuando** consulta por Id un ticket que no es suyo, **entonces** se responde `403 Forbidden`.                                                                                                           |
+| CA-02.6 | **Dado** un solicitante que consulta por Id un ticket que no es suyo, o un técnico que consulta uno que no tiene asignado, **entonces** se responde `403 Forbidden`.                                                                                                           |
 
 ---
 
@@ -60,7 +66,7 @@ Convención de IDs:
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CA-03.1 | **Dado** un ticket `Abierto` y un técnico activo, **cuando** el supervisor lo asigna, **entonces** el ticket queda con ese técnico y pasa a estado `Asignado`.      |
 | CA-03.2 | **Dado** un ticket `Asignado` o `En progreso`, **cuando** el supervisor lo reasigna a otro técnico, **entonces** cambia el técnico y el ticket queda en `Asignado`. |
-| CA-03.3 | **Dado** un usuario que no tiene rol Técnico, **cuando** se intenta asignar, **entonces** se responde `400 Bad Request`.                                            |
+| CA-03.3 | **Dado** un usuario que no existe, no tiene rol Técnico o no está activo, **cuando** se intenta asignar, **entonces** se responde `400 Bad Request`.                                            |
 | CA-03.4 | **Dado** un ticket `Resuelto` o `Cerrado`, **cuando** se intenta asignar, **entonces** se responde `409 Conflict`.                                                  |
 | CA-03.5 | **Dado** un usuario que no es supervisor, **cuando** intenta asignar, **entonces** se responde `403 Forbidden`.                                                     |
 
@@ -103,6 +109,7 @@ Convención de IDs:
 | CA-05.3 | **Dado** un ticket resuelto, **entonces** su estado de SLA es `Cumplido` si se resolvió antes o en el vencimiento, e `Incumplido` si se resolvió después.                                         |
 | CA-05.4 | **Dado** un ticket no resuelto ni cerrado, **cuando** el supervisor cambia su prioridad, **entonces** el vencimiento se recalcula desde la fecha de creación con las horas de la nueva prioridad. |
 | CA-05.5 | **Dado** un ticket resuelto o cerrado, **cuando** se intenta cambiar la prioridad, **entonces** se responde `409 Conflict`.                                                                       |
+| CA-05.6 | **Dado** un usuario que no es supervisor, **cuando** intenta cambiar la prioridad, **entonces** se responde `403 Forbidden` y la prioridad no cambia. |
 
 ---
 
@@ -126,10 +133,10 @@ Convención de IDs:
 
 | RF        | Historias    | Criterios | Prioridad   |
 | --------- | ------------ | --------- | ----------- |
-| RF-01     | HU-01        | 5         | Obligatorio |
+| RF-01     | HU-01, HU-09 | 9         | Obligatorio |
 | RF-02     | HU-02, HU-03 | 6         | Obligatorio |
 | RF-03     | HU-04        | 5         | Obligatorio |
 | RF-04     | HU-05, HU-06 | 7         | Obligatorio |
-| RF-05     | HU-07        | 5         | Obligatorio |
+| RF-05     | HU-07        | 6         | Obligatorio |
 | RF-06     | HU-08        | 3         | Deseable    |
-| **Total** | **8**        | **31**    |             |
+| **Total** | **9**        | **36**    |             |

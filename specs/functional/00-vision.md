@@ -26,11 +26,11 @@ Construir una API REST que centralice el ciclo de vida de los tickets de soporte
 
 ## 3. Usuarios y roles
 
-| Rol             | Descripción                               | Puede                                                                                                       |
-| --------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Solicitante** | Colaborador que reporta un problema       | Crear tickets, consultar sus propios tickets, confirmar cierre o reabrir un ticket resuelto                 |
-| **Técnico**     | Personal de soporte que atiende los casos | Consultar tickets asignados a él, iniciar atención, registrar comentarios y marcar como resuelto            |
-| **Supervisor**  | Coordinador del área de TI                | Consultar todos los tickets, asignar y reasignar técnicos, cambiar prioridad, cerrar tickets y ver reportes |
+| Rol             | Descripción                               | Puede                                                                                                                                  |
+| --------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Solicitante** | Colaborador que reporta un problema       | Crear tickets, consultar sus propios tickets, confirmar cierre o reabrir un ticket resuelto                                            |
+| **Técnico**     | Personal de soporte que atiende los casos | Consultar tickets asignados a él, reclasificar la categoría de sus tickets asignados, iniciar atención y marcar como resuelto           |
+| **Supervisor**  | Coordinador del área de TI                | Consultar todos los tickets, asignar y reasignar técnicos, reclasificar la categoría, cambiar prioridad, cerrar tickets y ver reportes |
 
 ## 4. Alcance
 
@@ -38,7 +38,7 @@ Construir una API REST que centralice el ciclo de vida de los tickets de soporte
 
 | ID    | Funcionalidad                            | Prioridad   |
 | ----- | ---------------------------------------- | ----------- |
-| RF-01 | Registrar ticket                         | Obligatorio |
+| RF-01 | Registrar y reclasificar el ticket       | Obligatorio |
 | RF-02 | Consultar, filtrar y paginar tickets     | Obligatorio |
 | RF-03 | Asignar y reasignar técnico              | Obligatorio |
 | RF-04 | Cambiar estado (máquina de estados)      | Obligatorio |
@@ -51,6 +51,7 @@ Construir una API REST que centralice el ciclo de vida de los tickets de soporte
 - Autenticación con JWT (queda como mejora deseable; ver supuesto S-02).
 - Despliegue con contenedores (Docker).
 - Notificaciones por correo, SLA en horario laboral, adjuntos y base de conocimiento.
+- Desactivar usuarios y redistribuir los tickets de un técnico desactivado (los usuarios son datos semilla, S-01).
 
 ## 5. Supuestos
 
