@@ -29,6 +29,8 @@ Motivos:
 
 Para pasar a **LISTA** basta con responder las preguntas abiertas 1 a 8 (sección 8) y reflejar las respuestas en las especificaciones. Las demás preguntas pueden resolverse durante el diseño del contrato.
 
+**Actualización 28/10/2026 (corrección parte 1):** se aplicaron las 20 decisiones de la sección 9; el estado de cada hallazgo está en la sección 10. Con las decisiones 21 a 27 se resolvió también el crítico H-31: **no quedan críticos pendientes** (19 resueltos, 36 pendientes). El veredicto se mantiene **NO LISTA** hasta la revalidación completa de la parte 2, que actualizará este resumen.
+
 Escala de severidad:
 
 - **Crítico:** impide avanzar al contrato de endpoints o deja una regla sin fuente válida.
@@ -340,6 +342,127 @@ Las preguntas 1 a 8 bloquean el contrato de endpoints. Las opciones son sugerenc
 18. **Borrado (H-39).** ¿Se confirma que el MVP no elimina tickets?
 19. **Datos semilla (H-12).** ¿Cuántos usuarios de cada rol y si se incluye un técnico inactivo para probar CA-03.3?
 20. **Bitácora E-009 (H-06).** A) Falta escribir la entrada E-009. B) El mensaje del commit `0b06fcb` debía decir E-008.
+
+---
+
+## 9. Decisiones tomadas
+
+Decisiones de la desarrolladora del 28/10/2026 sobre las preguntas de la sección 8. Son la fuente de verdad para la corrección (parte 1 de 2).
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 1  | Detalle completo y listado resumido; técnico y solicitante como `{ id, nombre }`. | H-31 (parcial) | `01-requisitos-funcionales.md` convenciones, CA-02.1, CA-02.4 |
+| 2  | Crear → `201` con el ticket y `Location`; asignar, transiciones y cambiar prioridad → `200` con el ticket actualizado (detalle); consultas → `200`. | H-55 | `01-requisitos-funcionales.md` convenciones, CA-01.1, CA-02.1, CA-02.4, CA-03.1, CA-03.2, CA-03.6, CA-04.1, CA-04.2, CA-04.4, CA-04.5, CA-05.4, CA-06.1 |
+| 3  | Solo el solicitante crea tickets; técnico o supervisor → `403`. | H-32 | RN-03, matriz de permisos (`02-reglas-negocio.md`), CA-01.10 |
+| 4  | Técnico inexistente al asignar → `400`; `404` solo para el recurso de la ruta. | H-17 | Enmienda de ADR-004, RNF-04 |
+| 5  | `TransicionInvalidaException` → `409`; `InvarianteVioladaException` → `500`. | H-18 | Enmiendas de ADR-001, ADR-003 y ADR-004; `01-modelo-dominio.md` §1 y §4; `02-arquitectura-c4.md` §3 |
+| 6  | Precedencia de errores: `401` → `404` → `403` → `400` → `409`. | H-34 | RNF-04, enmienda de ADR-004, convenciones de `01-requisitos-funcionales.md` |
+| 7  | Actor no autorizado para una acción → `403`. | H-33 | RN-08 (nota bajo la tabla), matriz de permisos, CA-04.7, enmienda de ADR-004 |
+| 8  | Una operación por acción. | H-03 (parcial) | Convenciones de `01-requisitos-funcionales.md` |
+| 9  | `page` por defecto 1; `pageSize` por defecto 20, máximo 100; respuesta con `items`, `page`, `pageSize`, `totalItems`. | H-35 | RN-05, CA-02.4, RNF-05, `01-modelo-dominio.md` §4, enmienda de ADR-003 |
+| 10 | `soloVencidos` no incluye `Incumplido`; técnico que filtra por otro `tecnicoId` → `403`; filtro inválido → `400`. | H-36 | CA-02.3, CA-02.7, CA-02.8, RNF-05, matriz de permisos, enmienda de ADR-003 |
+| 11 | Reporte con dos agrupaciones separadas (por técnico y por prioridad). | H-46 | CA-06.1 |
+| 12 | Operación de consulta de técnicos activos, solo para el supervisor. | H-54 | `00-vision.md` §3, HU-14, CA-03.6, CA-03.7, matriz de permisos |
+| 13 | Código "único y creciente"; se aceptan huecos. | H-45 | RN-03, `01-modelo-dominio.md` §1 y §4, enmienda de ADR-002 |
+| 14 | Reasignar al mismo técnico → `400`. | H-48 | RN-06, CA-03.8, `01-modelo-dominio.md` §4, enmienda de ADR-003 |
+| 15 | `400` para reabrir sin motivo, textos de más de 2000 caracteres y prioridad inexistente. | H-37 | CA-04.8, CA-04.9, CA-05.7, RNF-05, enmienda de ADR-003 |
+| 16 | El ticket guarda `FechaCreacion` y `FechaActualizacion`; historial fuera del MVP. | H-38 | `01-modelo-dominio.md` §1 y §5, `00-vision.md` §4, enmienda de ADR-002 |
+| 17 | Concurrencia fuera del MVP, como limitación conocida. | H-40 | `00-vision.md` §4, `03-requisitos-no-funcionales.md` (Fuera de alcance) |
+| 18 | El MVP no elimina tickets. | H-39 | `00-vision.md` §4, `01-modelo-dominio.md` §3 |
+| 19 | Datos semilla: 5 solicitantes, 4 técnicos (uno inactivo) y 1 supervisor. | H-12 (parcial) | `00-vision.md` S-01 |
+| 20 | El commit `0b06fcb` debía llamarse E-008; nota sin reescribir el historial. | H-06 | `bitacora.md` E-008 |
+
+Decisiones complementarias (28/10/2026), respuestas a las preguntas de la sección 11:
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 21 | (P-1) Cada elemento del listado incluye el `id` y el código del ticket. | H-31 | CA-02.4 |
+| 22 | (P-2) Cada comentario del detalle tiene `id`, `texto`, `autor` (`{ id, nombre }`) y `fechaCreacion`. | H-31 | CA-02.1 |
+| 23 | (P-3) Reclasificar responde `200` con el ticket actualizado (detalle). | H-31, H-55 | CA-01.6, convenciones de `01-requisitos-funcionales.md` |
+| 24 | (P-4) La consulta de técnicos activos no se pagina; devuelve una lista de `{ id, nombre }`. | H-54 | CA-03.6 |
+| 25 | (P-5) Al crear un ticket, `FechaActualizacion` es igual a `FechaCreacion`. | H-38 | `01-modelo-dominio.md` §1 |
+| 26 | Se confirma el máximo de `pageSize` en 100. | H-35 | Sin cambios (ya aplicado con la decisión 9) |
+| 27 | Cada comentario del detalle incluye además su `tipo` (`Solucion` o `Reapertura`), coherente con `TipoComentario` del modelo de dominio. | H-31 | CA-02.1 |
+
+Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
+
+Cambio respecto de lo documentado antes: la decisión 9 sube el máximo de `pageSize` de 50 a 100 (antes en RN-05, CA-02.4, RNF-05 y ADR-003).
+
+---
+
+## 10. Estado de los hallazgos
+
+Corrección parte 1 de 2 (28/10/2026). Los marcados "Pendiente · parte 2" corresponden a CLAUDE.md, enlaces y glosario, que se corrigen en la segunda parte.
+
+| ID   | Estado | Nota |
+| ---- | ------ | ---- |
+| H-01 | Pendiente · parte 2 | CLAUDE.md. |
+| H-02 | Pendiente · parte 2 | CLAUDE.md. |
+| H-03 | Pendiente | Se resuelve al generar el contrato de endpoints. La decisión 8 ya fija una operación por acción. |
+| H-04 | Pendiente · parte 2 | Enlaces. |
+| H-05 | Pendiente | README sin decisión sobre su contenido. |
+| H-06 | Resuelto | Decisión 20: nota de corrección en E-008. |
+| H-07 | Pendiente | Referencia a RNF-11 en E-007; no cubierta por las decisiones. |
+| H-08 | Pendiente | Plantilla E-NNN sin decisión. |
+| H-09 | Pendiente | Hashes de E-001 a E-003 sin decisión. |
+| H-10 | Pendiente | Nombre de la carpeta de pruebas sin decisión. |
+| H-11 | Pendiente | Sin decisión. |
+| H-12 | Pendiente | Decisión 19 aplicada en S-01; faltan tablas, columnas, nombre de la SEQUENCE y los datos de cada usuario semilla. |
+| H-13 | Pendiente · parte 2 | Enlaces. |
+| H-14 | Pendiente | Sin decisión. |
+| H-15 | Pendiente | Justificación de ADR-002 a cargo de la desarrolladora. |
+| H-16 | Pendiente | Sin decisión. |
+| H-17 | Resuelto | Decisión 4: enmienda de ADR-004 y RNF-04. |
+| H-18 | Resuelto | Decisión 5: enmiendas de ADR-001, ADR-003 y ADR-004; modelo y C4 nombran ambos tipos. |
+| H-19 | Pendiente · parte 2 | Sin decisión en esta parte. |
+| H-20 | Pendiente · parte 2 | Sin decisión en esta parte. |
+| H-21 | Pendiente · parte 2 | CLAUDE.md y `02-reglas-negocio.md` l.3. |
+| H-22 | Pendiente · parte 2 | RNF-07. |
+| H-23 | Pendiente · parte 2 | CLAUDE.md. La decisión 9 cambia además el máximo a 100. |
+| H-24 | Pendiente · parte 2 | CLAUDE.md. |
+| H-25 | Pendiente · parte 2 | CLAUDE.md. |
+| H-26 | Pendiente | La decisión 9 cambia el rango, pero no dónde vive la constante de paginación. |
+| H-27 | Pendiente | Diagramas duplicados; sin decisión. |
+| H-28 | Pendiente · parte 2 | Glosario. |
+| H-29 | Pendiente | Índice único de `Email` sin decisión. |
+| H-30 | Pendiente | `01-modelo-dominio.md` pasó a 1.2; los demás encabezados siguen igual. |
+| H-31 | Resuelto | Decisiones 1, 21, 22, 23 y 27: campos del detalle (con comentarios) en CA-02.1, del listado en CA-02.4 y cuerpo de reclasificar en CA-01.6. |
+| H-32 | Resuelto | Decisión 3: RN-03, CA-01.10 y matriz de permisos. |
+| H-33 | Resuelto | Decisión 7: matriz de permisos en `02-reglas-negocio.md`, nota en RN-08 y CA-04.7 ampliado. |
+| H-34 | Resuelto | Decisión 6: RNF-04 y enmienda de ADR-004. |
+| H-35 | Resuelto | Decisión 9: RN-05, CA-02.4 y RNF-05. |
+| H-36 | Resuelto | Decisión 10: CA-02.3, CA-02.7 y CA-02.8. |
+| H-37 | Resuelto | Decisión 15: CA-04.8, CA-04.9 y CA-05.7. |
+| H-38 | Resuelto | Decisiones 16 y 25: `FechaActualizacion` en el modelo (igual a `FechaCreacion` al crear); historial fuera del MVP. |
+| H-39 | Resuelto | Decisión 18: `00-vision.md` §4 y nota en el modelo §3. |
+| H-40 | Resuelto | Decisión 17: limitación conocida en `00-vision.md` §4 y RNF. |
+| H-41 | Pendiente | Catálogo de `type` y `title` sin decisión. |
+| H-42 | Pendiente | Valor inicial y límite del código sin decisión. |
+| H-43 | Pendiente | Formato de `X-Usuario-Id` sin decisión. |
+| H-44 | Pendiente | Textos con solo espacios sin decisión. |
+| H-45 | Resuelto | Decisión 13: RN-03, modelo y enmienda de ADR-002. `CLAUDE.md` l.45 se corrige en la parte 2. |
+| H-46 | Resuelto | Decisión 11: CA-06.1. |
+| H-47 | Pendiente · parte 2 | Glosario. |
+| H-48 | Resuelto | Decisión 14: RN-06, CA-03.8 y modelo §4. |
+| H-49 | Pendiente | Sin decisión. |
+| H-50 | Pendiente · parte 2 | Glosario. |
+| H-51 | Pendiente · parte 2 | Glosario. |
+| H-52 | Pendiente · parte 2 | Glosario. |
+| H-53 | Resuelto | HU-10 a HU-14 en `01-requisitos-funcionales.md`. |
+| H-54 | Resuelto | Decisiones 12 y 24: HU-14, CA-03.6 (lista sin paginar de `{ id, nombre }`), CA-03.7 y matriz de permisos. |
+| H-55 | Resuelto | Decisiones 2 y 23: código de éxito y cuerpo en todos los CA de operaciones, incluido reclasificar. |
+
+Resueltos: 19 · Pendientes: 36 (16 de ellos para la parte 2). **No quedan críticos pendientes.** El veredicto se revalida en la parte 2.
+
+## 11. Preguntas abiertas de la corrección
+
+Surgieron al aplicar las decisiones. **Respondidas el 28/10/2026** (decisiones 21 a 25, sección 9).
+
+- **P-1 (H-31).** El listado resumido de la decisión 1 no incluye el `id` del ticket, y CA-02.1 consulta por Id. ¿Se agrega `id` a cada elemento del listado?
+- **P-2 (H-31).** ¿Qué campos tiene cada comentario en el detalle? ¿El autor se devuelve también como `{ id, nombre }`?
+- **P-3 (H-31, H-55).** Reclasificar responde `200` (CA-01.6), pero la decisión 2 no dice su cuerpo. ¿Devuelve el ticket actualizado (detalle), como las demás acciones?
+- **P-4 (H-54).** ¿La consulta de técnicos activos se pagina como los listados (decisión 9) o devuelve la lista completa?
+- **P-5 (H-38).** Al crear un ticket, ¿`FechaActualizacion` vale lo mismo que `FechaCreacion` o queda vacía hasta la primera modificación?
 
 ### Resumen de las secciones 3 y 4
 

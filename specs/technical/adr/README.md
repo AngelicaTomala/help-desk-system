@@ -2,6 +2,8 @@
 
 Cada ADR sigue el formato de Michael Nygard: título, estado, fecha, contexto, decisión, consecuencias y alternativas consideradas.
 
+Los ADR aceptados no se reescriben: los cambios posteriores se agregan al final como "Enmienda" con su fecha. ADR-001 a ADR-004 tienen una enmienda del 28/10/2026.
+
 | Número  | Título                                    | Estado   | Fecha      | Enlace                                                             |
 | ------- | ----------------------------------------- | -------- | ---------- | ------------------------------------------------------------------ |
 | ADR-001 | Clean Architecture en cuatro proyectos    | Aceptado | 27/10/2026 | [ADR-001-clean-architecture.md](ADR-001-clean-architecture.md)     |

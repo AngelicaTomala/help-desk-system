@@ -2,8 +2,8 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.1                    |
-| Fecha   | 27/10/2026             |
+| Versión | 1.2                    |
+| Fecha   | 28/10/2026             |
 | Estado  | Aprobado               |
 
 Deriva de `specs/functional/` (00 visión, 01 RF/CA, 02 RN, 03 RNF). Todas las fechas son `DateTime` en **UTC** (S-04) y los Id son `int` de identidad.
@@ -31,7 +31,7 @@ Se carga como dato semilla (S-01); no hay endpoint de registro.
 | Atributo         | Tipo             | Reglas                                                 |
 | ---------------- | ---------------- | ------------------------------------------------------ |
 | Id               | int              | PK                                                     |
-| Codigo           | string(9)        | `HD-` + 6 dígitos, consecutivo y único (RN-03, índice único) |
+| Codigo           | string(9)        | `HD-` + 6 dígitos, único y creciente; se aceptan huecos (RN-03, índice único) |
 | Titulo           | string           | 5–150 caracteres (RN-01)                               |
 | Descripcion      | string           | 10–2000 caracteres (RN-01)                             |
 | Categoria        | Categoria        | RN-02; reclasificable (RN-13)                          |
@@ -40,6 +40,7 @@ Se carga como dato semilla (S-01); no hay endpoint de registro.
 | SolicitanteId    | int              | FK Usuario, obligatorio                                |
 | TecnicoId        | int?             | FK Usuario, nulo hasta asignar                         |
 | FechaCreacion    | DateTime         | UTC, inmutable                                         |
+| FechaActualizacion | DateTime       | UTC, fecha de la última modificación del ticket; al crear, es igual a `FechaCreacion`. El historial de cambios queda fuera del MVP |
 | FechaVencimiento | DateTime         | UTC, `FechaCreacion + HorasSla(Prioridad)` (RN-10)     |
 | FechaResolucion  | DateTime?        | Se fija al resolver y se borra al reabrir (RN-09)      |
 | FechaCierre      | DateTime?        | Se fija al cerrar                                      |
@@ -51,12 +52,12 @@ Los límites de RN-01 se exponen como constantes públicas de `Ticket` (`TituloL
 
 | Método                     | Efecto                                                                    | RN           |
 | -------------------------- | ------------------------------------------------------------------------- | ------------ |
-| `Crear(...)`               | Valida las longitudes de RN-01 (excepción de dominio si se violan), estado `Abierto`, sin técnico, calcula vencimiento | RN-01, RN-03, RN-10 |
+| `Crear(...)`               | Valida las longitudes de RN-01 (`InvarianteVioladaException` si se violan), estado `Abierto`, sin técnico, calcula vencimiento | RN-01, RN-03, RN-10 |
 | `Asignar(tecnicoId)`       | Asigna o reasigna; queda `Asignado`                                       | RN-07, RN-08 |
 | `IniciarAtencion()`        | `Asignado` → `EnProgreso`                                                 | RN-08        |
-| `Resolver(solucion, ahora)`| Valida la solución (no vacía, ≤ `Comentario.TextoLongitudMaxima`; excepción de dominio); `EnProgreso` → `Resuelto`; fija FechaResolucion; agrega comentario `Solucion` | RN-08, RN-09 |
+| `Resolver(solucion, ahora)`| Valida la solución (no vacía, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`); `EnProgreso` → `Resuelto`; fija FechaResolucion; agrega comentario `Solucion` | RN-08, RN-09 |
 | `Cerrar(ahora)`            | `Resuelto` → `Cerrado`; fija FechaCierre                                  | RN-08        |
-| `Reabrir(motivo)`          | Valida el motivo (no vacío, ≤ `Comentario.TextoLongitudMaxima`; excepción de dominio); `Resuelto` → `EnProgreso`; borra FechaResolucion; conserva técnico; agrega comentario `Reapertura` | RN-08, RN-09 |
+| `Reabrir(motivo)`          | Valida el motivo (no vacío, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`); `Resuelto` → `EnProgreso`; borra FechaResolucion; conserva técnico; agrega comentario `Reapertura` | RN-08, RN-09 |
 | `CambiarPrioridad(nueva)`  | Recalcula FechaVencimiento desde FechaCreacion                            | RN-10, RN-12 |
 | `Reclasificar(categoria)`  | Cambia la categoría                                                       | RN-13        |
 | `CalcularEstadoSla(ahora)` | Devuelve `EstadoSla`; **no se persiste**                                  | RN-11        |
@@ -98,21 +99,23 @@ Se persisten como texto, coherente con RNF-09 (enums como texto en OpenAPI).
 | Ticket contiene Comentario        | 1 — 0..\* (composición, borrado en cascada) |
 | Usuario escribe Comentario        | 1 — 0..\*                                   |
 
+El MVP no elimina tickets (`00-vision.md` §4); el borrado en cascada solo describe la composición.
+
 ## 4. Ubicación de las reglas de negocio
 
-Criterio (ver ADR-003): el formato de la entrada se valida en **Application** con FluentValidation (`400` con detalle). **Domain** protege las invariantes de RN-01 y RN-09 con las mismas constantes (excepción de dominio; `500` si llega a la API) y las reglas de estado (`409`). Lo que requiere consultar la base de datos o conocer al actor (rol, dueño) va en **Application** (`403` o `400`).
+Criterio (ver ADR-003): el formato de la entrada se valida en **Application** con FluentValidation (`400` con detalle). **Domain** protege las invariantes de RN-01 y RN-09 con las mismas constantes (`InvarianteVioladaException`; `500` si llega a la API) y las reglas de estado (`TransicionInvalidaException`; `409`). Lo que requiere consultar la base de datos o conocer al actor (rol, dueño) va en **Application** (`403` o `400`).
 
 | RN    | Capa                 | Responsable                                                                                                                                    |
 | ----- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| RN-01 | Domain + Application | `Ticket.Crear` (invariante con constantes públicas; excepción de dominio) · `CrearTicketValidator` (mismas constantes; `400` con detalle, RNF-05) |
+| RN-01 | Domain + Application | `Ticket.Crear` (invariante con constantes públicas; `InvarianteVioladaException`) · `CrearTicketValidator` (mismas constantes; `400` con detalle, RNF-05) |
 | RN-02 | Domain + Application | Enums `Categoria` y `Prioridad` · `CrearTicketValidator`                                                                                       |
-| RN-03 | Domain + Application | `Ticket.Crear` (`Abierto`, sin técnico) · `IGeneradorCodigoTicket` (consecutivo; en Infrastructure con una SEQUENCE de SQL Server)            |
+| RN-03 | Domain + Application | `Ticket.Crear` (`Abierto`, sin técnico) · `IGeneradorCodigoTicket` (único y creciente; en Infrastructure con una SEQUENCE de SQL Server)            |
 | RN-04 | Application          | `ListarTicketsHandler` / `ObtenerTicketHandler` (filtro por rol; `403` si el ticket no le corresponde)                                        |
-| RN-05 | Application          | `ListarTicketsValidator` (`page` ≥ 1, `pageSize` 1–50) · consulta paginada ordenada por FechaCreacion descendente                             |
-| RN-06 | Application + Domain | `AsignarTicketHandler` (actor supervisor, si no `403`; técnico existente y `Usuario.EsTecnicoActivo()`, si no `400`)                          |
+| RN-05 | Application          | `ListarTicketsValidator` (`page` ≥ 1, por defecto 1; `pageSize` 1–100, por defecto 20; filtros válidos) · consulta paginada ordenada por FechaCreacion descendente                             |
+| RN-06 | Application + Domain | `AsignarTicketHandler` (actor supervisor, si no `403`; técnico existente y `Usuario.EsTecnicoActivo()`, si no `400`; reasignar al mismo técnico, `400`)                          |
 | RN-07 | Domain               | `Ticket.Asignar` (solo desde `Abierto`, `Asignado` o `EnProgreso`; queda `Asignado`; si no, `409`)                                            |
 | RN-08 | Domain + Application | `Ticket` (métodos de transición; una transición inválida lanza `TransicionInvalidaException` → `409`) · handlers verifican quién puede (`403`) |
-| RN-09 | Domain + Application | `Ticket.Resolver` / `Ticket.Reabrir` (invariante: texto no vacío y ≤ `Comentario.TextoLongitudMaxima`; excepción de dominio) · `ResolverTicketValidator` / `ReabrirTicketValidator` (mismas constantes; `400` con detalle, CA-04.3) · `Resolver` fija FechaResolucion; `Reabrir` la borra y conserva el técnico |
+| RN-09 | Domain + Application | `Ticket.Resolver` / `Ticket.Reabrir` (invariante: texto no vacío y ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`) · `ResolverTicketValidator` / `ReabrirTicketValidator` (mismas constantes; `400` con detalle, CA-04.3) · `Resolver` fija FechaResolucion; `Reabrir` la borra y conserva el técnico |
 | RN-10 | Domain               | `PoliticaSla.HorasPara(Prioridad)` · `Ticket.Crear` calcula FechaVencimiento                                                                   |
 | RN-11 | Domain               | `Ticket.CalcularEstadoSla(ahora)`; `ahora` se obtiene de `TimeProvider` (RNF-08)                                                              |
 | RN-12 | Domain + Application | `Ticket.CambiarPrioridad` (`409` si `Resuelto`/`Cerrado`; recalcula desde FechaCreacion) · `CambiarPrioridadHandler` (solo supervisor, si no `403`) |
@@ -141,6 +144,7 @@ classDiagram
         +int SolicitanteId
         +int? TecnicoId
         +DateTime FechaCreacion
+        +DateTime FechaActualizacion
         +DateTime FechaVencimiento
         +DateTime? FechaResolucion
         +DateTime? FechaCierre

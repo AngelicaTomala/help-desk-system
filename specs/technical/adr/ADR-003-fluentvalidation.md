@@ -52,3 +52,12 @@ Reparto de responsabilidades:
 ## Requisitos relacionados
 
 RNF-05, RNF-08, RNF-10 · RN-01, RN-02, RN-05, RN-09, RN-13 · CA-01.3, CA-01.4, CA-01.9, CA-02.4, CA-04.3
+
+## Enmienda · 28/10/2026
+
+Origen: decisiones 5, 9, 10, 14 y 15 de `docs/auditoria-documentacion.md` §9 (hallazgos H-18, H-35, H-36, H-37).
+
+- La "excepción de dominio" de las invariantes de RN-01 y RN-09 es `InvarianteVioladaException` → `500`. Las reglas de estado usan `TransicionInvalidaException` → `409` (ver ADR-001 y ADR-004).
+- El rango de paginación es `pageSize` 1–100 (antes 1–50), con valores por defecto `page` = 1 y `pageSize` = 20 (RN-05).
+- `ListarTicketsValidator` también rechaza con `400` los valores de filtro inválidos (CA-02.8).
+- Responden `400` desde los validadores: reabrir sin motivo (CA-04.8), solución o motivo de más de 2000 caracteres (CA-04.9) y prioridad inexistente al cambiarla (CA-05.7). Reasignar al mismo técnico (CA-03.8) también responde `400`.

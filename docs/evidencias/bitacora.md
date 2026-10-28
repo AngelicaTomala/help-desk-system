@@ -521,3 +521,6 @@ Muéstrame el diff final de ambos archivos antes de guardar.
 
 - `afa2435` docs(adr): decisiones de arquitectura 001-004
 - `eb0f1a1` docs(specs): alinea modelo de dominio con ADR-003
+- `0b06fcb` docs(evidencias): bitácora E-009
+
+**Nota de corrección (28/10/2026):** el commit `0b06fcb` se tituló "bitácora E-009", pero registra esta entrada; debía llamarse "bitácora E-008". No se reescribe el historial de Git (hallazgo H-06 de `docs/auditoria-documentacion.md`).

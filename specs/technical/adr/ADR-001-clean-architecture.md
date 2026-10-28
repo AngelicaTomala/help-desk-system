@@ -42,3 +42,12 @@ Organizar la solución en cuatro proyectos: **Domain**, **Application**, **Infra
 ## Requisitos relacionados
 
 RNF-07, RNF-08, RNF-10 · RN-01 a RN-13 · S-02
+
+## Enmienda · 28/10/2026
+
+Origen: decisión 5 de `docs/auditoria-documentacion.md` §9 (hallazgo H-18).
+
+"Excepción de dominio" en la sección Decisión se precisa en dos tipos:
+
+- `TransicionInvalidaException`: transición o cambio no permitido por el estado del ticket → `409`.
+- `InvarianteVioladaException`: invariante de la entidad violada (RN-01, RN-09) → `500` (ver ADR-003).
