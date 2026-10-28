@@ -4,13 +4,15 @@
 | ------- | ---------------------- |
 | Versión | 1.0                    |
 | Fecha   | 28/10/2026             |
-| Estado  | Borrador para revisión |
+| Estado  | Vigente                |
+
+Las "decisiones N" citadas en este documento están definidas en la [sección 9 de la auditoría de la documentación](../docs/auditoria-documentacion.md#9-decisiones-tomadas).
 
 Une cada criterio de aceptación de [01-requisitos-funcionales.md](functional/01-requisitos-funcionales.md) con su historia, las reglas de [02-reglas-negocio.md](functional/02-reglas-negocio.md) y los endpoints de [03-contrato-api.md](technical/03-contrato-api.md).
 
 - Las columnas **Test** y **Commit** se llenan durante la implementación (RNF-10: `[Trait("CA", …)]` y `[Trait("RN", …)]`).
 - **Estado inicial:** `Especificado`.
-- Las rutas omiten el prefijo `/api/v1`, común a todas (decisión 43).
+- Las rutas omiten el prefijo `/api/v1`, común a todas ([decisión 43](../docs/auditoria-documentacion.md#9-decisiones-tomadas)).
 - "—" en "RN relacionadas" indica que el CA no deriva de una RN; ver [Observaciones](#observaciones).
 
 ## RF-01 · Registrar y reclasificar el ticket
@@ -93,9 +95,9 @@ Une cada criterio de aceptación de [01-requisitos-funcionales.md](functional/01
 - **Ningún CA tiene endpoint "N/A".** Los 45 CA se verifican a través de un endpoint del contrato, incluidos los de validación (CA-01.3, CA-01.4, CA-02.8, CA-04.3, CA-04.8, CA-04.9, CA-05.7), que se observan en sus respuestas `400`.
 - **CA sin RN relacionada ("—"):**
   - **CA-01.5:** se basa en el supuesto S-02 y en RNF-01 (identidad por `X-Usuario-Id`), no en una RN. El `401` aplica a todos los endpoints; aquí se traza al que nombra el CA.
-  - **CA-02.2:** el `404` de un ticket inexistente sale de RNF-04 y de la decisión 65, no de una RN.
-  - **CA-02.8:** el `400` por filtro inválido sale de las decisiones 10 y 53 y de RNF-05.
-  - **CA-03.7 y CA-06.3:** el `403` sale de la matriz de permisos de [02-reglas-negocio.md](functional/02-reglas-negocio.md#matriz-de-permisos) (decisión 12 para técnicos activos), no de una RN numerada.
+  - **CA-02.2:** el `404` de un ticket inexistente sale de RNF-04 y de la [decisión 65](../docs/auditoria-documentacion.md#9-decisiones-tomadas), no de una RN.
+  - **CA-02.8:** el `400` por filtro inválido sale de las [decisiones 10 y 53](../docs/auditoria-documentacion.md#9-decisiones-tomadas) y de RNF-05.
+  - **CA-03.7 y CA-06.3:** el `403` sale de la matriz de permisos de [02-reglas-negocio.md](functional/02-reglas-negocio.md#matriz-de-permisos) ([decisión 12](../docs/auditoria-documentacion.md#9-decisiones-tomadas) para técnicos activos), no de una RN numerada.
 - **CA-05.1 a CA-05.3:** no tienen una operación propia. Se verifican por los valores de `fechaVencimiento` y `estadoSla` que devuelven los endpoints indicados ([03-contrato-api.md §5.1](technical/03-contrato-api.md#51-ca--endpoints)).
 - **HU de RF-02 y CA-04.4:** cuando un CA cubre varios actores, se listan todas sus HU. Por ejemplo, CA-04.4 (cierre) tiene HU-06 para el solicitante y HU-12 para el supervisor.
 
