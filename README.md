@@ -22,7 +22,7 @@ Todavía no hay una solución `.sln`; los comandos de compilación y pruebas est
 | Carpeta                                     | Contenido                                                  |
 | ------------------------------------------- | ---------------------------------------------------------- |
 | [specs/functional/](specs/functional/)      | Visión, requisitos funcionales, reglas de negocio y RNF    |
-| [specs/technical/](specs/technical/)        | Modelo de dominio, arquitectura C4 y ADR                   |
+| [specs/technical/](specs/technical/)        | Modelo de dominio, arquitectura C4, contrato de la API y ADR |
 | [docs/](docs/)                              | Auditoría de la documentación y bitácora de evidencias     |
 | `src/`, `test/`                             | Código y pruebas (vacías hasta crear la solución)          |
 
@@ -34,6 +34,7 @@ Todavía no hay una solución `.sln`; los comandos de compilación y pruebas est
 - [03 · Requisitos no funcionales](specs/functional/03-requisitos-no-funcionales.md)
 - [01 · Modelo de dominio](specs/technical/01-modelo-dominio.md)
 - [02 · Arquitectura C4](specs/technical/02-arquitectura-c4.md)
+- [03 · Contrato de la API](specs/technical/03-contrato-api.md)
 - [Índice de ADR](specs/technical/adr/README.md)
 - [Auditoría de la documentación](docs/auditoria-documentacion.md)
 - [Bitácora de evidencias](docs/evidencias/bitacora.md)

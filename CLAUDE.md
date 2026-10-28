@@ -4,7 +4,7 @@ Este archivo contiene instrucciones específicas para que Claude Code (la herram
 
 ## Estado del proyecto
 
-API REST de tickets de soporte de TI (curso "Agentic Software Development .NET 10"). Existen las especificaciones funcionales y técnicas; todavía no hay código ni contrato de endpoints. Las carpetas `src/` y `test/` están vacías y Git no las versiona hasta que tengan contenido; se completarán al crear la solución.
+API REST de tickets de soporte de TI (curso "Agentic Software Development .NET 10"). Existen las especificaciones funcionales y técnicas, incluido el contrato de endpoints; todavía no hay código. Las carpetas `src/` y `test/` están vacías y Git no las versiona hasta que tengan contenido; se completarán al crear la solución.
 
 Especificaciones funcionales ([specs/functional/](specs/functional/)):
 
@@ -17,6 +17,7 @@ Especificaciones técnicas ([specs/technical/](specs/technical/)):
 
 - [01-modelo-dominio.md](specs/technical/01-modelo-dominio.md): entidades, enums, relaciones y ubicación de cada RN por capa.
 - [02-arquitectura-c4.md](specs/technical/02-arquitectura-c4.md): C4 niveles 1 y 2 y capas de Clean Architecture.
+- [03-contrato-api.md](specs/technical/03-contrato-api.md): contrato REST de las 13 operaciones (rutas, cuerpos, respuestas, errores y verificación). Implementa los endpoints según este contrato.
 - [adr/README.md](specs/technical/adr/README.md): índice de las decisiones de arquitectura (ADR-001 a ADR-004, con enmiendas).
 
 Auditoría y decisiones: [docs/auditoria-documentacion.md](docs/auditoria-documentacion.md). Su sección 9 registra las decisiones de la desarrolladora que aclaran las especificaciones.

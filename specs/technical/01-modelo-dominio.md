@@ -58,7 +58,7 @@ Los límites de RN-01 se exponen como constantes públicas de `Ticket` (`TituloL
 | `Resolver(solucion, ahora)`| Valida la solución (no vacía, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`); `EnProgreso` → `Resuelto`; fija FechaResolucion; agrega comentario `Solucion` | RN-08, RN-09 |
 | `Cerrar(ahora)`            | `Resuelto` → `Cerrado`; fija FechaCierre                                  | RN-08        |
 | `Reabrir(motivo)`          | Valida el motivo (no vacío, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`); `Resuelto` → `EnProgreso`; borra FechaResolucion; conserva técnico; agrega comentario `Reapertura` | RN-08, RN-09 |
-| `CambiarPrioridad(nueva)`  | Recalcula FechaVencimiento desde FechaCreacion                            | RN-10, RN-12 |
+| `CambiarPrioridad(prioridad)` | Recalcula FechaVencimiento desde FechaCreacion                            | RN-10, RN-12 |
 | `Reclasificar(categoria)`  | Cambia la categoría                                                       | RN-13        |
 | `CalcularEstadoSla(ahora)` | Devuelve `EstadoSla`; **no se persiste**                                  | RN-11        |
 

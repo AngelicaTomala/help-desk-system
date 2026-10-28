@@ -104,7 +104,8 @@ Resume quién puede ejecutar cada operación según RN-03, RN-04, RN-06, RN-08, 
 | Consultar ticket por Id    | Solo los suyos (`403` si no)   | Solo los asignados a él (`403` si no)                | ✔          |
 | Listar tickets             | Solo los suyos                 | Solo los asignados a él; filtrar por otro `tecnicoId` → `403` | ✔ |
 | Reclasificar               | `403`                          | Solo el técnico asignado (`403` si no)               | ✔          |
-| Asignar o reasignar        | `403`                          | `403`                                                | ✔          |
+| Asignar (decisión 42)      | `403`                          | `403`                                                | ✔          |
+| Reasignar (decisión 42)    | `403`                          | `403`                                                | ✔          |
 | Consultar técnicos activos | `403`                          | `403`                                                | ✔          |
 | Iniciar atención           | `403`                          | Solo el técnico asignado (`403` si no)               | `403`      |
 | Resolver                   | `403`                          | Solo el técnico asignado (`403` si no)               | `403`      |

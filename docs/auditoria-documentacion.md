@@ -14,16 +14,16 @@ Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8)
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
 | Crítico   | 2     | 2         | 0          |
-| Alto      | 8     | 7         | 1 (H-03)   |
+| Alto      | 8     | 8         | 0          |
 | Medio     | 26    | 26        | 0          |
 | Bajo      | 19    | 19        | 0          |
-| **Total** | **55** | **54**   | **1**      |
+| **Total** | **55** | **55**   | **0**      |
 
 H-41 y H-43 se reclasificaron de Bajo a Alto en la parte 2 porque el contrato necesita su definición. Los totales originales por severidad eran: Crítico 2, Alto 6, Medio 26, Bajo 21.
 
 ### Veredicto: **LISTA** para generar el contrato de endpoints
 
-No quedan hallazgos críticos ni bloqueantes. Las 12 operaciones (las 11 originales más la consulta de técnicos activos) tienen request, response, validaciones, códigos de error y de éxito, y permisos definidos (sección 13.3). El único pendiente, H-03, es el propio contrato de endpoints.
+No quedan hallazgos críticos ni bloqueantes. Las 13 operaciones (las 11 originales, con asignar y reasignar separadas según la decisión 42, más la consulta de técnicos activos) tienen request, response, validaciones, códigos de error y de éxito, y permisos definidos (sección 13.3). H-03 quedó resuelto con el [contrato de endpoints](../specs/technical/03-contrato-api.md).
 
 El catálogo de `codigo` de [ADR-004](../specs/technical/adr/ADR-004-problemdetails-errores.md#enmienda-3--28102026) está aprobado (decisión 39), y las excepciones de dominio exponen su `Codigo` (decisión 40, [Enmienda 4](../specs/technical/adr/ADR-004-problemdetails-errores.md#enmienda-4--28102026)).
 
@@ -238,6 +238,8 @@ Un término canónico por concepto. Las definiciones se toman de los documentos 
 | Reabrir | — | Transición `Resuelto` → `EnProgreso` por el solicitante dueño, con motivo (RN-08, RN-09). | — |
 | Motivo de reapertura | `Reapertura` (tipo de comentario) | Texto obligatorio al reabrir, máx. 2000 (RN-09). | — |
 | Reclasificar | — | Cambiar la categoría de un ticket no `Resuelto` ni `Cerrado` (RN-13). | corregir la categoría, cambiar la categoría (H-52) |
+| Cambiar prioridad | `cambiar-prioridad` (ruta) | Cambiar la prioridad de un ticket no `Resuelto` ni `Cerrado`; recalcula el vencimiento (RN-12). Solo el supervisor. | — |
+| Consultar técnicos activos | `tecnicos` (ruta) | Obtener la lista de técnicos activos como `{ id, nombre }`, sin paginar (CA-03.6, decisiones 12, 24 y 45). Solo el supervisor. | — |
 | Categoría | `Categoria` | Uno de `Hardware`, `Software`, `Red`, `Accesos`, `Otros` (RN-02). | — |
 | Prioridad | `Prioridad` | Uno de `Critica`, `Alta`, `Media`, `Baja` (RN-02); "Crítica" solo como texto de lectura. | — |
 | SLA | — | Tiempo máximo comprometido para resolver un ticket según su prioridad (`00-vision.md` §8; horas en RN-10). | — |
@@ -292,6 +294,8 @@ Los casos de uso del proyecto son las historias de usuario (HU) de `01-requisito
 ## 7. Suficiencia de información por operación
 
 _Estado original de la fase 4. La revalidación tras las correcciones está en la sección 13.3._
+
+_Nota: esta tabla es la foto de la fase 4 (11 operaciones); el número vigente de operaciones (13) está en §13.3._
 
 ✅ definido · ⚠️ parcial · ❌ no definido. "Ruta y verbo" es ❌ en todas (H-03).
 
@@ -415,6 +419,49 @@ Decisiones sobre las preguntas de la sección 12 (28/10/2026):
 | 40 | Las excepciones de dominio exponen una propiedad `Codigo`. `TransicionInvalidaException` se lanza con `TRANSICION_INVALIDA` o `TICKET_NO_MODIFICABLE` según el caso, y la Api copia ese valor al campo `codigo` de Problem Details. | H-18, H-41 | `01-modelo-dominio.md` §4, Enmienda 4 de ADR-004 |
 | 41 | En los errores `500` la Api ignora el `Codigo` de la excepción y responde siempre `ERROR_INTERNO`, sin exponer detalles internos; el detalle de la excepción se registra en el log. | H-41 | `01-modelo-dominio.md` §4, Enmienda 4 de ADR-004 |
 
+Decisiones para el contrato de endpoints (28/10/2026, parte 5.1):
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 42 | Asignar y reasignar son dos operaciones distintas (decisión 8); el contrato tiene 13 operaciones. Según la tabla de RN-08, asignar un ticket `Asignado` y reasignar uno `Abierto` no son combinaciones permitidas: responden `409` `TRANSICION_INVALIDA`. | H-03 | Esta auditoría (§13.3 y resumen ejecutivo) |
+| 43 | Todas las rutas usan el prefijo `/api/v1`. | H-03 | RNF-06 (ejemplo corregido) |
+| 44 | Las rutas de varias palabras usan kebab-case, sin tildes. | H-03 | — (se aplica en el contrato) |
+| 45 | Técnicos activos: `GET /api/v1/tecnicos`, que devuelve solo los técnicos activos. | H-03 | Glosario §5 |
+| 46 | Reporte de vencidos: `GET /api/v1/reportes/tickets-vencidos`. | H-03 | — (se aplica en el contrato) |
+| 47 | Los campos JSON van en camelCase. | H-03 | — (se aplica en el contrato) |
+| 48 | Los enums se serializan como texto, con el nombre del valor en el modelo de dominio. | H-03 | — (se aplica en el contrato) |
+| 49 | En las respuestas, `tecnico` es `null` cuando el ticket no tiene técnico; las fechas que aún no aplican también son `null`. | H-03 | — (se aplica en el contrato) |
+| 50 | En el reporte, el grupo "Sin asignar" se representa con `tecnico: null`. | H-03 | — (se aplica en el contrato) |
+| 51 | El solicitante puede usar el filtro `tecnicoId`; se aplica dentro de su visibilidad (RN-04) y puede devolver una lista vacía. | H-03 | — (se aplica en el contrato) |
+| 52 | Swagger UI y el documento OpenAPI no exigen `X-Usuario-Id`. | H-03 | RNF-01 |
+| 53 | Filtros: `soloVencidos` es booleano y `tecnicoId` es entero positivo; un valor inválido responde `400` `VALIDACION_FALLIDA` (CA-02.8, decisión 10). | H-03 | — (se aplica en el contrato) |
+
+Decisiones para el contrato de endpoints (28/10/2026, parte 5.2):
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 54 | El solicitante del ticket se toma de `X-Usuario-Id`; nunca viene en el cuerpo. | H-03 | — (se aplica en el contrato) |
+| 55 | Cambiar prioridad recibe el campo `prioridad`. | H-03 | Tabla de métodos de `01-modelo-dominio.md` §1 (`CambiarPrioridad(prioridad)`) |
+| 56 | Reporte de vencidos: campos `porTecnico`, `porPrioridad`, `cantidad` y `total`. Solo se incluyen grupos con `cantidad` mayor que 0. `total` es igual a la suma de cada agrupación. | H-03 | — (se aplica en el contrato) |
+| 57 | Orden del reporte: `porPrioridad` por severidad (`Critica`, `Alta`, `Media`, `Baja`); `porTecnico` por `cantidad` descendente y luego por nombre, con `tecnico: null` al final. | H-03 | — (se aplica en el contrato) |
+| 58 | Enums de entrada (cuerpo y query): no distinguen mayúsculas y minúsculas; las respuestas usan siempre la grafía canónica; los valores numéricos se rechazan con `400` `VALIDACION_FALLIDA`. | H-03 | — (se aplica en el contrato) |
+| 59 | El listado de tickets se ordena por `fechaCreacion` descendente (RN-05, CA-02.4) y, en caso de empate, por `id` descendente. | H-03 | `03-contrato-api.md` (Convenciones comunes) |
+| 60 | Las fechas en JSON usan ISO 8601 en UTC con sufijo `Z` (por ejemplo, `2026-10-28T14:30:00Z`); los segundos fraccionarios son opcionales. | H-03 | `03-contrato-api.md` §1.6 |
+| 61 | Los mensajes de `errors` van en español y su redacción queda a la implementación; el contrato fija solo las claves y el `codigo`. Las claves de `errors` usan los nombres de campo en camelCase. | H-03 | `03-contrato-api.md` §1.3 |
+| 62 | Los Problem Details incluyen `traceId`. `detail` e `instance` no forman parte del contrato, y `detail` nunca expone información interna. | H-03 | `03-contrato-api.md` §1.3 y §4 |
+| 63 | Los ejemplos del contrato usan un elenco fijo de tickets ilustrativos, definido en §1.10. | H-03 | `03-contrato-api.md` §1.10 |
+| 64 | El encabezado `Location` de crear ticket es una ruta relativa (`/api/v1/tickets/{id}`). | H-03 | `03-contrato-api.md` §2.1 |
+| 65 | Un `{id}` de ruta que no sea un entero positivo responde `404` `TICKET_NO_ENCONTRADO`, con Problem Details completo. | H-03 | `03-contrato-api.md` §1.1 |
+| 66 | Los campos no previstos en el cuerpo se ignoran (por ejemplo, `solicitanteId`, según la decisión 54). | H-03 | `03-contrato-api.md` §1.7 |
+| 67 | Reclasificar con la misma categoría o cambiar a la misma prioridad responde `200` sin cambios: no se modifican `fechaActualizacion` ni `fechaVencimiento`. Solo aplica a tickets modificables (ver decisión 70). | H-03 | `03-contrato-api.md` §2.4 y §2.5 |
+| 68 | Los comentarios del detalle se ordenan por `fechaCreacion` ascendente y luego por `id` ascendente. | H-03 | `03-contrato-api.md` §2.2 |
+| 69 | Un filtro `tecnicoId` que no corresponde a un técnico existente responde `200` con una lista vacía. | H-03 | `03-contrato-api.md` §2.3 |
+| 70 | La decisión 67 solo aplica a tickets modificables: reclasificar o cambiar la prioridad de un ticket `Resuelto` o `Cerrado` responde `409` `TICKET_NO_MODIFICABLE`, aunque el valor sea igual al actual. | H-03 | `03-contrato-api.md` §2.4 y §2.5 |
+| 71 | En asignar y reasignar, un `tecnicoId` ausente o no positivo responde `400` `VALIDACION_FALLIDA` (`errors.tecnicoId`); `TECNICO_NO_VALIDO` queda para un Id bien formado que no existe, no tiene rol Técnico o está inactivo. | H-03 | `03-contrato-api.md` §3.1 y §3.2 |
+| 72 | El orden de los `400` en asignar y reasignar es: `VALIDACION_FALLIDA`, luego `TECNICO_NO_VALIDO`, luego `MISMO_TECNICO`. | H-03 | `03-contrato-api.md` §3.1 y §3.2 |
+| 73 | La lista de técnicos activos se ordena por nombre ascendente y luego por `id`. | H-03 | `03-contrato-api.md` §3.3 |
+| 74 | Toda operación que modifica el ticket actualiza `fechaActualizacion`, incluidas las que agregan comentarios; la operación sin cambios de la decisión 67 no la modifica. Complementa la decisión 16 sin contradecirla. | H-03 | `03-contrato-api.md` §1.6 y operaciones que modifican el ticket |
+
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 
 Cambio respecto de lo documentado antes: la decisión 9 sube el máximo de `pageSize` de 50 a 100 (antes en RN-05, CA-02.4, RNF-05 y ADR-003).
@@ -429,7 +476,7 @@ Estado tras la corrección parte 1, la parte 2 y las decisiones 28 a 38 (28/10/2
 | ---- | ------ | ---- |
 | H-01 | Resuelto | `CLAUDE.md` §Estado del proyecto lista y enlaza los documentos funcionales, técnicos, el índice de ADR y la auditoría. |
 | H-02 | Resuelto | Eliminada la línea "no inicializada"; §Git indica que los cambios llegan a `main` por pull request (E-004). |
-| H-03 | Pendiente | Se resuelve al generar el contrato de endpoints. No bloquea: es el entregable siguiente. |
+| H-03 | Resuelto | Contrato de endpoints en [03-contrato-api.md](../specs/technical/03-contrato-api.md): 13 operaciones, con las tres verificaciones de su §5 limpias (28/10/2026). |
 | H-04 | Resuelto | `adr/README.md` enlazado desde `README.md`, `CLAUDE.md` y `02-arquitectura-c4.md`. |
 | H-05 | Resuelto | `README.md` con propósito, stack, requisitos de ejecución (ADR-002, S-01), estructura e índice de documentos. |
 | H-06 | Resuelto | Decisión 20: nota de corrección en E-008. |
@@ -483,7 +530,7 @@ Estado tras la corrección parte 1, la parte 2 y las decisiones 28 a 38 (28/10/2
 | H-54 | Resuelto | Decisiones 12 y 24: HU-14, CA-03.6 (lista sin paginar de `{ id, nombre }`), CA-03.7 y matriz de permisos. |
 | H-55 | Resuelto | Decisiones 2 y 23: código de éxito y cuerpo en todos los CA de operaciones, incluido reclasificar. |
 
-**Resueltos: 54 · Pendientes: 1** (H-03, que se resuelve al generar el contrato).
+**Resueltos: 55 · Pendientes: 0.**
 
 ## 11. Preguntas abiertas de la corrección (parte 1)
 
@@ -546,7 +593,8 @@ Las menciones de la bitácora (E-002, E-005) son registro histórico.
 | Consultar por Id | ✅ | ✅ detalle | — | ✅ `401`, `403`, `404` | ✅ `200` | ✅ |
 | Listar | ✅ filtros y paginación | ✅ `items`, `page`, `pageSize`, `totalItems` | ✅ | ✅ `400`, `401`, `403` | ✅ `200` | ✅ |
 | Reclasificar | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
-| Asignar / reasignar | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Asignar | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Reasignar | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
 | Consultar técnicos activos | ✅ | ✅ lista de `{ id, nombre }` sin paginar | — | ✅ `401`, `403` | ✅ `200` | ✅ |
 | Iniciar atención | ✅ | ✅ detalle | — | ✅ `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
 | Resolver | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
@@ -555,4 +603,4 @@ Las menciones de la bitácora (E-002, E-005) son registro histórico.
 | Cambiar prioridad | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
 | Reporte de vencidos | ✅ | ✅ dos agrupaciones y total; nombres de campo a definir en el contrato | — | ✅ `401`, `403` | ✅ `200` | ✅ |
 
-Las 12 operaciones tienen información suficiente para su contrato. El catálogo de `codigo` está aprobado (decisión 39) y cada `409` se distingue por el `Codigo` de `TransicionInvalidaException` (decisión 40).
+Las 13 operaciones tienen información suficiente para su contrato. El catálogo de `codigo` está aprobado (decisión 39) y cada `409` se distingue por el `Codigo` de `TransicionInvalidaException` (decisión 40).
