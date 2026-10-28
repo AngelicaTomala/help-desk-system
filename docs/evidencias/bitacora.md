@@ -307,3 +307,217 @@ Señala cualquier contradicción entre requisitos y reglas de negocio.
 
 - `9fe9cff` docs(specs): modelo de dominio
 - `f55293e` docs(specs): aplica decisiones del modelo de dominio en specs funcionales
+
+---
+
+## E-007 · 27/10/2026 · Diagramas C4 de niveles 1 y 2
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+**Contexto:**
+Help Desk System, API REST .NET 10, Clean Architecture
+(Domain, Application, Infrastructure, Api), SQL Server, EF Core.
+Lee specs/functional/00-vision.md, specs/functional/03-requisitos-no-funcionales.md
+y specs/technical/01-modelo-dominio.md.
+
+**Tarea:**
+Crea specs/technical/02-arquitectura-c4.md con:
+
+1. Nivel 1 (Contexto): los 3 roles, el sistema y sistemas externos (si existen).
+2. Nivel 2 (Contenedores): Swagger UI, API REST y base de datos SQL Server,
+   indicando tecnología y forma de comunicación (HTTP/JSON, encabezado
+   X-Usuario-Id, EF Core).
+3. Una sección con las 4 capas de Clean Architecture, qué contiene cada una
+   y la regla de dependencias (qué capa puede referenciar a cuál).
+   Usa Mermaid (C4Context y C4Container) con una breve explicación de cada diagrama.
+
+**Restricciones:**
+
+- No incluyas Docker, colas, caché, correo, JWT ni servicios fuera del alcance.
+- Mismo encabezado (versión, fecha, estado) que los demás documentos de specs.
+- No modifiques otros archivos.
+
+**Verificación:**
+
+- Confirma que la sintaxis Mermaid sea válida para que GitHub la renderice.
+- Señala las decisiones que tomaste y que no estaban definidas en las especificaciones.
+
+**Resultado de la IA:**
+
+- Creó `specs/technical/02-arquitectura-c4.md` con el mismo encabezado que los demás documentos, sin modificar otros archivos.
+- **Nivel 1 (Contexto):** los tres roles y el Help Desk System. No hay sistemas externos, y el documento explica por qué.
+- **Nivel 2 (Contenedores):** Swagger UI, API REST y SQL Server, con su tecnología y comunicación (HTTP/JSON con `X-Usuario-Id`; EF Core hacia la base de datos), más una tabla resumen.
+- **Clean Architecture:** tabla con el contenido de cada capa y sus referencias permitidas, diagrama de dependencias y regla de dependencias.
+- **Sintaxis Mermaid:** el agente la revisó manualmente contra la documentación, pero no la ejecutó en un renderizador. Advirtió que C4 es experimental en Mermaid y recomendó confirmarlo en GitHub.
+
+**Revisión humana — decisiones del agente no definidas en las especificaciones:**
+
+| Decisión del agente                                                                   | Decisión | Justificación                                                                                                                                                              |
+| ------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Diagrama `flowchart` adicional para las capas                                         | ✅       | C4 no tiene notación para capas internas; el diagrama complementa la tabla y hace visible la regla de dependencias.                                                        |
+| Swagger UI como contenedor separado                                                   | ✅       | Aunque lo sirve la propia API, separarlo deja claro cómo interactúan los usuarios con el sistema en el MVP sin frontend. Se documenta que solo está activo en Development. |
+| Api → Infrastructure solo para registrar dependencias en `Program.cs`                 | ✅       | Es la única excepción aceptable en Clean Architecture: la Api arma la aplicación, pero no usa Infrastructure directamente.                                                 |
+| Conversión de excepciones a ProblemDetails y lectura de `X-Usuario-Id` en la capa Api | ✅       | Son responsabilidades HTTP; mantenerlas fuera de Domain y Application conserva el negocio independiente del transporte.                                                    |
+| Interfaces de persistencia en Application, implementadas en Infrastructure            | ✅       | Inversión de dependencias: Application no depende de EF Core, lo que permite probarla sin base de datos.                                                                   |
+| Pruebas unitarias en Domain y Application; integración en Api                         | ✅       | Coherente con RNF-10 y RNF-11 (cobertura en Domain y Application).                                                                                                         |
+| Conexión a SQL Server indicada solo como "EF Core"                                    | ✅       | El protocolo de red no aporta a la comprensión del diseño en el nivel 2.                                                                                                   |
+
+**Revisión del contenido:**
+
+| Elemento                           | Decisión | Justificación                                           |
+| ---------------------------------- | -------- | ------------------------------------------------------- |
+| Nivel 1 sin sistemas externos      | ✅       | Correo y JWT están fuera del alcance del MVP.           |
+| Nivel 2: contenedores y protocolos | ✅       | Refleja el encabezado `X-Usuario-Id` del supuesto S-02. |
+| Regla de dependencias entre capas  | ✅       | Coincide con RNF-07: Domain no depende de ninguna capa. |
+
+**Incidencias:**
+El agente no validó los diagramas en un renderizador; solo revisó la sintaxis manualmente.
+
+**Aprendizaje:**
+Que el agente diga "la sintaxis es válida" no equivale a comprobarlo. La verificación debe hacerse en el entorno donde se leerá el documento, en este caso GitHub.
+
+**Commit relacionado:**
+
+- `0ab5aa4` docs(specs): arquitectura C4
+
+---
+
+## E-008 · 27/10/2026 · Decisiones de arquitectura (ADRs)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+**Contexto:**
+Help Desk System, API REST .NET 10, Clean Architecture
+(Domain, Application, Infrastructure, Api), SQL Server, EF Core.
+Lee la documentacion que se encuentra dentro de specs/ .
+
+**Tarea:**
+Crea 4 ADR en specs/technical/adr/ con el formato de Michael Nygard
+(Título, Estado, Fecha, Contexto, Decisión, Consecuencias positivas y negativas,
+Alternativas consideradas):
+
+- ADR-001-clean-architecture.md
+- ADR-002-sqlserver-efcore.md
+- ADR-003-fluentvalidation.md
+- ADR-004-problemdetails-errores.md
+  Crea también specs/technical/adr/README.md con un índice de los ADR
+  (número, título, estado y enlace).
+
+**Restricciones:**
+
+- Cada ADR debe justificarse con requisitos concretos (RF, RN o RNF por su ID).
+- Al menos 2 alternativas consideradas por ADR, con el motivo de descarte.
+- Máximo 1 página por ADR. Estado: "Aceptado". Fecha: 27/10/2026.
+- Los ADR deben ser coherentes con decisiones ya tomadas en el modelo de dominio
+  y la arquitectura (SEQUENCE para el código del ticket, enums como texto,
+  409 desde Domain y 403 desde Application, interfaces de persistencia en Application).
+- ADR-003 debe explicar cómo se reparte la validación entre FluentValidation
+  (Application) y las invariantes del Domain, sin duplicar reglas innecesariamente.
+- ADR-004 debe usar las capacidades nativas de ASP.NET Core para ProblemDetails,
+  sin librerías externas si no son necesarias.
+- No modifiques otros archivos.
+
+**Verificación:**
+
+- Lista qué requisitos justifica cada ADR.
+- Señala las decisiones que tomaste y que no estaban definidas en las especificaciones.
+
+**Prompts de revisión:**
+
+1. Corrección del reparto de la validación: el Domain también valida RN-01 con las constantes compartidas, y se alinea `01-modelo-dominio.md`.
+   **Prompt**
+   Revisé los ADR. haz el siguiente cambio:
+
+ADR-003: modifica el reparto de la validación. El Domain sí valida las
+invariantes de RN-01 (longitudes) usando las mismas constantes públicas que
+reutilizan los validadores; lanza una excepción de dominio si se violan.
+El validador de Application sigue siendo el que responde 400 con el detalle.
+Justificación: un Ticket inválido nunca debe poder existir (RNF-08), y las
+constantes compartidas evitan la duplicación.
+
+Después, en un cambio aparte, revisa que 01-modelo-dominio.md quede
+coherente con el ADR-003 corregido y muéstrame el diff antes de guardar.
+
+Acepto el resto de tus decisiones
+
+2. Extensión del mismo criterio a RN-09 y diff final de ambos archivos.
+   **Prompt**
+   Acepto el cambio en ADR-003 y la excepción de dominio como 500.
+   Acepto quitar el 401 del criterio y la versión 1.1.
+
+Un ajuste al diff antes de guardar: aplica el mismo criterio a RN-09.
+Ticket.Resolver y Ticket.Reabrir también deben lanzar una excepción de
+dominio si el texto está vacío o supera Comentario.TextoLongitudMaxima,
+porque un ticket resuelto sin solución es un estado inválido (RNF-08).
+Los validadores siguen respondiendo 400 con el detalle (CA-04.3).
+Actualiza la fila de RN-09 en 01-modelo-dominio.md y la tabla de reparto
+de ADR-003 para que digan lo mismo.
+
+Muéstrame el diff final de ambos archivos antes de guardar.
+
+3. Aprobación: validación del texto en `Ticket`, guardar, commits y push.
+   **Prompt**
+   Aprobado. La validación del texto se queda en Ticket, como raíz del agregado.
+   Guarda ambos archivos y haz dos commits:
+1. specs/technical/adr/ → "docs(adr): decisiones de arquitectura 001-004"
+1. specs/technical/01-modelo-dominio.md → "docs(specs): alinea modelo de dominio con ADR-003"
+   Luego haz push de feat/specs-tecnicas y dame los dos hashes.
+
+**Resultado de la IA:**
+
+- Creó 4 ADR en `specs/technical/adr/` con formato Nygard y un índice (`README.md`) con número, título, estado, fecha y enlace.
+- Requisitos justificados por cada ADR:
+
+| ADR                      | Requisitos                                                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 001 Clean Architecture   | RNF-07, RNF-08, RNF-10 · RN-01 a RN-13 · S-02                                                                                              |
+| 002 SQL Server + EF Core | RNF-02, RNF-06, RNF-09 · RN-03, RN-05 · CA-02.3, CA-02.4 · S-01, S-04                                                                      |
+| 003 FluentValidation     | RNF-05, RNF-08, RNF-10 · RN-01, RN-02, RN-05, RN-09, RN-13 · CA-01.3, CA-01.4, CA-01.9, CA-02.4, CA-04.3                                   |
+| 004 ProblemDetails       | RNF-01, RNF-03, RNF-04, RNF-07, RNF-09 · RN-07, RN-08, RN-12, RN-13 · CA-01.5, CA-01.7, CA-02.2, CA-02.6, CA-03.4, CA-04.6, CA-05.5 · S-02 |
+
+- ADR-004 usa solo piezas nativas de ASP.NET Core: `AddProblemDetails()`, `UseExceptionHandler()`, `IExceptionHandler` y `ValidationProblemDetails`.
+- El agente detectó que `01-modelo-dominio.md` contradecía el ADR-003 y no lo modificó porque el prompt lo prohibía; lo propuso como cambio aparte.
+- Tras las correcciones, actualizó ADR-003 y el modelo de dominio (versión 1.1), mostrando el diff antes de guardar.
+
+**Revisión humana — decisiones del agente:**
+
+| Decisión del agente                                                                                                | Decisión | Justificación                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain no valida longitudes; solo el validador de Application                                                      | ✏️       | Se modificó: el Domain también valida las invariantes de RN-01, para que un ticket inválido nunca pueda existir (RNF-08). El validador sigue respondiendo 400 con el detalle. |
+| Corrección aplicada solo a RN-01 (interpretación literal)                                                          | ✏️       | Se extendió el mismo criterio a RN-09: un ticket resuelto sin solución es un estado inválido, así que el Domain también lo impide.                                            |
+| Límites como constantes públicas en Domain (`Ticket.TituloLongitudMaxima`, `Comentario.TextoLongitudMaxima`, etc.) | ✅       | El límite se define una sola vez y lo reutilizan Domain y validadores; la regla se comprueba en dos lugares sin contradicciones.                                              |
+| Validación del texto en `Ticket` (raíz del agregado) y no en `Comentario`                                          | ✅       | Los comentarios solo se crean mediante `Resolver` y `Reabrir`; validar en la raíz del agregado protege la regla en su único punto de entrada.                                 |
+| Excepción de dominio que llega a la API → 500                                                                      | ✅       | Indica que falta un validador (error de programación), no un error del usuario; ADR-004 no necesita cambios.                                                                  |
+| Validadores invocados explícitamente, sin validación automática                                                    | ✅       | Control explícito en cada caso de uso; la validación automática de FluentValidation.AspNetCore está desaconsejada por sus propios autores.                                    |
+| `ResolverTicketValidator` y `ReabrirTicketValidator`                                                               | ✅       | Cubren la obligatoriedad y la longitud de la solución y del motivo (RN-09, CA-04.3).                                                                                          |
+| LocalDB o SQL Server local, columnas `datetime2`                                                                   | ✅       | `datetime2` tiene mayor precisión y rango que `datetime`; LocalDB permite ejecutar el proyecto sin un servidor dedicado.                                                      |
+| Pruebas de integración contra una base real, no InMemory                                                           | ✅       | InMemory no reproduce restricciones reales (índice único, SEQUENCE). Requiere LocalDB para ejecutar las pruebas; se documentará en el README.                                 |
+| Excepciones en lugar de `Result<T>`                                                                                | ✅       | Más simple y coherente con `IExceptionHandler` (ADR-004).                                                                                                                     |
+| Excepciones lanzadas antes de `SaveChanges`                                                                        | ✅       | Una operación rechazada no deja cambios parciales en la base de datos.                                                                                                        |
+| Quitar el 401 del criterio del modelo de dominio                                                                   | ✅       | La identidad se resuelve en la capa Api, como indica la arquitectura.                                                                                                         |
+| Modelo de dominio a versión 1.1                                                                                    | ✅       | Registra el cambio de criterio de validación.                                                                                                                                 |
+| ADR-002                                                                                                            | ✏️       | Se agrega la experiencia de la desarrolladora con SQL Server como justificación. (pendiente)                                                                                  |
+
+**Incidencias:**
+
+- El prompt de los ADR se ejecutó dos veces: en la segunda version exigía coherencia con el modelo de dominio y un reparto claro de la validación.
+- El agente detectó una contradicción entre el ADR-003 y `01-modelo-dominio.md` y la reportó en lugar de corregirla, respetando la restricción del prompt. Se alineó en un commit aparte.
+
+**Aporte humano:**
+
+- Decisión de que el Domain también proteja las invariantes, contra la propuesta inicial del agente.
+- Extensión del criterio a RN-09, que el agente no había aplicado.
+
+**Aprendizaje:**
+
+- Las restricciones del prompt ("no modifiques otros archivos") hicieron que el agente reportara la inconsistencia en lugar de corregirla por su cuenta, lo que permitió decidirla conscientemente.
+- El agente aplicó la corrección de forma literal (solo a RN-01). Al revisar el diff se detectó que el mismo principio aplicaba a RN-09: hay que comunicar el criterio, no solo el caso concreto.
+
+**Commits relacionados:**
+
+- `afa2435` docs(adr): decisiones de arquitectura 001-004
+- `eb0f1a1` docs(specs): alinea modelo de dominio con ADR-003
