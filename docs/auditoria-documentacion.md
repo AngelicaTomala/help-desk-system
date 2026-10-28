@@ -2,33 +2,30 @@
 
 | Campo   | Valor                                  |
 | ------- | -------------------------------------- |
-| Versión | 1.1                                    |
+| Versión | 1.2                                    |
 | Fecha   | 28/10/2026                             |
-| Estado  | Auditoría y corrección (partes 1 y 2)  |
-| Rama    | `feat/specs-tecnicas` (auditoría en `fb3a977`; corrección parte 1 en `801b2ff`) |
+| Estado  | Auditoría y corrección completas       |
+| Rama    | `feat/specs-tecnicas` (auditoría en `fb3a977`; corrección parte 1 en `801b2ff`; parte 2 en `9060679`) |
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron en dos partes con las 27 decisiones de la sección 9. El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las 41 decisiones de la sección 9. El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
 | Crítico   | 2     | 2         | 0          |
-| Alto      | 8     | 5         | 3 (H-03, H-41, H-43) |
-| Medio     | 26    | 25        | 1 (H-12)   |
-| Bajo      | 19    | 12        | 7 (H-15, H-16, H-26, H-29, H-42, H-44, H-49) |
-| **Total** | **55** | **44**   | **11**     |
+| Alto      | 8     | 7         | 1 (H-03)   |
+| Medio     | 26    | 26        | 0          |
+| Bajo      | 19    | 19        | 0          |
+| **Total** | **55** | **54**   | **1**      |
 
 H-41 y H-43 se reclasificaron de Bajo a Alto en la parte 2 porque el contrato necesita su definición. Los totales originales por severidad eran: Crítico 2, Alto 6, Medio 26, Bajo 21.
 
-### Veredicto: **NO LISTA** para generar el contrato de endpoints
+### Veredicto: **LISTA** para generar el contrato de endpoints
 
-No quedan hallazgos críticos. Las 12 operaciones (las 11 originales más la consulta de técnicos activos) tienen request, response, validaciones, códigos y permisos definidos (sección 13.3), salvo dos elementos comunes a todas:
+No quedan hallazgos críticos ni bloqueantes. Las 12 operaciones (las 11 originales más la consulta de técnicos activos) tienen request, response, validaciones, códigos de error y de éxito, y permisos definidos (sección 13.3). El único pendiente, H-03, es el propio contrato de endpoints.
 
-1. **Esquema de error (H-41):** no están definidos los valores de `type` y `title` de Problem Details que RNF-03 exige verificar.
-2. **Encabezado `X-Usuario-Id` (H-43):** no está definido qué es un Id válido.
-
-Para pasar a **LISTA** basta con responder las preguntas Q-1 y Q-2 (sección 12). H-03 se resuelve al generar el contrato, y las demás preguntas de la sección 12 no lo bloquean.
+El catálogo de `codigo` de [ADR-004](../specs/technical/adr/ADR-004-problemdetails-errores.md#enmienda-3--28102026) está aprobado (decisión 39), y las excepciones de dominio exponen su `Codigo` (decisión 40, [Enmienda 4](../specs/technical/adr/ADR-004-problemdetails-errores.md#enmienda-4--28102026)).
 
 Escala de severidad:
 
@@ -399,6 +396,25 @@ Decisiones complementarias (28/10/2026), respuestas a las preguntas de la secci�
 | 26 | Se confirma el máximo de `pageSize` en 100. | H-35 | Sin cambios (ya aplicado con la decisión 9) |
 | 27 | Cada comentario del detalle incluye además su `tipo` (`Solucion` o `Reapertura`), coherente con `TipoComentario` del modelo de dominio. | H-31 | CA-02.1 |
 
+Decisiones sobre las preguntas de la sección 12 (28/10/2026):
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 28 | Se confirma que la Api obtiene el usuario a través de Application. | H-20 | Enmienda 3 de ADR-004 |
+| 29 | (Q-1) Problem Details con `type` y `title` por defecto de ASP.NET Core, más el campo de extensión `codigo` con el caso de negocio (p. ej., `TRANSICION_INVALIDA`). | H-41 | RNF-03, Enmienda 3 de ADR-004 (con el catálogo de `codigo` propuesto), `CLAUDE.md` |
+| 30 | (Q-2) `X-Usuario-Id` es un entero positivo dentro del rango de `int`; cualquier otro valor responde `401`. | H-43 | RNF-01, Enmienda 3 de ADR-004, `CLAUDE.md` |
+| 31 | (Q-3) Los textos se recortan antes de validar; si quedan vacíos responden `400`. | H-44 | RN-01, RN-09, RNF-05, Enmienda 2 de ADR-003, `CLAUDE.md` |
+| 32 | (Q-4) Las migraciones de EF Core son la fuente del modelo físico; los 10 usuarios semilla se documentan en una tabla con nombres y correos ficticios. | H-12 | `01-modelo-dominio.md` §8, Enmienda 2 de ADR-002, `00-vision.md` S-01, `CLAUDE.md`, `README.md` |
+| 33 | (Q-5) `Usuario.Email` tiene índice único. | H-29 | RNF-06, `01-modelo-dominio.md` §1, Enmienda 2 de ADR-002 |
+| 34 | (Q-6) La constante de paginación vive en Application. | H-26 | `01-modelo-dominio.md` §4, Enmienda 2 de ADR-003 |
+| 35 | (Q-7) El código inicia en `HD-000001`; el límite `HD-999999` es una limitación conocida del MVP. | H-42 | RN-03, `00-vision.md` §4, `01-modelo-dominio.md` §1, Enmienda 2 de ADR-002, `CLAUDE.md` |
+| 36 | (Q-8) La prueba de arquitectura es obligatoria; las claves de `[Trait]` son `CA` y `RN`; se usa LocalDB. | H-49 | RNF-07, RNF-10, Enmienda 2 de ADR-002, `CLAUDE.md`, `README.md` |
+| 37 | (Q-9) Justificación de ADR-002: más de 10 años de experiencia desarrollando software con .NET y con SQL Server. | H-15 | Enmienda 2 de ADR-002, `bitacora.md` E-008 |
+| 38 | (Q-10) Se eliminan las líneas de la SPA del `.gitignore`. | H-16 | `.gitignore` |
+| 39 | Se aprueba el catálogo de `codigo` tal como se propuso, con los códigos separados. | H-41 | Enmienda 4 de ADR-004 |
+| 40 | Las excepciones de dominio exponen una propiedad `Codigo`. `TransicionInvalidaException` se lanza con `TRANSICION_INVALIDA` o `TICKET_NO_MODIFICABLE` según el caso, y la Api copia ese valor al campo `codigo` de Problem Details. | H-18, H-41 | `01-modelo-dominio.md` §4, Enmienda 4 de ADR-004 |
+| 41 | En los errores `500` la Api ignora el `Codigo` de la excepción y responde siempre `ERROR_INTERNO`, sin exponer detalles internos; el detalle de la excepción se registra en el log. | H-41 | `01-modelo-dominio.md` §4, Enmienda 4 de ADR-004 |
+
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 
 Cambio respecto de lo documentado antes: la decisión 9 sube el máximo de `pageSize` de 50 a 100 (antes en RN-05, CA-02.4, RNF-05 y ADR-003).
@@ -407,7 +423,7 @@ Cambio respecto de lo documentado antes: la decisión 9 sube el máximo de `page
 
 ## 10. Estado de los hallazgos
 
-Estado tras la corrección parte 1 y parte 2 (28/10/2026).
+Estado tras la corrección parte 1, la parte 2 y las decisiones 28 a 38 (28/10/2026).
 
 | ID   | Estado | Nota |
 | ---- | ------ | ---- |
@@ -422,24 +438,24 @@ Estado tras la corrección parte 1 y parte 2 (28/10/2026).
 | H-09 | Resuelto | E-001: `21ae3a5` y `61b123f`; E-002 y E-003: `61b123f`, según E-004. |
 | H-10 | Resuelto | Nota en E-001: las carpetas reales son `test/` y `docs/evidencias/`. |
 | H-11 | Resuelto | Nota en E-004 con la ruta correcta; la transcripción del prompt se mantiene literal. |
-| H-12 | Pendiente | Decisión 19 aplicada en S-01. Faltan tablas, columnas, nombre de la SEQUENCE y los datos de cada usuario semilla (pregunta Q-4). |
+| H-12 | Resuelto | Decisiones 19 y 32: las migraciones de EF Core son la fuente del modelo físico; los 10 usuarios semilla están en `01-modelo-dominio.md` §8. |
 | H-13 | Resuelto | Referencias entre documentos convertidas en enlaces relativos; en los ADR, mediante enmiendas. 81 enlaces revalidados (§13.1). |
 | H-14 | Resuelto | `CLAUDE.md` aclara que `src/` y `test/` no se versionan hasta tener contenido. |
-| H-15 | Pendiente | Justificación de ADR-002 a cargo de la desarrolladora (pregunta Q-9). |
-| H-16 | Pendiente | `.gitignore` no es documentación; requiere decisión (pregunta Q-10). |
+| H-15 | Resuelto | Decisión 37: Enmienda 2 de ADR-002; pendiente cerrado en E-008. |
+| H-16 | Resuelto | Decisión 38: eliminado el bloque de la SPA del `.gitignore` (`src/wwwroot/app/` y `*.tsbuildinfo`). |
 | H-17 | Resuelto | Decisión 4: enmienda de ADR-004 y RNF-04. |
 | H-18 | Resuelto | Decisión 5: enmiendas de ADR-001, ADR-003 y ADR-004; modelo y C4 nombran ambos tipos. |
 | H-19 | Resuelto | `02-arquitectura-c4.md` §2: la Api valida el `401`; el `403` lo valida el caso de uso en Application. |
-| H-20 | Resuelto | `02-arquitectura-c4.md` §2 y §3, Enmienda 2 de ADR-001 y ADR-004: la Api obtiene el usuario a través de Application, como exige la regla de dependencias ya documentada. |
+| H-20 | Resuelto | `02-arquitectura-c4.md` §2 y §3, Enmienda 2 de ADR-001 y ADR-004: la Api obtiene el usuario a través de Application. Confirmado por la decisión 28. |
 | H-21 | Resuelto | `CLAUDE.md` y `02-reglas-negocio.md` usan el criterio de `01-modelo-dominio.md` §4. |
 | H-22 | Resuelto | RNF-07 incluye la referencia Api → Infrastructure limitada a `Program.cs`. |
 | H-23 | Resuelto | `CLAUDE.md`: paginación con valores por defecto, máximo 100, `400` y forma de la respuesta (decisión 9). |
 | H-24 | Resuelto | `CLAUDE.md`: los tres casos de `401` de RNF-01. |
 | H-25 | Resuelto | `CLAUDE.md` remite a RN-09 en lugar de resumirla. |
-| H-26 | Pendiente | Dónde vive la constante de paginación (pregunta Q-6). |
+| H-26 | Resuelto | Decisión 34: en Application (`01-modelo-dominio.md` §4, Enmienda 2 de ADR-003). |
 | H-27 | Resuelto | Los dos diagramas de estados usan ahora las mismas etiquetas ("Técnico asignado", "Solicitante dueño"). Se conservan ambos. |
 | H-28 | Resuelto | Nota en RN-08 y en `CLAUDE.md`: el valor en la API es `EnProgreso`. |
-| H-29 | Pendiente | Índice único de `Email` (pregunta Q-5). |
+| H-29 | Resuelto | Decisión 33: índice único en RNF-06, el modelo y la Enmienda 2 de ADR-002. |
 | H-30 | Resuelto | Encabezado agregado a `01-requisitos-funcionales.md` y `02-reglas-negocio.md`; versión y fecha actualizadas en 00, 01, 02, 03, modelo (1.3) y C4. |
 | H-31 | Resuelto | Decisiones 1, 21, 22, 23 y 27: campos del detalle (con comentarios) en CA-02.1, del listado en CA-02.4 y cuerpo de reclasificar en CA-01.6. |
 | H-32 | Resuelto | Decisión 3: RN-03, CA-01.10 y matriz de permisos. |
@@ -451,15 +467,15 @@ Estado tras la corrección parte 1 y parte 2 (28/10/2026).
 | H-38 | Resuelto | Decisiones 16 y 25: `FechaActualizacion` en el modelo (igual a `FechaCreacion` al crear); historial fuera del MVP. |
 | H-39 | Resuelto | Decisión 18: `00-vision.md` §4 y nota en el modelo §3. |
 | H-40 | Resuelto | Decisión 17: limitación conocida en `00-vision.md` §4 y RNF. |
-| H-41 | Pendiente · **bloquea el contrato** | Reclasificado de Bajo a Alto en la parte 2: el contrato debe definir el esquema de error (pregunta Q-1). |
-| H-42 | Pendiente | Valor inicial y límite del código (pregunta Q-7). |
-| H-43 | Pendiente · **bloquea el contrato** | Reclasificado de Bajo a Alto en la parte 2: el contrato debe definir el esquema del encabezado (pregunta Q-2). |
-| H-44 | Pendiente | Textos con solo espacios (pregunta Q-3). |
+| H-41 | Resuelto | Decisión 29: valores por defecto más `codigo` (RNF-03, Enmienda 3 de ADR-004). Catálogo de `codigo` aprobado (decisión 39) y propiedad `Codigo` en las excepciones de dominio (decisión 40, Enmienda 4 de ADR-004). |
+| H-42 | Resuelto | Decisión 35: RN-03, `00-vision.md` §4, modelo y Enmienda 2 de ADR-002. |
+| H-43 | Resuelto | Decisión 30: RNF-01 y Enmienda 3 de ADR-004. |
+| H-44 | Resuelto | Decisión 31: RN-01, RN-09, RNF-05 y Enmienda 2 de ADR-003. |
 | H-45 | Resuelto | Decisión 13: RN-03, modelo, enmienda de ADR-002 y `CLAUDE.md`. |
 | H-46 | Resuelto | Decisión 11: CA-06.1. |
 | H-47 | Resuelto | HU-09 dice "técnico asignado"; CA-04.4 y CA-04.5 dicen "solicitante dueño"; diagrama de RN-08 con las mismas etiquetas. |
 | H-48 | Resuelto | Decisión 14: RN-06, CA-03.8 y modelo §4. |
-| H-49 | Pendiente | Corregido el "etc." de RNF-09 (enlace a los enums). Siguen pendientes la prueba de arquitectura opcional, las claves de `[Trait]` y el entorno de pruebas (pregunta Q-8). |
+| H-49 | Resuelto | "etc." corregido en la parte 2; decisión 36: prueba de arquitectura obligatoria (RNF-07), claves `CA` y `RN` (RNF-10) y LocalDB (Enmienda 2 de ADR-002). |
 | H-50 | Resuelto | "ticket" en README, visión (§3), HU-03; "solicitud" queda solo para el problema previo al sistema (§1 de la visión) y la definición. |
 | H-51 | Resuelto | README reescrito con los nombres de rol; "colaborador" y "personal de soporte" quedan solo como descripción del rol. |
 | H-52 | Resuelto | "reclasificar" (HU-09, CA-01.6, visión), "cerrar" (HU-06, CA-04.4, visión), "resolver" (CA-04.2, visión) y "reporte de tickets vencidos" en singular (visión, C4). |
@@ -467,7 +483,7 @@ Estado tras la corrección parte 1 y parte 2 (28/10/2026).
 | H-54 | Resuelto | Decisiones 12 y 24: HU-14, CA-03.6 (lista sin paginar de `{ id, nombre }`), CA-03.7 y matriz de permisos. |
 | H-55 | Resuelto | Decisiones 2 y 23: código de éxito y cuerpo en todos los CA de operaciones, incluido reclasificar. |
 
-**Resueltos: 44 · Pendientes: 11.** Bloquean el contrato: H-41 y H-43.
+**Resueltos: 54 · Pendientes: 1** (H-03, que se resuelve al generar el contrato).
 
 ## 11. Preguntas abiertas de la corrección (parte 1)
 
@@ -480,6 +496,8 @@ Surgieron al aplicar las decisiones. **Respondidas el 28/10/2026** (decisiones 2
 - **P-5 (H-38).** Al crear un ticket, ¿`FechaActualizacion` vale lo mismo que `FechaCreacion` o queda vacía hasta la primera modificación?
 
 ## 12. Preguntas abiertas (parte 2)
+
+**Respondidas el 28/10/2026** (decisiones 28 a 38, sección 9).
 
 **Bloquean el contrato de endpoints:**
 
@@ -502,33 +520,39 @@ Surgieron al aplicar las decisiones. **Respondidas el 28/10/2026** (decisiones 2
 - **Q-9 (H-15) · ADR-002.** Texto de la justificación por experiencia con SQL Server que quedó pendiente en E-008.
 - **Q-10 (H-16) · `.gitignore`.** A) Eliminar las líneas de la SPA (`src/wwwroot/app/`). B) Conservarlas con un comentario que explique por qué.
 
-## 13. Revalidación (parte 2)
+## 13. Revalidación final (28/10/2026)
 
 ### 13.1 Enlaces
 
-Se validaron con un script todos los enlaces Markdown internos de los documentos (excluidos `node_modules/` y el código entre comillas invertidas): **81 enlaces, 0 rotos**, incluidas las anclas, calculadas con el algoritmo de GitHub. Ningún documento queda huérfano: todos se enlazan desde `README.md`.
+Se validaron con un script todos los enlaces Markdown internos de los documentos (excluidos `node_modules/` y el código entre comillas invertidas): **94 enlaces, 0 rotos**, incluidas las anclas, calculadas con el algoritmo de GitHub. Ningún documento queda huérfano: todos se enlazan desde `README.md`.
 
 ### 13.2 Contradicciones
 
-Se revisaron de nuevo los ejes de la sección 2 sobre los documentos corregidos. **Sin contradicciones nuevas.** Las menciones a "consecutivo" y al rango 1–50 que quedan en el cuerpo de ADR-002 y ADR-003 están corregidas por sus enmiendas. Las de la bitácora (E-002, E-005) son registro histórico.
+Se revisaron de nuevo los ejes de la sección 2 sobre los documentos corregidos. **Sin contradicciones nuevas.** En el cuerpo de los ADR quedan menciones que corrigen sus enmiendas:
+
+- "consecutivo" en ADR-002 (Enmienda 1);
+- "LocalDB o instancia local" en ADR-002 (Enmienda 2);
+- el rango 1–50 y las constantes de paginación en Domain en ADR-003 (Enmiendas 1 y 2).
+
+Las menciones de la bitácora (E-002, E-005) son registro histórico.
 
 ### 13.3 Suficiencia por operación
 
-✅ definido · ⚠️ parcial · ❌ no definido. "Ruta y verbo" se define en el contrato (H-03); la decisión 8 fija una operación por acción.
+✅ definido. "Ruta y verbo" se define en el contrato (H-03); la decisión 8 fija una operación por acción. En todas las operaciones el encabezado `X-Usuario-Id` es un entero positivo de `int` (decisión 30) y los errores usan Problem Details con `codigo` (decisión 29).
 
-| Operación | Request | Response | Validaciones | Errores | Éxito | Permisos |
-| --------- | ------- | -------- | ------------ | ------- | ----- | -------- |
-| Crear ticket | ✅ | ✅ detalle + `Location` | ⚠️ espacios (Q-3) | ✅ `400`, `401`, `403` | ✅ `201` | ✅ |
+| Operación | Request | Response | Validaciones | Errores (`codigo`) | Éxito | Permisos |
+| --------- | ------- | -------- | ------------ | ------------------ | ----- | -------- |
+| Crear ticket | ✅ | ✅ detalle + `Location` | ✅ | ✅ `400`, `401`, `403` | ✅ `201` | ✅ |
 | Consultar por Id | ✅ | ✅ detalle | — | ✅ `401`, `403`, `404` | ✅ `200` | ✅ |
 | Listar | ✅ filtros y paginación | ✅ `items`, `page`, `pageSize`, `totalItems` | ✅ | ✅ `400`, `401`, `403` | ✅ `200` | ✅ |
-| Reclasificar | ✅ | ✅ detalle | ✅ | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
-| Asignar / reasignar | ✅ | ✅ detalle | ✅ | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
-| Consultar técnicos activos | ✅ | ✅ lista de `{ id, nombre }` | — | ✅ `401`, `403` | ✅ `200` | ✅ |
-| Iniciar atención | ✅ | ✅ detalle | — | ✅ `403`, `404`, `409` | ✅ `200` | ✅ |
-| Resolver | ✅ | ✅ detalle | ⚠️ espacios (Q-3) | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
-| Cerrar | ✅ | ✅ detalle | — | ✅ `403`, `404`, `409` | ✅ `200` | ✅ |
-| Reabrir | ✅ | ✅ detalle | ⚠️ espacios (Q-3) | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
-| Cambiar prioridad | ✅ | ✅ detalle | ✅ | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
-| Reporte de vencidos | ✅ | ✅ dos agrupaciones y total; nombres de campo a definir en el contrato | — | ✅ `403` | ✅ `200` | ✅ |
+| Reclasificar | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Asignar / reasignar | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Consultar técnicos activos | ✅ | ✅ lista de `{ id, nombre }` sin paginar | — | ✅ `401`, `403` | ✅ `200` | ✅ |
+| Iniciar atención | ✅ | ✅ detalle | — | ✅ `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Resolver | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Cerrar | ✅ | ✅ detalle | — | ✅ `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Reabrir | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Cambiar prioridad | ✅ | ✅ detalle | ✅ | ✅ `400`, `401`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Reporte de vencidos | ✅ | ✅ dos agrupaciones y total; nombres de campo a definir en el contrato | — | ✅ `401`, `403` | ✅ `200` | ✅ |
 
-Comunes a todas las operaciones y **sin definir**: el esquema de error, es decir, los valores de `type` y `title` (Q-1), y el formato válido de `X-Usuario-Id` (Q-2). Con ellos, todas las operaciones tendrían información suficiente.
+Las 12 operaciones tienen información suficiente para su contrato. El catálogo de `codigo` está aprobado (decisión 39) y cada `409` se distingue por el `Codigo` de `TransicionInvalidaException` (decisión 40).

@@ -63,3 +63,36 @@ Origen: decisiones 4, 5, 6 y 7 de [auditoria-documentacion.md §9](../../../docs
 Origen: corrección de la documentación, parte 2 ([auditoria-documentacion.md](../../../docs/auditoria-documentacion.md), hallazgo H-20).
 
 - En la tabla de mapeo, "Usuario no identificado o inexistente (Api)" significa que la Api decide el `401` con el usuario que obtiene a través de Application, sin acceder a Infrastructure (ver [ADR-001](ADR-001-clean-architecture.md) y [02-arquitectura-c4.md §2](../02-arquitectura-c4.md#2-nivel-2--contenedores)).
+
+## Enmienda 3 · 28/10/2026
+
+Origen: decisiones 28, 29 y 30 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-20, H-41 y H-43).
+
+- **Confirmación:** se confirma el mecanismo de la Enmienda 2 para el `401`.
+- **Esquema de error:** `type` y `title` usan los valores por defecto de ASP.NET Core. Se agrega el campo de extensión `codigo` con el caso de negocio, según el catálogo siguiente.
+- **`X-Usuario-Id`:** debe ser un entero positivo dentro del rango de `int`; cualquier otro valor (ausente, no numérico, `0`, negativo o fuera de rango) responde `401`.
+
+**Catálogo de `codigo` (propuesto el 28/10/2026, pendiente de aprobación):**
+
+| `codigo`                  | HTTP  | Caso                                                                                              | Origen                                                                 |
+| ------------------------- | ----- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `VALIDACION_FALLIDA`      | `400` | Datos de entrada inválidos detectados por un validador; el detalle va en `errors` por campo.     | CA-01.3, CA-01.4, CA-01.9, CA-02.4, CA-02.8, CA-04.3, CA-04.8, CA-04.9, CA-05.7 · RN-01, RN-02, RN-05, RN-09 |
+| `TECNICO_NO_VALIDO`       | `400` | Al asignar: el técnico no existe, no tiene rol Técnico o no está activo.                         | CA-03.3 · RN-06                                                        |
+| `MISMO_TECNICO`           | `400` | Reasignar al técnico que ya está asignado.                                                       | CA-03.8 · RN-06                                                        |
+| `USUARIO_NO_IDENTIFICADO` | `401` | Falta `X-Usuario-Id` o su valor no es un entero positivo dentro del rango de `int`.              | RNF-01 · S-02                                                          |
+| `USUARIO_INEXISTENTE`     | `401` | El Id es válido, pero no corresponde a ningún usuario.                                           | CA-01.5 · RNF-01                                                       |
+| `ROL_NO_AUTORIZADO`       | `403` | El rol del usuario no puede ejecutar la operación (matriz de permisos).                          | CA-01.8 (solicitante), CA-01.10, CA-03.5, CA-03.7, CA-04.7, CA-05.6, CA-06.3 |
+| `TICKET_AJENO`            | `403` | El rol puede ejecutar la operación, pero el ticket no es suyo (solicitante) o no está asignado a él (técnico). | CA-01.8 (técnico no asignado), CA-02.6, CA-04.7 · RN-04, RN-08, RN-13 |
+| `FILTRO_NO_AUTORIZADO`    | `403` | Un técnico filtra el listado por el `tecnicoId` de otro técnico.                                 | CA-02.7                                                                |
+| `TICKET_NO_ENCONTRADO`    | `404` | El ticket de la ruta no existe.                                                                  | CA-02.2                                                                |
+| `TRANSICION_INVALIDA`     | `409` | La transición no está permitida por RN-08 (incluye asignar un ticket `Resuelto` o `Cerrado`). `TransicionInvalidaException`. | CA-03.4, CA-04.6 · RN-07, RN-08 |
+| `TICKET_NO_MODIFICABLE`   | `409` | Reclasificar o cambiar la prioridad de un ticket `Resuelto` o `Cerrado`. `TransicionInvalidaException`. | CA-01.7, CA-05.5 · RN-12, RN-13                         |
+| `ERROR_INTERNO`           | `500` | Error no controlado, incluida `InvarianteVioladaException`; sin detalle fuera de Development.    | RNF-03 · ADR-003                                                       |
+
+## Enmienda 4 · 28/10/2026
+
+Origen: decisiones 39, 40 y 41 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas).
+
+- **Catálogo aprobado:** el catálogo de `codigo` de la Enmienda 3 queda aprobado tal como se propuso, con los códigos separados (decisión 39).
+- **Propiedad `Codigo` en las excepciones de dominio:** las excepciones de dominio exponen una propiedad `Codigo` con un valor del catálogo. `TransicionInvalidaException` se lanza con `TRANSICION_INVALIDA` (transición no permitida por RN-08) o con `TICKET_NO_MODIFICABLE` (reclasificar o cambiar la prioridad de un ticket `Resuelto` o `Cerrado`). El `IExceptionHandler` de la Api copia ese valor al campo `codigo` de Problem Details. Así, ambos casos comparten el `409` y la misma excepción, pero el cliente los distingue por `codigo` (decisión 40).
+- **Errores `500`:** la Api ignora el `Codigo` de la excepción, incluida `InvarianteVioladaException`, y responde siempre `ERROR_INTERNO`, sin exponer detalles internos. El detalle de la excepción se registra en el log (decisión 41).

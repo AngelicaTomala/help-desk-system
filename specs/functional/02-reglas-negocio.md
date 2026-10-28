@@ -12,9 +12,9 @@ Cada regla está referenciada desde uno o más requisitos en [01-requisitos-func
 
 | ID    | Regla                                                                                                                                                                                                                     | RF    |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| RN-01 | El título es obligatorio y tiene entre 5 y 150 caracteres. La descripción es obligatoria y tiene entre 10 y 2000 caracteres.                                                                                              | RF-01 |
+| RN-01 | El título es obligatorio y tiene entre 5 y 150 caracteres. La descripción es obligatoria y tiene entre 10 y 2000 caracteres. Los textos se recortan (espacios al inicio y al final) antes de validar; si quedan vacíos, se responde `400`. | RF-01 |
 | RN-02 | La categoría debe ser una de: `Hardware`, `Software`, `Red`, `Accesos`, `Otros`. La prioridad debe ser una de: `Critica`, `Alta`, `Media`, `Baja`.                                                                        | RF-01 |
-| RN-03 | Todo ticket nuevo nace en estado `Abierto`, sin técnico asignado, con un código único y creciente con formato `HD-` + 6 dígitos (ej. `HD-000001`). Se aceptan huecos en la numeración. Solo el **solicitante** puede crear tickets. | RF-01 |
+| RN-03 | Todo ticket nuevo nace en estado `Abierto`, sin técnico asignado, con un código único y creciente con formato `HD-` + 6 dígitos que inicia en `HD-000001`. Se aceptan huecos en la numeración. El límite `HD-999999` es una limitación conocida del MVP. Solo el **solicitante** puede crear tickets. | RF-01 |
 | RN-13 | La categoría de un ticket puede ser reclasificada por el **técnico asignado** o por un **supervisor**, siempre que el ticket no esté `Resuelto` ni `Cerrado`. La nueva categoría debe ser una de las permitidas en RN-02. | RF-01 |
 
 ## Visibilidad
@@ -64,7 +64,7 @@ stateDiagram-v2
 
 | ID    | Regla                                                                                                                                                                        | RF    |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| RN-09 | Para **resolver** se exige un comentario de solución; para **reabrir** se exige un motivo. Al reabrir se borra la fecha de resolución y el ticket conserva el mismo técnico. El comentario de solución y el motivo de reapertura tienen como máximo 2000 caracteres. | RF-04 |
+| RN-09 | Para **resolver** se exige un comentario de solución; para **reabrir** se exige un motivo. Al reabrir se borra la fecha de resolución y el ticket conserva el mismo técnico. El comentario de solución y el motivo de reapertura tienen como máximo 2000 caracteres; se recortan antes de validar y, si quedan vacíos, se responde `400`. | RF-04 |
 
 ## SLA
 

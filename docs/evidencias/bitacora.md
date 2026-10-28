@@ -20,7 +20,7 @@ Campos que exige [CLAUDE.md](../../CLAUDE.md#trazabilidad-y-evidencias) (prompt,
 **Revisión humana:**
 
 | Elemento propuesto | Decisión (✅/✏️/❌) | Justificación |
-| ------------------ | ------------------ | ------------- |
+| ------------------ | ------------------- | ------------- |
 
 **Incidencias:** … (si las hubo)
 
@@ -390,7 +390,7 @@ Crea specs/technical/02-arquitectura-c4.md con:
 | Api → Infrastructure solo para registrar dependencias en `Program.cs`                 | ✅       | Es la única excepción aceptable en Clean Architecture: la Api arma la aplicación, pero no usa Infrastructure directamente.                                                 |
 | Conversión de excepciones a ProblemDetails y lectura de `X-Usuario-Id` en la capa Api | ✅       | Son responsabilidades HTTP; mantenerlas fuera de Domain y Application conserva el negocio independiente del transporte.                                                    |
 | Interfaces de persistencia en Application, implementadas en Infrastructure            | ✅       | Inversión de dependencias: Application no depende de EF Core, lo que permite probarla sin base de datos.                                                                   |
-| Pruebas unitarias en Domain y Application; integración en Api                         | ✅       | Coherente con RNF-10. _(Corrección 28/10/2026: se citaba también RNF-11, que no existe en `03-requisitos-no-funcionales.md`.)_                                                                                                         |
+| Pruebas unitarias en Domain y Application; integración en Api                         | ✅       | Coherente con RNF-10. _(Corrección 28/10/2026: se citaba también RNF-11, que no existe en `03-requisitos-no-funcionales.md`.)_                                             |
 | Conexión a SQL Server indicada solo como "EF Core"                                    | ✅       | El protocolo de red no aporta a la comprensión del diseño en el nivel 2.                                                                                                   |
 
 **Revisión del contenido:**
@@ -529,7 +529,7 @@ Muéstrame el diff final de ambos archivos antes de guardar.
 | Excepciones lanzadas antes de `SaveChanges`                                                                        | ✅       | Una operación rechazada no deja cambios parciales en la base de datos.                                                                                                        |
 | Quitar el 401 del criterio del modelo de dominio                                                                   | ✅       | La identidad se resuelve en la capa Api, como indica la arquitectura.                                                                                                         |
 | Modelo de dominio a versión 1.1                                                                                    | ✅       | Registra el cambio de criterio de validación.                                                                                                                                 |
-| ADR-002                                                                                                            | ✏️       | Se agrega la experiencia de la desarrolladora con SQL Server como justificación. (pendiente)                                                                                  |
+| ADR-002                                                                                                            | ✏️       | Se agrega la experiencia de la desarrolladora con SQL Server como justificación. (Aplicado el 28/10/2026 en la Enmienda 2 de ADR-002.)                                                                                  |
 
 **Incidencias:**
 

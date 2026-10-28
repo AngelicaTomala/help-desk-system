@@ -55,12 +55,13 @@ Construir una API REST que centralice el ciclo de vida de los tickets de soporte
 - Eliminar tickets: el MVP no elimina tickets.
 - Historial de cambios del ticket: solo se guardan la fecha de creación y la fecha de última actualización.
 - Control de concurrencia: dos modificaciones simultáneas sobre el mismo ticket no se detectan. Es una limitación conocida del MVP.
+- Más de 999 999 tickets: el código `HD-` + 6 dígitos llega hasta `HD-999999`. Es una limitación conocida del MVP (RN-03).
 
 ## 5. Supuestos
 
 | ID   | Supuesto                                                                                                                                           |
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S-01 | Los usuarios (solicitantes, técnicos y supervisores) se cargan como datos iniciales; no hay registro de usuarios en el MVP. Los datos semilla son 5 solicitantes, 4 técnicos (uno de ellos inactivo) y 1 supervisor. |
+| S-01 | Los usuarios (solicitantes, técnicos y supervisores) se cargan como datos iniciales; no hay registro de usuarios en el MVP. Los datos semilla son 5 solicitantes, 4 técnicos (uno de ellos inactivo) y 1 supervisor ([detalle](../technical/01-modelo-dominio.md#8-datos-semilla)). |
 | S-02 | Mientras no exista JWT, la identidad del usuario se recibe en el encabezado `X-Usuario-Id`. Es una limitación de seguridad conocida y documentada. |
 | S-03 | El SLA se calcula en horas calendario (24/7), no en horario laboral.                                                                               |
 | S-04 | Las fechas se almacenan en UTC.                                                                                                                    |

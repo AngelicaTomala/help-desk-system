@@ -61,3 +61,10 @@ Origen: decisiones 5, 9, 10, 14 y 15 de [auditoria-documentacion.md §9](../../.
 - El rango de paginación es `pageSize` 1–100 (antes 1–50), con valores por defecto `page` = 1 y `pageSize` = 20 (RN-05).
 - `ListarTicketsValidator` también rechaza con `400` los valores de filtro inválidos (CA-02.8).
 - Responden `400` desde los validadores: reabrir sin motivo (CA-04.8), solución o motivo de más de 2000 caracteres (CA-04.9) y prioridad inexistente al cambiarla (CA-05.7). Reasignar al mismo técnico (CA-03.8) también responde `400`.
+
+## Enmienda 2 · 28/10/2026
+
+Origen: decisiones 31 y 34 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-44 y H-26).
+
+- **Recorte de textos:** los textos se recortan antes de validar; si quedan vacíos, el validador responde `400` (RN-01, RN-09).
+- **Constantes de paginación:** viven en Application, junto a `ListarTicketsValidator`, y no en Domain. Las demás constantes (longitudes de RN-01 y RN-09) siguen en Domain.

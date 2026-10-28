@@ -51,3 +51,13 @@ Origen: decisiones 13 y 16 de [auditoria-documentacion.md §9](../../../docs/aud
 
 - Donde dice "consecutivo" o "consecutivos", léase **único y creciente**: se aceptan huecos en la numeración del código (RN-03). La SEQUENCE garantiza códigos sin duplicados, no sin huecos.
 - El ticket guarda también `FechaActualizacion` (UTC, `datetime2`). El historial de cambios queda fuera del MVP.
+
+## Enmienda 2 · 28/10/2026
+
+Origen: decisiones 32, 33, 35, 36 y 37 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-12, H-29, H-42, H-49 y H-15).
+
+- **Modelo físico:** las migraciones de EF Core son la fuente del modelo físico (tablas, columnas, índices y SEQUENCE). Los usuarios semilla están en [01-modelo-dominio.md §8](../01-modelo-dominio.md#8-datos-semilla).
+- **Índices:** además de los de la Decisión, `Usuario.Email` tiene índice único.
+- **Código del ticket:** la SEQUENCE inicia en 1 (`HD-000001`). El límite `HD-999999` es una limitación conocida del MVP.
+- **Entorno:** el desarrollo y las pruebas de integración usan LocalDB.
+- **Justificación adicional:** la desarrolladora tiene más de 10 años de experiencia desarrollando software con .NET y con SQL Server.
