@@ -2,11 +2,11 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.0                    |
-| Fecha   | 27/10/2026             |
+| Versión | 1.1                    |
+| Fecha   | 28/10/2026             |
 | Estado  | Borrador para revisión |
 
-Describe la arquitectura del MVP en los niveles 1 (Contexto) y 2 (Contenedores) del modelo C4, y la organización interna de la API en Clean Architecture. Deriva de `specs/functional/00-vision.md`, `specs/functional/03-requisitos-no-funcionales.md` y `specs/technical/01-modelo-dominio.md`.
+Describe la arquitectura del MVP en los niveles 1 (Contexto) y 2 (Contenedores) del modelo C4, y la organización interna de la API en Clean Architecture. Deriva de [00-vision.md](../functional/00-vision.md), [03-requisitos-no-funcionales.md](../functional/03-requisitos-no-funcionales.md) y [01-modelo-dominio.md](01-modelo-dominio.md). Las decisiones de arquitectura están en el [índice de ADR](adr/README.md).
 
 ---
 
@@ -26,14 +26,14 @@ C4Context
 
     Rel(solicitante, helpdesk, "Crea y consulta sus tickets, cierra o reabre los resueltos", "HTTP/JSON")
     Rel(tecnico, helpdesk, "Consulta sus tickets asignados, reclasifica, inicia atención y resuelve", "HTTP/JSON")
-    Rel(supervisor, helpdesk, "Consulta todos los tickets, asigna, cambia prioridad, cierra y ve reportes", "HTTP/JSON")
+    Rel(supervisor, helpdesk, "Consulta todos los tickets y los técnicos activos, asigna, cambia prioridad, cierra y ve el reporte de vencidos", "HTTP/JSON")
 
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
 
 ## 2. Nivel 2 · Contenedores
 
-Muestra las piezas desplegables del sistema y cómo se comunican. Cada petición lleva el encabezado `X-Usuario-Id`; la API valida la identidad (`401`) y el permiso (`403`) antes de ejecutar el caso de uso (RNF-01). La API accede a SQL Server solo mediante EF Core con consultas parametrizadas (RNF-02).
+Muestra las piezas desplegables del sistema y cómo se comunican. Cada petición lleva el encabezado `X-Usuario-Id`. La capa Api valida la identidad (`401`) antes de ejecutar el caso de uso, obteniendo el usuario a través de Application, porque no usa Infrastructure ni el `DbContext` directamente (§3). El permiso (`403`) lo valida el caso de uso en Application (RNF-01, [01-modelo-dominio.md §4](01-modelo-dominio.md#4-ubicación-de-las-reglas-de-negocio)). La API accede a SQL Server solo mediante EF Core con consultas parametrizadas (RNF-02).
 
 ```mermaid
 C4Container
@@ -73,7 +73,7 @@ La API se divide en cuatro proyectos. Las dependencias apuntan siempre hacia el 
 | **Domain**         | Entidades (`Ticket`, `Usuario`, `Comentario`), enumeraciones, `PoliticaSla`, invariantes y transiciones (RN-01, RN-03, RN-07 a RN-13), excepciones de dominio (`TransicionInvalidaException` → `409`, `InvarianteVioladaException` → `500`). Sin EF Core ni ASP.NET Core.                | Ninguna                                 |
 | **Application**    | Casos de uso (handlers), validadores FluentValidation, DTOs, reglas que dependen de datos o del actor (RN-04, RN-05, RN-06), interfaces de persistencia y de `IGeneradorCodigoTicket`. Usa `TimeProvider` para la hora actual (RNF-08). | Domain                                  |
 | **Infrastructure** | `DbContext` de EF Core, configuraciones de entidades, migraciones, datos semilla de usuarios, implementación de repositorios y del generador de código con SEQUENCE de SQL Server.                                                         | Application, Domain                     |
-| **Api**            | Controladores, lectura del encabezado `X-Usuario-Id` (`401`), traducción de excepciones a Problem Details (`400`, `403`, `404`, `409`, `500`), configuración de OpenAPI y Swagger UI, registro de dependencias (`Program.cs`).          | Application, Infrastructure (solo para registrar dependencias) |
+| **Api**            | Controladores, lectura del encabezado `X-Usuario-Id` (`401`, con el usuario obtenido a través de Application), traducción de excepciones a Problem Details (`400`, `403`, `404`, `409`, `500`), configuración de OpenAPI y Swagger UI, registro de dependencias (`Program.cs`).          | Application, Infrastructure (solo para registrar dependencias) |
 
 ```mermaid
 flowchart TD
@@ -98,4 +98,4 @@ flowchart TD
 
 ## 4. Fuera de alcance
 
-No forman parte de esta arquitectura: Docker, colas de mensajes, caché, correo, autenticación JWT ni servicios externos (ver `00-vision.md`, sección 4).
+No forman parte de esta arquitectura: Docker, colas de mensajes, caché, correo, autenticación JWT ni servicios externos (ver [00-vision.md §4](../functional/00-vision.md#4-alcance)).

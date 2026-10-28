@@ -1,18 +1,25 @@
 # 01 · Requisitos funcionales, historias y criterios de aceptación
 
+| Campo   | Valor                  |
+| ------- | ---------------------- |
+| Versión | 1.1                    |
+| Fecha   | 28/10/2026             |
+| Estado  | Borrador para revisión |
+
 Convención de IDs:
 
 - **RF-xx**: requisito funcional
 - **HU-xx**: historia de usuario
 - **CA-xx.y**: criterio de aceptación _y_ del RF _xx_ (cada uno debe tener al menos una prueba)
-- **RN-xx**: regla de negocio (ver `02-reglas-negocio.md`)
+- **RN-xx**: regla de negocio (ver [02-reglas-negocio.md](02-reglas-negocio.md))
 
-Convenciones de respuesta de la API (decisiones de la auditoría, `docs/auditoria-documentacion.md` §9):
+Convenciones de respuesta de la API (decisiones de la auditoría, [auditoria-documentacion.md §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas)):
 
 - Cada acción sobre un ticket (asignar, reasignar, iniciar atención, resolver, cerrar, reabrir, reclasificar, cambiar prioridad) es una operación propia, no una operación genérica de cambio de estado.
 - Crear responde `201 Created` con el ticket (detalle) y el encabezado `Location`. Asignar, reasignar, las transiciones, reclasificar y cambiar la prioridad responden `200 OK` con el ticket actualizado (detalle). Las consultas responden `200 OK`.
 - El solicitante y el técnico se devuelven como objeto `{ id, nombre }`.
-- Orden de evaluación de errores: `401` → `404` → `403` → `400` → `409` (RNF-04).
+- Orden de evaluación de errores: `401` → `404` → `403` → `400` → `409` (RNF-04, [03-requisitos-no-funcionales.md](03-requisitos-no-funcionales.md)).
+- Permisos por rol: [matriz de permisos](02-reglas-negocio.md#matriz-de-permisos).
 
 ---
 
@@ -24,7 +31,7 @@ Convenciones de respuesta de la API (decisiones de la auditoría, `docs/auditori
 
 **HU-01:** Como **solicitante**, quiero registrar un ticket describiendo mi problema, para que el área de TI lo atienda dentro del tiempo comprometido.
 
-**HU-09:** Como **técnico** o **supervisor**, quiero corregir la categoría de un ticket mal clasificado, para que los reportes y la atención reflejen el tipo real de problema.
+**HU-09:** Como **técnico asignado** o **supervisor**, quiero reclasificar un ticket mal clasificado, para que los reportes y la atención reflejen el tipo real de problema.
 
 | ID       | Criterio de aceptación                                                                                                                                                                                             |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -33,7 +40,7 @@ Convenciones de respuesta de la API (decisiones de la auditoría, `docs/auditori
 | CA-01.3  | **Dado** un título con menos de 5 o más de 150 caracteres, o una descripción con menos de 10 o más de 2000, **cuando** se envía, **entonces** se responde `400 Bad Request` con el detalle del error y no se crea el ticket. |
 | CA-01.4  | **Dado** una categoría o prioridad inexistente, **cuando** se envía, **entonces** se responde `400 Bad Request`.                                                                                                   |
 | CA-01.5  | **Dado** un usuario que no existe en el encabezado `X-Usuario-Id`, **cuando** intenta crear un ticket, **entonces** se responde `401 Unauthorized`.                                                                |
-| CA-01.6  | **Dado** un ticket que no está `Resuelto` ni `Cerrado`, **cuando** su técnico asignado o un supervisor cambia la categoría por una válida, **entonces** la categoría se actualiza y se responde `200 OK` con el ticket actualizado (detalle). |
+| CA-01.6  | **Dado** un ticket que no está `Resuelto` ni `Cerrado`, **cuando** su técnico asignado o un supervisor lo reclasifica con una categoría válida, **entonces** la categoría se actualiza y se responde `200 OK` con el ticket actualizado (detalle). |
 | CA-01.7  | **Dado** un ticket `Resuelto` o `Cerrado`, **cuando** se intenta reclasificar, **entonces** se responde `409 Conflict` y la categoría no cambia.                                                                   |
 | CA-01.8  | **Dado** un solicitante o un técnico que no es el asignado, **cuando** intenta reclasificar, **entonces** se responde `403 Forbidden`.                                                                             |
 | CA-01.9  | **Dado** una categoría inexistente, **cuando** el técnico asignado o un supervisor intenta reclasificar, **entonces** se responde `400 Bad Request` y la categoría no cambia.                                       |
@@ -49,13 +56,13 @@ Convenciones de respuesta de la API (decisiones de la auditoría, `docs/auditori
 
 **HU-02:** Como **supervisor**, quiero consultar los tickets filtrando por estado, prioridad, técnico o vencimiento, para tener visibilidad de la carga de trabajo.
 
-**HU-03:** Como **solicitante**, quiero ver solo mis tickets y su estado, para saber cómo avanza mi solicitud.
+**HU-03:** Como **solicitante**, quiero ver solo mis tickets y su estado, para saber cómo avanza mi ticket.
 
 **HU-13:** Como **técnico**, quiero consultar los tickets asignados a mí, para saber qué tickets debo atender y en qué estado están.
 
 | ID      | Criterio de aceptación                                                                                                                                                                                                            |
 | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CA-02.1 | **Dado** un ticket existente, **cuando** se consulta por su Id, **entonces** se responde `200 OK` con el detalle completo: los atributos del ticket del modelo de dominio, el estado del SLA, el solicitante y el técnico asignado como `{ id, nombre }`, y sus comentarios. Cada comentario tiene `id`, `tipo` (`Solucion` o `Reapertura`), `texto`, `autor` (`{ id, nombre }`) y `fechaCreacion`. |
+| CA-02.1 | **Dado** un ticket existente, **cuando** se consulta por su Id, **entonces** se responde `200 OK` con el detalle completo: los atributos del ticket del [modelo de dominio](../technical/01-modelo-dominio.md#1-entidades), el estado del SLA, el solicitante y el técnico asignado como `{ id, nombre }`, y sus comentarios. Cada comentario tiene `id`, `tipo` (`Solucion` o `Reapertura`), `texto`, `autor` (`{ id, nombre }`) y `fechaCreacion`. |
 | CA-02.2 | **Dado** un Id inexistente, **cuando** se consulta, **entonces** se responde `404 Not Found`.                                                                                                                                     |
 | CA-02.3 | **Dado** un listado, **cuando** se envían filtros (`estado`, `prioridad`, `tecnicoId`, `soloVencidos`), **entonces** solo se devuelven los tickets que cumplen todos los filtros. `soloVencidos` devuelve solo tickets con estado del SLA `Vencido` (no incluye `Incumplido`). |
 | CA-02.4 | **Dado** un listado, **entonces** se responde `200 OK` con `items`, `page`, `pageSize` y `totalItems`, ordenado por fecha de creación descendente. `page` vale 1 por defecto y `pageSize` 20 por defecto, con máximo 100. Cada elemento de `items` es un resumen: id, código, título, estado, prioridad, técnico asignado (`{ id, nombre }`), fecha de vencimiento y estado del SLA. Si `page` es menor a 1, o `pageSize` es mayor a 100 o menor a 1, se responde `400 Bad Request`. |
@@ -99,17 +106,17 @@ Convenciones de respuesta de la API (decisiones de la auditoría, `docs/auditori
 
 **HU-05:** Como **técnico**, quiero registrar el avance de un ticket (iniciar atención y resolverlo), para que el solicitante y el supervisor conozcan su estado.
 
-**HU-06:** Como **solicitante**, quiero confirmar el cierre de mi ticket resuelto o reabrirlo si el problema persiste, para asegurar que mi problema quede realmente solucionado.
+**HU-06:** Como **solicitante**, quiero cerrar mi ticket resuelto o reabrirlo si el problema persiste, para asegurar que mi problema quede realmente solucionado.
 
 **HU-12:** Como **supervisor**, quiero cerrar un ticket resuelto, para dar por terminada su atención.
 
 | ID      | Criterio de aceptación                                                                                                                                                                                  |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CA-04.1 | **Dado** un ticket `Asignado`, **cuando** su técnico asignado inicia la atención, **entonces** pasa a `En progreso` y se responde `200 OK` con el ticket actualizado (detalle).                        |
-| CA-04.2 | **Dado** un ticket `En progreso`, **cuando** su técnico lo marca como resuelto con un comentario de solución, **entonces** pasa a `Resuelto`, se registra la fecha de resolución y se responde `200 OK` con el ticket actualizado (detalle). |
+| CA-04.2 | **Dado** un ticket `En progreso`, **cuando** su técnico asignado lo resuelve con un comentario de solución, **entonces** pasa a `Resuelto`, se registra la fecha de resolución y se responde `200 OK` con el ticket actualizado (detalle). |
 | CA-04.3 | **Dado** un intento de resolver sin comentario de solución, **entonces** se responde `400 Bad Request`.                                                                                                 |
-| CA-04.4 | **Dado** un ticket `Resuelto`, **cuando** el solicitante (o el supervisor) confirma, **entonces** pasa a `Cerrado`, se registra la fecha de cierre y se responde `200 OK` con el ticket actualizado (detalle). |
-| CA-04.5 | **Dado** un ticket `Resuelto`, **cuando** el solicitante lo reabre con un motivo, **entonces** vuelve a `En progreso` con el mismo técnico, se borra la fecha de resolución y se responde `200 OK` con el ticket actualizado (detalle). |
+| CA-04.4 | **Dado** un ticket `Resuelto`, **cuando** el solicitante dueño o el supervisor lo cierra, **entonces** pasa a `Cerrado`, se registra la fecha de cierre y se responde `200 OK` con el ticket actualizado (detalle). |
+| CA-04.5 | **Dado** un ticket `Resuelto`, **cuando** el solicitante dueño lo reabre con un motivo, **entonces** vuelve a `En progreso` con el mismo técnico, se borra la fecha de resolución y se responde `200 OK` con el ticket actualizado (detalle). |
 | CA-04.6 | **Dado** cualquier transición no permitida por la tabla de RN-08 (por ejemplo, `Abierto → Resuelto` o cualquier cambio desde `Cerrado`), **entonces** se responde `409 Conflict` y el estado no cambia. |
 | CA-04.7 | **Dado** un usuario que no figura en RN-08 como autorizado para la acción (por ejemplo, un técnico que no es el asignado, el técnico asignado que intenta cerrar o reabrir, o un supervisor que intenta iniciar atención o resolver), **cuando** intenta ejecutarla, **entonces** se responde `403 Forbidden`. |
 | CA-04.8 | **Dado** un intento de reabrir sin motivo, **entonces** se responde `400 Bad Request`.                                                                                                                 |

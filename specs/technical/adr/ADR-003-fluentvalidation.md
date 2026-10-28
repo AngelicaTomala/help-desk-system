@@ -55,7 +55,7 @@ RNF-05, RNF-08, RNF-10 · RN-01, RN-02, RN-05, RN-09, RN-13 · CA-01.3, CA-01.4,
 
 ## Enmienda · 28/10/2026
 
-Origen: decisiones 5, 9, 10, 14 y 15 de `docs/auditoria-documentacion.md` §9 (hallazgos H-18, H-35, H-36, H-37).
+Origen: decisiones 5, 9, 10, 14 y 15 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-18, H-35, H-36, H-37).
 
 - La "excepción de dominio" de las invariantes de RN-01 y RN-09 es `InvarianteVioladaException` → `500`. Las reglas de estado usan `TransicionInvalidaException` → `409` (ver ADR-001 y ADR-004).
 - El rango de paginación es `pageSize` 1–100 (antes 1–50), con valores por defecto `page` = 1 y `pageSize` = 20 (RN-05).

@@ -2,34 +2,33 @@
 
 | Campo   | Valor                                  |
 | ------- | -------------------------------------- |
-| Versión | 1.0                                    |
+| Versión | 1.1                                    |
 | Fecha   | 28/10/2026                             |
-| Estado  | Final · Fase 4 de 4                    |
-| Rama    | `feat/specs-tecnicas` (commit `0b06fcb`) |
+| Estado  | Auditoría y corrección (partes 1 y 2)  |
+| Rama    | `feat/specs-tecnicas` (auditoría en `fb3a977`; corrección parte 1 en `801b2ff`) |
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases: inventario y enlaces, contradicciones, definiciones incompletas y ambigüedades, y trazabilidad hacia la API.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron en dos partes con las 27 decisiones de la sección 9. El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
-| Severidad | Cantidad | Hallazgos |
-| --------- | -------- | --------- |
-| Crítico   | 2        | H-31, H-55 |
-| Alto      | 6        | H-01, H-02, H-03, H-17, H-18, H-32 |
-| Medio     | 26       | H-04 a H-09, H-12, H-19 a H-24, H-33 a H-40, H-45, H-46, H-50, H-53, H-54 |
-| Bajo      | 21       | H-10, H-11, H-13 a H-16, H-25 a H-30, H-41 a H-44, H-47 a H-49, H-51, H-52 |
-| **Total** | **55**   | |
+| Severidad | Total | Resueltos | Pendientes |
+| --------- | ----- | --------- | ---------- |
+| Crítico   | 2     | 2         | 0          |
+| Alto      | 8     | 5         | 3 (H-03, H-41, H-43) |
+| Medio     | 26    | 25        | 1 (H-12)   |
+| Bajo      | 19    | 12        | 7 (H-15, H-16, H-26, H-29, H-42, H-44, H-49) |
+| **Total** | **55** | **44**   | **11**     |
+
+H-41 y H-43 se reclasificaron de Bajo a Alto en la parte 2 porque el contrato necesita su definición. Los totales originales por severidad eran: Crítico 2, Alto 6, Medio 26, Bajo 21.
 
 ### Veredicto: **NO LISTA** para generar el contrato de endpoints
 
-Motivos:
+No quedan hallazgos críticos. Las 12 operaciones (las 11 originales más la consulta de técnicos activos) tienen request, response, validaciones, códigos y permisos definidos (sección 13.3), salvo dos elementos comunes a todas:
 
-1. **Dos hallazgos críticos pendientes.** No están definidos los campos de las respuestas (H-31) ni los códigos de éxito de 9 de las 11 operaciones identificadas (H-55). El contrato tendría que inventarlos.
-2. **Hallazgos altos que afectan al contrato:** la elección entre `404` y `400` para un técnico inexistente (H-17), el doble significado de "excepción de dominio" (`409` frente a `500`, H-18) y los permisos para crear tickets (H-32).
-3. **Ninguna de las 11 operaciones** tiene información suficiente para su contrato (sección 7).
+1. **Esquema de error (H-41):** no están definidos los valores de `type` y `title` de Problem Details que RNF-03 exige verificar.
+2. **Encabezado `X-Usuario-Id` (H-43):** no está definido qué es un Id válido.
 
-Para pasar a **LISTA** basta con responder las preguntas abiertas 1 a 8 (sección 8) y reflejar las respuestas en las especificaciones. Las demás preguntas pueden resolverse durante el diseño del contrato.
-
-**Actualización 28/10/2026 (corrección parte 1):** se aplicaron las 20 decisiones de la sección 9; el estado de cada hallazgo está en la sección 10. Con las decisiones 21 a 27 se resolvió también el crítico H-31: **no quedan críticos pendientes** (19 resueltos, 36 pendientes). El veredicto se mantiene **NO LISTA** hasta la revalidación completa de la parte 2, que actualizará este resumen.
+Para pasar a **LISTA** basta con responder las preguntas Q-1 y Q-2 (sección 12). H-03 se resuelve al generar el contrato, y las demás preguntas de la sección 12 no lo bloquean.
 
 Escala de severidad:
 
@@ -180,9 +179,9 @@ Revisado y **completo**: lista cerrada de valores de los seis enums (`01-modelo-
 | H-38 | Medio | `01-modelo-dominio.md` · §1, l.31–46 · `00-vision.md` §1, l.20 | No se define auditoría de cambios: el ticket no registra quién ni cuándo asignó, reasignó, reclasificó, cambió la prioridad o cerró. La visión plantea como problema "saber quién atiende qué". | Decidir si el MVP registra historial o campos de auditoría y documentarlo, o declararlo fuera de alcance. |
 | H-39 | Medio | `01-modelo-dominio.md` · §3, l.98 · `00-vision.md` §4 | El modelo define "borrado en cascada" de comentarios, pero ningún RF permite eliminar tickets y no se dice si el borrado sería lógico o físico. | Declarar que no se eliminan tickets en el MVP o definir el tipo de borrado. |
 | H-40 | Medio | `01-modelo-dominio.md` · §1, l.31–46 · `03-requisitos-no-funcionales.md` RNF-04, l.23 | No se define el control de concurrencia (p. ej., dos supervisores reasignan a la vez, o el técnico resuelve mientras el supervisor reasigna). El modelo no tiene campo de versión. | Decidir una estrategia (p. ej., concurrencia optimista con `409`) o declararlo fuera de alcance. |
-| H-41 | Bajo | `03-requisitos-no-funcionales.md` · RNF-03, l.22 · `ADR-004` · l.16–23 | RNF-03 verifica los campos `type` y `title`, pero no se definen sus valores para cada tipo de error. | Definir un catálogo de `type` y `title` por código. |
+| H-41 | Alto *(reclasificado en la corrección parte 2; antes Bajo)* | `03-requisitos-no-funcionales.md` · RNF-03, l.22 · `ADR-004` · l.16–23 | RNF-03 verifica los campos `type` y `title`, pero no se definen sus valores para cada tipo de error. | Definir un catálogo de `type` y `title` por código. |
 | H-42 | Bajo | `02-reglas-negocio.md` · RN-03, l.11 · `ADR-002` · l.18 | No se define el valor inicial de la secuencia ni qué ocurre al superar `HD-999999`. | Documentar el inicio y el límite, o declarar el límite aceptado para el MVP. |
-| H-43 | Bajo | `03-requisitos-no-funcionales.md` · RNF-01, l.20 · `01-modelo-dominio.md` §1, l.21 | "No es un Id válido" no especifica qué es válido (numérico, positivo, rango de `int`). | Precisar el formato válido de `X-Usuario-Id`. |
+| H-43 | Alto *(reclasificado en la corrección parte 2; antes Bajo)* | `03-requisitos-no-funcionales.md` · RNF-01, l.20 · `01-modelo-dominio.md` §1, l.21 | "No es un Id válido" no especifica qué es válido (numérico, positivo, rango de `int`). | Precisar el formato válido de `X-Usuario-Id`. |
 | H-44 | Bajo | `02-reglas-negocio.md` · RN-01 l.9, RN-09 l.59 | "Obligatorio" no aclara si un texto formado solo por espacios es válido ni si las longitudes se miden antes o después de recortar espacios. | Precisarlo en RN-01 y RN-09. |
 
 ---
@@ -204,6 +203,18 @@ Términos vagos encontrados: "Opcional" (RNF-07), "etc." (RNF-09), "y equivalent
 | H-51 | Bajo | `00-vision.md` §3, l.31–32 · `02-arquitectura-c4.md` l.21–22, l.42–43 · `README.md` l.2 | Sinónimos de roles: "colaborador" y "usuarios" por *solicitante*; "personal de soporte" por *técnico*. | Usar solo los nombres de rol; dejar las descripciones como explicación, no como nombre. |
 | H-52 | Bajo | `01-requisitos-funcionales.md` HU-09 l.20, CA-01.6 l.29, CA-04.4 l.90 · `00-vision.md` l.31, l.33 | Varios verbos para una misma acción: "reclasificar", "corregir la categoría" y "cambia la categoría"; "cerrar", "confirmar cierre" y "confirma". La visión dice "ver reportes" (plural) y el MVP define un solo reporte (RF-06). | Usar un verbo canónico por acción (sección 5) y "reporte de vencidos" en singular. |
 
+### Resumen de las secciones 3 y 4
+
+Incluye las reclasificaciones posteriores: H-31 a Crítico (fase 4), y H-41 y H-43 a Alto (corrección parte 2).
+
+| Severidad | Sección 3 | Sección 4 | Total |
+| --------- | --------- | --------- | ----- |
+| Crítico   | 1         | 0         | 1     |
+| Alto      | 3         | 0         | 3     |
+| Medio     | 8         | 3         | 11    |
+| Bajo      | 2         | 5         | 7     |
+| **Total** | **14**    | **8**     | **22** |
+
 ---
 
 ## 5. Glosario propuesto
@@ -212,8 +223,8 @@ Un término canónico por concepto. Las definiciones se toman de los documentos 
 
 | Término canónico | Valor de contrato | Definición (fuente) | Sinónimos encontrados (evitar) |
 | ---------------- | ----------------- | ------------------- | ------------------------------ |
-| Ticket | — | Solicitud de soporte registrada en el sistema (`00-vision.md` §8). | incidencia, caso, solicitud (H-50) |
-| Código de ticket | — | `HD-` + 6 dígitos, único y consecutivo (RN-03). Interpretación de "consecutivo": ver H-45. | — |
+| Ticket | — | Solicitud de soporte registrada en el sistema (`00-vision.md` §8). | incidencia, caso (H-50). "Solicitud" solo para el problema previo al sistema (`00-vision.md` §1) y en la definición |
+| Código de ticket | — | `HD-` + 6 dígitos, único y creciente; se aceptan huecos (RN-03, decisión 13). | consecutivo |
 | Usuario | — | Persona cargada como dato semilla con un rol (S-01, `01-modelo-dominio.md` §1). | — |
 | Solicitante | `Solicitante` | Rol que reporta un problema y crea tickets (`00-vision.md` §3). | colaborador, usuarios (H-51) |
 | Solicitante dueño | — | Solicitante que creó el ticket (`SolicitanteId`, RN-04, RN-08). | "el solicitante" sin calificar (H-47) |
@@ -225,7 +236,7 @@ Un término canónico por concepto. Las definiciones se toman de los documentos 
 | Reasignar | — | Cambiar el técnico responsable de un ticket (`00-vision.md` §8); queda en `Asignado` (RN-07). | — |
 | Iniciar atención | — | Transición `Asignado` → `EnProgreso` por el técnico asignado (RN-08). | — |
 | Resolver | — | Transición `EnProgreso` → `Resuelto` con una solución (RN-08, RN-09). | marcar como resuelto |
-| Solución | `Solucion` (tipo de comentario) | Texto obligatorio al resolver, máx. 2000 (RN-09). | comentario de solución |
+| Solución | `Solucion` (tipo de comentario) | Texto obligatorio al resolver, máx. 2000 (RN-09). | comentario de solución (aceptable, lo usa RN-09) |
 | Cerrar | — | Transición `Resuelto` → `Cerrado` por el solicitante dueño o el supervisor (RN-08). | confirmar cierre, confirma (H-52) |
 | Reabrir | — | Transición `Resuelto` → `EnProgreso` por el solicitante dueño, con motivo (RN-08, RN-09). | — |
 | Motivo de reapertura | `Reapertura` (tipo de comentario) | Texto obligatorio al reabrir, máx. 2000 (RN-09). | — |
@@ -237,11 +248,13 @@ Un término canónico por concepto. Las definiciones se toman de los documentos 
 | Estado del SLA | `EstadoSla` | Valor calculado: `EnTiempo`, `Vencido`, `Cumplido`, `Incumplido` (RN-11). | — |
 | Ticket vencido | — | Ticket con estado del SLA `Vencido` (RN-11, CA-06.1). Alcance del filtro `soloVencidos`: ver H-36. | — |
 | Comentario | `Comentario` | Texto ligado a un ticket, de tipo `Solucion` o `Reapertura` (`01-modelo-dominio.md` §1). | — |
-| Reporte de vencidos | — | Conteo de tickets vencidos agrupado por técnico y prioridad (RF-06). Estructura: ver H-46. | reportes (H-52) |
+| Reporte de vencidos | — | Conteo de tickets vencidos en dos agrupaciones separadas, por técnico y por prioridad, más el total (RF-06, decisión 11). | reportes (H-52) |
 
 ---
 
 ## 6. Matriz de trazabilidad
+
+_Estado original de la fase 4; tras las correcciones, los requisitos sin caso de uso quedaron cubiertos por HU-10 a HU-14 (H-53) y `Usuario` tiene la consulta de técnicos activos (H-54)._
 
 Los casos de uso del proyecto son las historias de usuario (HU) de `01-requisitos-funcionales.md`; no hay otro documento de casos de uso. Ningún documento define recursos de la API (H-03): el único endpoint mencionado es `GET /tickets` (RNF-06, `03-requisitos-no-funcionales.md` l.25). Por eso la última columna indica **qué operación exige el requisito**, no una ruta.
 
@@ -280,6 +293,8 @@ Los casos de uso del proyecto son las historias de usuario (HU) de `01-requisito
 ---
 
 ## 7. Suficiencia de información por operación
+
+_Estado original de la fase 4. La revalidación tras las correcciones está en la sección 13.3._
 
 ✅ definido · ⚠️ parcial · ❌ no definido. "Ruta y verbo" es ❌ en todas (H-03).
 
@@ -392,40 +407,40 @@ Cambio respecto de lo documentado antes: la decisión 9 sube el máximo de `page
 
 ## 10. Estado de los hallazgos
 
-Corrección parte 1 de 2 (28/10/2026). Los marcados "Pendiente · parte 2" corresponden a CLAUDE.md, enlaces y glosario, que se corrigen en la segunda parte.
+Estado tras la corrección parte 1 y parte 2 (28/10/2026).
 
 | ID   | Estado | Nota |
 | ---- | ------ | ---- |
-| H-01 | Pendiente · parte 2 | CLAUDE.md. |
-| H-02 | Pendiente · parte 2 | CLAUDE.md. |
-| H-03 | Pendiente | Se resuelve al generar el contrato de endpoints. La decisión 8 ya fija una operación por acción. |
-| H-04 | Pendiente · parte 2 | Enlaces. |
-| H-05 | Pendiente | README sin decisión sobre su contenido. |
+| H-01 | Resuelto | `CLAUDE.md` §Estado del proyecto lista y enlaza los documentos funcionales, técnicos, el índice de ADR y la auditoría. |
+| H-02 | Resuelto | Eliminada la línea "no inicializada"; §Git indica que los cambios llegan a `main` por pull request (E-004). |
+| H-03 | Pendiente | Se resuelve al generar el contrato de endpoints. No bloquea: es el entregable siguiente. |
+| H-04 | Resuelto | `adr/README.md` enlazado desde `README.md`, `CLAUDE.md` y `02-arquitectura-c4.md`. |
+| H-05 | Resuelto | `README.md` con propósito, stack, requisitos de ejecución (ADR-002, S-01), estructura e índice de documentos. |
 | H-06 | Resuelto | Decisión 20: nota de corrección en E-008. |
-| H-07 | Pendiente | Referencia a RNF-11 en E-007; no cubierta por las decisiones. |
-| H-08 | Pendiente | Plantilla E-NNN sin decisión. |
-| H-09 | Pendiente | Hashes de E-001 a E-003 sin decisión. |
-| H-10 | Pendiente | Nombre de la carpeta de pruebas sin decisión. |
-| H-11 | Pendiente | Sin decisión. |
-| H-12 | Pendiente | Decisión 19 aplicada en S-01; faltan tablas, columnas, nombre de la SEQUENCE y los datos de cada usuario semilla. |
-| H-13 | Pendiente · parte 2 | Enlaces. |
-| H-14 | Pendiente | Sin decisión. |
-| H-15 | Pendiente | Justificación de ADR-002 a cargo de la desarrolladora. |
-| H-16 | Pendiente | Sin decisión. |
+| H-07 | Resuelto | E-007: se corrige la cita a RNF-10 con nota de corrección. |
+| H-08 | Resuelto | Plantilla E-NNN al inicio de `bitacora.md`, con los campos de `CLAUDE.md` y el formato de E-001 a E-008. |
+| H-09 | Resuelto | E-001: `21ae3a5` y `61b123f`; E-002 y E-003: `61b123f`, según E-004. |
+| H-10 | Resuelto | Nota en E-001: las carpetas reales son `test/` y `docs/evidencias/`. |
+| H-11 | Resuelto | Nota en E-004 con la ruta correcta; la transcripción del prompt se mantiene literal. |
+| H-12 | Pendiente | Decisión 19 aplicada en S-01. Faltan tablas, columnas, nombre de la SEQUENCE y los datos de cada usuario semilla (pregunta Q-4). |
+| H-13 | Resuelto | Referencias entre documentos convertidas en enlaces relativos; en los ADR, mediante enmiendas. 81 enlaces revalidados (§13.1). |
+| H-14 | Resuelto | `CLAUDE.md` aclara que `src/` y `test/` no se versionan hasta tener contenido. |
+| H-15 | Pendiente | Justificación de ADR-002 a cargo de la desarrolladora (pregunta Q-9). |
+| H-16 | Pendiente | `.gitignore` no es documentación; requiere decisión (pregunta Q-10). |
 | H-17 | Resuelto | Decisión 4: enmienda de ADR-004 y RNF-04. |
 | H-18 | Resuelto | Decisión 5: enmiendas de ADR-001, ADR-003 y ADR-004; modelo y C4 nombran ambos tipos. |
-| H-19 | Pendiente · parte 2 | Sin decisión en esta parte. |
-| H-20 | Pendiente · parte 2 | Sin decisión en esta parte. |
-| H-21 | Pendiente · parte 2 | CLAUDE.md y `02-reglas-negocio.md` l.3. |
-| H-22 | Pendiente · parte 2 | RNF-07. |
-| H-23 | Pendiente · parte 2 | CLAUDE.md. La decisión 9 cambia además el máximo a 100. |
-| H-24 | Pendiente · parte 2 | CLAUDE.md. |
-| H-25 | Pendiente · parte 2 | CLAUDE.md. |
-| H-26 | Pendiente | La decisión 9 cambia el rango, pero no dónde vive la constante de paginación. |
-| H-27 | Pendiente | Diagramas duplicados; sin decisión. |
-| H-28 | Pendiente · parte 2 | Glosario. |
-| H-29 | Pendiente | Índice único de `Email` sin decisión. |
-| H-30 | Pendiente | `01-modelo-dominio.md` pasó a 1.2; los demás encabezados siguen igual. |
+| H-19 | Resuelto | `02-arquitectura-c4.md` §2: la Api valida el `401`; el `403` lo valida el caso de uso en Application. |
+| H-20 | Resuelto | `02-arquitectura-c4.md` §2 y §3, Enmienda 2 de ADR-001 y ADR-004: la Api obtiene el usuario a través de Application, como exige la regla de dependencias ya documentada. |
+| H-21 | Resuelto | `CLAUDE.md` y `02-reglas-negocio.md` usan el criterio de `01-modelo-dominio.md` §4. |
+| H-22 | Resuelto | RNF-07 incluye la referencia Api → Infrastructure limitada a `Program.cs`. |
+| H-23 | Resuelto | `CLAUDE.md`: paginación con valores por defecto, máximo 100, `400` y forma de la respuesta (decisión 9). |
+| H-24 | Resuelto | `CLAUDE.md`: los tres casos de `401` de RNF-01. |
+| H-25 | Resuelto | `CLAUDE.md` remite a RN-09 en lugar de resumirla. |
+| H-26 | Pendiente | Dónde vive la constante de paginación (pregunta Q-6). |
+| H-27 | Resuelto | Los dos diagramas de estados usan ahora las mismas etiquetas ("Técnico asignado", "Solicitante dueño"). Se conservan ambos. |
+| H-28 | Resuelto | Nota en RN-08 y en `CLAUDE.md`: el valor en la API es `EnProgreso`. |
+| H-29 | Pendiente | Índice único de `Email` (pregunta Q-5). |
+| H-30 | Resuelto | Encabezado agregado a `01-requisitos-funcionales.md` y `02-reglas-negocio.md`; versión y fecha actualizadas en 00, 01, 02, 03, modelo (1.3) y C4. |
 | H-31 | Resuelto | Decisiones 1, 21, 22, 23 y 27: campos del detalle (con comentarios) en CA-02.1, del listado en CA-02.4 y cuerpo de reclasificar en CA-01.6. |
 | H-32 | Resuelto | Decisión 3: RN-03, CA-01.10 y matriz de permisos. |
 | H-33 | Resuelto | Decisión 7: matriz de permisos en `02-reglas-negocio.md`, nota en RN-08 y CA-04.7 ampliado. |
@@ -436,25 +451,25 @@ Corrección parte 1 de 2 (28/10/2026). Los marcados "Pendiente · parte 2" corre
 | H-38 | Resuelto | Decisiones 16 y 25: `FechaActualizacion` en el modelo (igual a `FechaCreacion` al crear); historial fuera del MVP. |
 | H-39 | Resuelto | Decisión 18: `00-vision.md` §4 y nota en el modelo §3. |
 | H-40 | Resuelto | Decisión 17: limitación conocida en `00-vision.md` §4 y RNF. |
-| H-41 | Pendiente | Catálogo de `type` y `title` sin decisión. |
-| H-42 | Pendiente | Valor inicial y límite del código sin decisión. |
-| H-43 | Pendiente | Formato de `X-Usuario-Id` sin decisión. |
-| H-44 | Pendiente | Textos con solo espacios sin decisión. |
-| H-45 | Resuelto | Decisión 13: RN-03, modelo y enmienda de ADR-002. `CLAUDE.md` l.45 se corrige en la parte 2. |
+| H-41 | Pendiente · **bloquea el contrato** | Reclasificado de Bajo a Alto en la parte 2: el contrato debe definir el esquema de error (pregunta Q-1). |
+| H-42 | Pendiente | Valor inicial y límite del código (pregunta Q-7). |
+| H-43 | Pendiente · **bloquea el contrato** | Reclasificado de Bajo a Alto en la parte 2: el contrato debe definir el esquema del encabezado (pregunta Q-2). |
+| H-44 | Pendiente | Textos con solo espacios (pregunta Q-3). |
+| H-45 | Resuelto | Decisión 13: RN-03, modelo, enmienda de ADR-002 y `CLAUDE.md`. |
 | H-46 | Resuelto | Decisión 11: CA-06.1. |
-| H-47 | Pendiente · parte 2 | Glosario. |
+| H-47 | Resuelto | HU-09 dice "técnico asignado"; CA-04.4 y CA-04.5 dicen "solicitante dueño"; diagrama de RN-08 con las mismas etiquetas. |
 | H-48 | Resuelto | Decisión 14: RN-06, CA-03.8 y modelo §4. |
-| H-49 | Pendiente | Sin decisión. |
-| H-50 | Pendiente · parte 2 | Glosario. |
-| H-51 | Pendiente · parte 2 | Glosario. |
-| H-52 | Pendiente · parte 2 | Glosario. |
+| H-49 | Pendiente | Corregido el "etc." de RNF-09 (enlace a los enums). Siguen pendientes la prueba de arquitectura opcional, las claves de `[Trait]` y el entorno de pruebas (pregunta Q-8). |
+| H-50 | Resuelto | "ticket" en README, visión (§3), HU-03; "solicitud" queda solo para el problema previo al sistema (§1 de la visión) y la definición. |
+| H-51 | Resuelto | README reescrito con los nombres de rol; "colaborador" y "personal de soporte" quedan solo como descripción del rol. |
+| H-52 | Resuelto | "reclasificar" (HU-09, CA-01.6, visión), "cerrar" (HU-06, CA-04.4, visión), "resolver" (CA-04.2, visión) y "reporte de tickets vencidos" en singular (visión, C4). |
 | H-53 | Resuelto | HU-10 a HU-14 en `01-requisitos-funcionales.md`. |
 | H-54 | Resuelto | Decisiones 12 y 24: HU-14, CA-03.6 (lista sin paginar de `{ id, nombre }`), CA-03.7 y matriz de permisos. |
 | H-55 | Resuelto | Decisiones 2 y 23: código de éxito y cuerpo en todos los CA de operaciones, incluido reclasificar. |
 
-Resueltos: 19 · Pendientes: 36 (16 de ellos para la parte 2). **No quedan críticos pendientes.** El veredicto se revalida en la parte 2.
+**Resueltos: 44 · Pendientes: 11.** Bloquean el contrato: H-41 y H-43.
 
-## 11. Preguntas abiertas de la corrección
+## 11. Preguntas abiertas de la corrección (parte 1)
 
 Surgieron al aplicar las decisiones. **Respondidas el 28/10/2026** (decisiones 21 a 25, sección 9).
 
@@ -464,12 +479,56 @@ Surgieron al aplicar las decisiones. **Respondidas el 28/10/2026** (decisiones 2
 - **P-4 (H-54).** ¿La consulta de técnicos activos se pagina como los listados (decisión 9) o devuelve la lista completa?
 - **P-5 (H-38).** Al crear un ticket, ¿`FechaActualizacion` vale lo mismo que `FechaCreacion` o queda vacía hasta la primera modificación?
 
-### Resumen de las secciones 3 y 4
+## 12. Preguntas abiertas (parte 2)
 
-| Severidad | Sección 3 | Sección 4 | Total |
-| --------- | --------- | --------- | ----- |
-| Crítico   | 1         | 0         | 1     |
-| Alto      | 1         | 0         | 1     |
-| Medio     | 8         | 3         | 11    |
-| Bajo      | 4         | 5         | 9     |
-| **Total** | **14**    | **8**     | **22** |
+**Bloquean el contrato de endpoints:**
+
+- **Q-1 (H-41) · Catálogo de `type` y `title` de los errores.** RNF-03 verifica ambos campos, pero no tienen valores definidos.
+  - A) Valores por defecto de ASP.NET Core: `type` con la URI de la sección de RFC 9110 de cada código y `title` estándar ("Bad Request", "Not Found", …).
+  - B) Catálogo propio: un `type` y un `title` en español por cada caso de error (p. ej., transición inválida, técnico inactivo).
+  - C) Valores por defecto de A, más un campo de extensión con el código del caso de negocio.
+- **Q-2 (H-43) · Formato válido de `X-Usuario-Id`.** RNF-01 responde `401` si "no es un Id válido", sin definir qué es válido.
+  - A) Entero positivo dentro del rango de `int` (el Id del modelo es `int`).
+  - B) Cualquier entero; un valor ≤ 0 se trata como usuario inexistente (`401`).
+
+**No bloquean el contrato:**
+
+- **Q-3 (H-44) · Textos formados solo por espacios.** A) Se recortan los espacios antes de validar la longitud (un texto de solo espacios responde `400`). B) Se valida el texto tal cual.
+- **Q-4 (H-12) · Modelo de datos físico y datos semilla.** A) Documentar tablas, columnas, nombre de la SEQUENCE y los 10 usuarios semilla en un documento técnico antes de las migraciones. B) Que las migraciones de EF Core sean la fuente; documentar solo los usuarios semilla.
+- **Q-5 (H-29) · Unicidad de `Usuario.Email`.** A) Índice único (agregarlo a RNF-06 o a una enmienda de ADR-002). B) Quitar la unicidad del modelo.
+- **Q-6 (H-26) · Constante de paginación.** A) En Application, junto a `ListarTicketsValidator`. B) En Domain, como las demás constantes (ADR-003).
+- **Q-7 (H-42) · Código del ticket.** A) La secuencia inicia en 1 y el límite `HD-999999` se acepta para el MVP. B) Otro valor inicial o formato.
+- **Q-8 (H-49) · Criterios de prueba.** ¿La prueba de arquitectura de RNF-07 es obligatoria? ¿Las claves de `[Trait]` son `CA` y `RN`? ¿Las pruebas de integración usan LocalDB o una instancia local?
+- **Q-9 (H-15) · ADR-002.** Texto de la justificación por experiencia con SQL Server que quedó pendiente en E-008.
+- **Q-10 (H-16) · `.gitignore`.** A) Eliminar las líneas de la SPA (`src/wwwroot/app/`). B) Conservarlas con un comentario que explique por qué.
+
+## 13. Revalidación (parte 2)
+
+### 13.1 Enlaces
+
+Se validaron con un script todos los enlaces Markdown internos de los documentos (excluidos `node_modules/` y el código entre comillas invertidas): **81 enlaces, 0 rotos**, incluidas las anclas, calculadas con el algoritmo de GitHub. Ningún documento queda huérfano: todos se enlazan desde `README.md`.
+
+### 13.2 Contradicciones
+
+Se revisaron de nuevo los ejes de la sección 2 sobre los documentos corregidos. **Sin contradicciones nuevas.** Las menciones a "consecutivo" y al rango 1–50 que quedan en el cuerpo de ADR-002 y ADR-003 están corregidas por sus enmiendas. Las de la bitácora (E-002, E-005) son registro histórico.
+
+### 13.3 Suficiencia por operación
+
+✅ definido · ⚠️ parcial · ❌ no definido. "Ruta y verbo" se define en el contrato (H-03); la decisión 8 fija una operación por acción.
+
+| Operación | Request | Response | Validaciones | Errores | Éxito | Permisos |
+| --------- | ------- | -------- | ------------ | ------- | ----- | -------- |
+| Crear ticket | ✅ | ✅ detalle + `Location` | ⚠️ espacios (Q-3) | ✅ `400`, `401`, `403` | ✅ `201` | ✅ |
+| Consultar por Id | ✅ | ✅ detalle | — | ✅ `401`, `403`, `404` | ✅ `200` | ✅ |
+| Listar | ✅ filtros y paginación | ✅ `items`, `page`, `pageSize`, `totalItems` | ✅ | ✅ `400`, `401`, `403` | ✅ `200` | ✅ |
+| Reclasificar | ✅ | ✅ detalle | ✅ | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Asignar / reasignar | ✅ | ✅ detalle | ✅ | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Consultar técnicos activos | ✅ | ✅ lista de `{ id, nombre }` | — | ✅ `401`, `403` | ✅ `200` | ✅ |
+| Iniciar atención | ✅ | ✅ detalle | — | ✅ `403`, `404`, `409` | ✅ `200` | ✅ |
+| Resolver | ✅ | ✅ detalle | ⚠️ espacios (Q-3) | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Cerrar | ✅ | ✅ detalle | — | ✅ `403`, `404`, `409` | ✅ `200` | ✅ |
+| Reabrir | ✅ | ✅ detalle | ⚠️ espacios (Q-3) | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Cambiar prioridad | ✅ | ✅ detalle | ✅ | ✅ `400`, `403`, `404`, `409` | ✅ `200` | ✅ |
+| Reporte de vencidos | ✅ | ✅ dos agrupaciones y total; nombres de campo a definir en el contrato | — | ✅ `403` | ✅ `200` | ✅ |
+
+Comunes a todas las operaciones y **sin definir**: el esquema de error, es decir, los valores de `type` y `title` (Q-1), y el formato válido de `X-Usuario-Id` (Q-2). Con ellos, todas las operaciones tendrían información suficiente.

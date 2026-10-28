@@ -45,9 +45,17 @@ RNF-07, RNF-08, RNF-10 · RN-01 a RN-13 · S-02
 
 ## Enmienda · 28/10/2026
 
-Origen: decisión 5 de `docs/auditoria-documentacion.md` §9 (hallazgo H-18).
+Origen: decisión 5 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo H-18).
 
 "Excepción de dominio" en la sección Decisión se precisa en dos tipos:
 
 - `TransicionInvalidaException`: transición o cambio no permitido por el estado del ticket → `409`.
 - `InvarianteVioladaException`: invariante de la entidad violada (RN-01, RN-09) → `500` (ver ADR-003).
+
+## Enmienda 2 · 28/10/2026
+
+Origen: corrección de la documentación, parte 2 ([auditoria-documentacion.md](../../../docs/auditoria-documentacion.md), hallazgos H-13 y H-20).
+
+- La "sección 3" citada en Decisión es [02-arquitectura-c4.md §3](../02-arquitectura-c4.md#3-clean-architecture-organización-interna-de-la-api).
+- La Api decide el `401` obteniendo el usuario a través de Application; no usa Infrastructure ni el `DbContext` directamente, conforme a la regla de dependencias.
+- Documentos relacionados: [ADR-002](ADR-002-sqlserver-efcore.md), [ADR-003](ADR-003-fluentvalidation.md), [ADR-004](ADR-004-problemdetails-errores.md).

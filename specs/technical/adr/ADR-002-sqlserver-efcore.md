@@ -47,7 +47,7 @@ RNF-02, RNF-06, RNF-09 · RN-03, RN-05 · CA-02.3, CA-02.4 · S-01, S-04
 
 ## Enmienda · 28/10/2026
 
-Origen: decisiones 13 y 16 de `docs/auditoria-documentacion.md` §9 (hallazgos H-45 y H-38).
+Origen: decisiones 13 y 16 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-45 y H-38).
 
 - Donde dice "consecutivo" o "consecutivos", léase **único y creciente**: se aceptan huecos en la numeración del código (RN-03). La SEQUENCE garantiza códigos sin duplicados, no sin huecos.
 - El ticket guarda también `FechaActualizacion` (UTC, `datetime2`). El historial de cambios queda fuera del MVP.

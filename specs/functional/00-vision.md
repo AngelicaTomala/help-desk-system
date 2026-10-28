@@ -5,19 +5,19 @@
 | Proyecto | Help Desk System                     |
 | Curso    | Agentic Software Development .NET 10 |
 | Autora   | Angélica Tomalá Torres               |
-| Versión  | 1.0                                  |
-| Fecha    | 26/10/2026                           |
+| Versión  | 1.1                                  |
+| Fecha    | 28/10/2026                           |
 | Estado   | Borrador para revisión               |
 
 ## 1. Problema
 
-En EL área de TI las solicitudes de soporte llegan por correo, llamadas o mensajes sueltos.
+En el área de TI las solicitudes de soporte llegan por correo, llamadas o mensajes sueltos.
 
 Esto provoca:
 
 - Solicitudes que se pierden o se atienden dos veces.
 - Falta de prioridad: un problema crítico espera igual que uno menor.
-- Imposibilidad de saber quién atiende qué y en qué estado está cada caso.
+- Imposibilidad de saber quién atiende qué y en qué estado está cada solicitud.
 - Ninguna medición del cumplimiento de tiempos de respuesta (SLA).
 
 ## 2. Objetivo
@@ -28,9 +28,9 @@ Construir una API REST que centralice el ciclo de vida de los tickets de soporte
 
 | Rol             | Descripción                               | Puede                                                                                                                                  |
 | --------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **Solicitante** | Colaborador que reporta un problema       | Crear tickets, consultar sus propios tickets, confirmar cierre o reabrir un ticket resuelto                                            |
-| **Técnico**     | Personal de soporte que atiende los casos | Consultar tickets asignados a él, reclasificar la categoría de sus tickets asignados, iniciar atención y marcar como resuelto           |
-| **Supervisor**  | Coordinador del área de TI                | Consultar todos los tickets, consultar los técnicos activos, asignar y reasignar técnicos, reclasificar la categoría, cambiar prioridad, cerrar tickets y ver reportes |
+| **Solicitante** | Colaborador que reporta un problema       | Crear tickets, consultar sus propios tickets, cerrar o reabrir un ticket resuelto                                                      |
+| **Técnico**     | Personal de soporte que atiende los tickets | Consultar tickets asignados a él, reclasificar sus tickets asignados, iniciar atención y resolver                                    |
+| **Supervisor**  | Coordinador del área de TI                | Consultar todos los tickets, consultar los técnicos activos, asignar y reasignar técnicos, reclasificar, cambiar prioridad, cerrar tickets y ver el reporte de tickets vencidos |
 
 ## 4. Alcance
 
@@ -51,7 +51,7 @@ Construir una API REST que centralice el ciclo de vida de los tickets de soporte
 - Autenticación con JWT (queda como mejora deseable; ver supuesto S-02).
 - Despliegue con contenedores (Docker).
 - Notificaciones por correo, SLA en horario laboral, adjuntos y base de conocimiento.
-- Desactivar usuarios y redistribuir los tickets de un técnico desactivado (los usuarios son datos semilla, S-01).
+- Desactivar usuarios y redistribuir los tickets de un técnico desactivado (los usuarios son datos semilla, [S-01](#5-supuestos)).
 - Eliminar tickets: el MVP no elimina tickets.
 - Historial de cambios del ticket: solo se guardan la fecha de creación y la fecha de última actualización.
 - Control de concurrencia: dos modificaciones simultáneas sobre el mismo ticket no se detectan. Es una limitación conocida del MVP.
@@ -87,3 +87,5 @@ Construir una API REST que centralice el ciclo de vida de los tickets de soporte
 | SLA         | Tiempo máximo comprometido para resolver un ticket según su prioridad |
 | Vencimiento | Fecha y hora límite del SLA de un ticket                              |
 | Reasignar   | Cambiar el técnico responsable de un ticket                           |
+
+Términos canónicos completos y sinónimos a evitar: [glosario propuesto de la auditoría](../../docs/auditoria-documentacion.md#5-glosario-propuesto).

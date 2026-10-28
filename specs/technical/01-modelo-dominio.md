@@ -2,11 +2,11 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.2                    |
+| Versión | 1.3                    |
 | Fecha   | 28/10/2026             |
 | Estado  | Aprobado               |
 
-Deriva de `specs/functional/` (00 visión, 01 RF/CA, 02 RN, 03 RNF). Todas las fechas son `DateTime` en **UTC** (S-04) y los Id son `int` de identidad.
+Deriva de [specs/functional/](../functional/) ([00 visión](../functional/00-vision.md), [01 RF/CA](../functional/01-requisitos-funcionales.md), [02 RN](../functional/02-reglas-negocio.md), [03 RNF](../functional/03-requisitos-no-funcionales.md)). Todas las fechas son `DateTime` en **UTC** (S-04) y los Id son `int` de identidad.
 
 ---
 
@@ -46,7 +46,7 @@ Se carga como dato semilla (S-01); no hay endpoint de registro.
 | FechaCierre      | DateTime?        | Se fija al cerrar                                      |
 | Comentarios      | List<Comentario> | Composición                                            |
 
-Los límites de RN-01 se exponen como constantes públicas de `Ticket` (`TituloLongitudMinima`, `TituloLongitudMaxima`, `DescripcionLongitudMinima`, `DescripcionLongitudMaxima`), que reutilizan los validadores de Application (ADR-003).
+Los límites de RN-01 se exponen como constantes públicas de `Ticket` (`TituloLongitudMinima`, `TituloLongitudMaxima`, `DescripcionLongitudMinima`, `DescripcionLongitudMaxima`), que reutilizan los validadores de Application ([ADR-003](adr/ADR-003-fluentvalidation.md)).
 
 **Comportamiento (Domain):**
 
@@ -99,11 +99,11 @@ Se persisten como texto, coherente con RNF-09 (enums como texto en OpenAPI).
 | Ticket contiene Comentario        | 1 — 0..\* (composición, borrado en cascada) |
 | Usuario escribe Comentario        | 1 — 0..\*                                   |
 
-El MVP no elimina tickets (`00-vision.md` §4); el borrado en cascada solo describe la composición.
+El MVP no elimina tickets ([00-vision.md §4](../functional/00-vision.md#4-alcance)); el borrado en cascada solo describe la composición.
 
 ## 4. Ubicación de las reglas de negocio
 
-Criterio (ver ADR-003): el formato de la entrada se valida en **Application** con FluentValidation (`400` con detalle). **Domain** protege las invariantes de RN-01 y RN-09 con las mismas constantes (`InvarianteVioladaException`; `500` si llega a la API) y las reglas de estado (`TransicionInvalidaException`; `409`). Lo que requiere consultar la base de datos o conocer al actor (rol, dueño) va en **Application** (`403` o `400`).
+Criterio (ver [ADR-003](adr/ADR-003-fluentvalidation.md)): el formato de la entrada se valida en **Application** con FluentValidation (`400` con detalle). **Domain** protege las invariantes de RN-01 y RN-09 con las mismas constantes (`InvarianteVioladaException`; `500` si llega a la API) y las reglas de estado (`TransicionInvalidaException`; `409`). Lo que requiere consultar la base de datos o conocer al actor (rol, dueño) va en **Application** (`403` o `400`).
 
 | RN    | Capa                 | Responsable                                                                                                                                    |
 | ----- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |

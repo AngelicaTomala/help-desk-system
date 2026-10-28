@@ -1,6 +1,12 @@
 # 02 · Reglas de negocio
 
-Cada regla está referenciada desde uno o más requisitos en `01-requisitos-funcionales.md` y debe estar implementada en la capa **Domain** (o **Application** cuando depende de datos externos) y cubierta por al menos una prueba.
+| Campo   | Valor                  |
+| ------- | ---------------------- |
+| Versión | 1.1                    |
+| Fecha   | 28/10/2026             |
+| Estado  | Borrador para revisión |
+
+Cada regla está referenciada desde uno o más requisitos en [01-requisitos-funcionales.md](01-requisitos-funcionales.md) y debe estar cubierta por al menos una prueba. Su ubicación por capa sigue el criterio de [01-modelo-dominio.md §4](../technical/01-modelo-dominio.md#4-ubicación-de-las-reglas-de-negocio): invariantes y reglas de estado en **Domain**; formato de la entrada y reglas que requieren consultar la base de datos o conocer al actor en **Application**.
 
 ## Registro y datos del ticket
 
@@ -41,16 +47,18 @@ Cada regla está referenciada desde uno o más requisitos en `01-requisitos-func
 
 Cualquier otra combinación de estado y acción es inválida (`409`). `Cerrado` es un estado final: no admite ninguna transición. Si quien ejecuta la acción no figura en la columna "Quién puede ejecutarla", se responde `403`.
 
+"En progreso" es el texto de lectura; el valor del estado en la API es `EnProgreso` (ver [01-modelo-dominio.md §2](../technical/01-modelo-dominio.md#2-enumeraciones)).
+
 ```mermaid
 stateDiagram-v2
     [*] --> Abierto
     Abierto --> Asignado: Asignar (Supervisor)
     Asignado --> Asignado: Reasignar (Supervisor)
-    Asignado --> EnProgreso: Iniciar atención (Técnico)
+    Asignado --> EnProgreso: Iniciar atención (Técnico asignado)
     EnProgreso --> Asignado: Reasignar (Supervisor)
-    EnProgreso --> Resuelto: Resolver (Técnico)
-    Resuelto --> Cerrado: Cerrar (Solicitante / Supervisor)
-    Resuelto --> EnProgreso: Reabrir (Solicitante)
+    EnProgreso --> Resuelto: Resolver (Técnico asignado)
+    Resuelto --> Cerrado: Cerrar (Solicitante dueño / Supervisor)
+    Resuelto --> EnProgreso: Reabrir (Solicitante dueño)
     Cerrado --> [*]
 ```
 
@@ -88,7 +96,7 @@ stateDiagram-v2
 
 ## Matriz de permisos
 
-Resume quién puede ejecutar cada operación según RN-03, RN-04, RN-06, RN-08, RN-12 y RN-13. Cualquier combinación marcada como `403` responde `403 Forbidden`.
+Resume quién puede ejecutar cada operación según RN-03, RN-04, RN-06, RN-08, RN-12 y RN-13, y las decisiones 3, 7, 10 y 12 de [auditoria-documentacion.md §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas). Cualquier combinación marcada como `403` responde `403 Forbidden`.
 
 | Operación                  | Solicitante                    | Técnico                                              | Supervisor |
 | -------------------------- | ------------------------------ | ---------------------------------------------------- | ---------- |

@@ -51,9 +51,15 @@ RNF-01, RNF-03, RNF-04, RNF-07, RNF-09 · RN-07, RN-08, RN-12, RN-13 · CA-01.5,
 
 ## Enmienda · 28/10/2026
 
-Origen: decisiones 4, 5, 6 y 7 de `docs/auditoria-documentacion.md` §9 (hallazgos H-17, H-18, H-33, H-34).
+Origen: decisiones 4, 5, 6 y 7 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-17, H-18, H-33, H-34).
 
 - **`404` solo para el recurso de la ruta.** "Recurso no encontrado" se refiere únicamente al recurso identificado en la ruta (el ticket). Una referencia inválida en el cuerpo, como un técnico inexistente al asignar, es un dato inválido y responde `400` (CA-03.3).
 - **Excepciones de dominio.** `TransicionInvalidaException` → `409`; `InvarianteVioladaException` → `500` sin detalle fuera de Development (cubierta por la fila "Cualquier otra").
 - **Orden de evaluación.** Cuando aplican varios errores, se responde el primero de: `401` → `404` → `403` → `400` → `409` (RNF-04).
 - **Actor no autorizado.** Un usuario que no figura en RN-08 como autorizado para una acción (p. ej., el técnico asignado que cierra o reabre, o el supervisor que inicia atención o resuelve) recibe `403` (CA-04.7).
+
+## Enmienda 2 · 28/10/2026
+
+Origen: corrección de la documentación, parte 2 ([auditoria-documentacion.md](../../../docs/auditoria-documentacion.md), hallazgo H-20).
+
+- En la tabla de mapeo, "Usuario no identificado o inexistente (Api)" significa que la Api decide el `401` con el usuario que obtiene a través de Application, sin acceder a Infrastructure (ver [ADR-001](ADR-001-clean-architecture.md) y [02-arquitectura-c4.md §2](../02-arquitectura-c4.md#2-nivel-2--contenedores)).

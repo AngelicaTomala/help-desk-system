@@ -4,6 +4,31 @@ Registro de las acciones relevantes del proyecto y de las interacciones con asis
 
 **Leyenda de decisión:** ✅ Aceptado · ✏️ Modificado · ❌ Rechazado
 
+### Plantilla de entrada E-NNN
+
+Campos que exige [CLAUDE.md](../../CLAUDE.md#trazabilidad-y-evidencias) (prompt, resultado, decisiones y commit), con el formato usado en las entradas E-001 a E-008:
+
+```markdown
+## E-NNN · DD/MM/AAAA · Título
+
+**Herramienta:** …
+
+**Prompt:** …
+
+**Resultado de la IA:** …
+
+**Revisión humana:**
+
+| Elemento propuesto | Decisión (✅/✏️/❌) | Justificación |
+| ------------------ | ------------------ | ------------- |
+
+**Incidencias:** … (si las hubo)
+
+**Aprendizaje:** … (si aplica)
+
+**Commit relacionado:** hash y mensaje
+```
+
 ---
 
 ## E-001 · 26/10/2026 · Fase 0 Creación del repositorio y estructura
@@ -22,7 +47,9 @@ Registro de las acciones relevantes del proyecto y de las interacciones con asis
 
 - Se excluye la carpeta `docker/`: el despliegue con contenedores queda fuera de alcance.
 
-**Commit relacionado:** (pendiente)
+**Nota (28/10/2026):** en el repositorio las carpetas son `test/` y `docs/evidencias/` (ver [CLAUDE.md](../../CLAUDE.md#estado-del-proyecto)).
+
+**Commit relacionado:** `21ae3a5` Initial commit (repositorio creado desde la web) y `61b123f`, que incluye el `.gitignore` (ver E-004).
 
 ---
 
@@ -56,7 +83,7 @@ diagrama de estados), ubicados en `specs/functional/`.
 **Incidencias:**
 Se evaluaron dos opciones: (A) lista fija y (B) tabla administrable con CRUD. Se eligió A porque resuelve el problema real (errores de clasificación del solicitante), frente a un CRUD completo.
 
-**Commit relacionado:** (pendiente)
+**Commit relacionado:** `61b123f` docs(specs): visión, requisitos funcionales y reglas de negocio (ver E-004).
 
 ---
 
@@ -86,7 +113,7 @@ Se eligió Playwright MCP en lugar de Claude in Chrome porque usa un navegador a
 **Revisión humana:**
 Se revisó que `.mcp.json` no contuviera secretos antes de incluirlo en el commit.
 
-**Commit relacionado:** (pendiente)
+**Commit relacionado:** `61b123f`, que incluye `CLAUDE.md` y `.mcp.json` (ver E-004).
 
 ---
 
@@ -119,6 +146,8 @@ Existe un repositorio en GitHub (`AngelicaTomala/help-desk-system`), pero la car
 
 **Verificación:**
 Muéstrame la lista de archivos incluidos en el commit y el hash confirmado desde GitHub.
+
+_Nota (28/10/2026): el prompt se transcribe literalmente; la ruta real de la bitácora es `docs/evidencias/bitacora.md`, no `evidencia/bitacora.md`._
 
 **Resultado de la IA:**
 
@@ -361,7 +390,7 @@ Crea specs/technical/02-arquitectura-c4.md con:
 | Api → Infrastructure solo para registrar dependencias en `Program.cs`                 | ✅       | Es la única excepción aceptable en Clean Architecture: la Api arma la aplicación, pero no usa Infrastructure directamente.                                                 |
 | Conversión de excepciones a ProblemDetails y lectura de `X-Usuario-Id` en la capa Api | ✅       | Son responsabilidades HTTP; mantenerlas fuera de Domain y Application conserva el negocio independiente del transporte.                                                    |
 | Interfaces de persistencia en Application, implementadas en Infrastructure            | ✅       | Inversión de dependencias: Application no depende de EF Core, lo que permite probarla sin base de datos.                                                                   |
-| Pruebas unitarias en Domain y Application; integración en Api                         | ✅       | Coherente con RNF-10 y RNF-11 (cobertura en Domain y Application).                                                                                                         |
+| Pruebas unitarias en Domain y Application; integración en Api                         | ✅       | Coherente con RNF-10. _(Corrección 28/10/2026: se citaba también RNF-11, que no existe en `03-requisitos-no-funcionales.md`.)_                                                                                                         |
 | Conexión a SQL Server indicada solo como "EF Core"                                    | ✅       | El protocolo de red no aporta a la comprensión del diseño en el nivel 2.                                                                                                   |
 
 **Revisión del contenido:**
