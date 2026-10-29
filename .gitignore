@@ -484,10 +484,6 @@ $RECYCLE.BIN/
 # Base de datos local de Snap
 snap.db*
 
-# Build de la SPA (web/ → npm run build); se genera en CI, no se commitea
-src/wwwroot/app/
-*.tsbuildinfo
-
 # Notas locales personales (p. ej. CLAUDE.local.md)
 *.local.md
 

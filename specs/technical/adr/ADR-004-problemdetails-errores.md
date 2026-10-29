@@ -1,0 +1,98 @@
+# ADR-004 · Manejo de errores con Problem Details
+
+| Campo  | Valor      |
+| ------ | ---------- |
+| Estado | Aceptado   |
+| Fecha  | 27/10/2026 |
+
+## Contexto
+
+La API responde con cinco tipos de error definidos por los CA: `400` validación, `401` identidad (S-02), `403` permiso, `404` recurso inexistente y `409` transición o estado no permitido (RN-07, RN-08, RN-12, RN-13). RNF-03 exige que todos los errores usen Problem Details (RFC 9457) y que un `500` no exponga stack traces fuera de Development. RNF-04 exige que el mapeo de códigos sea uniforme y que una operación rechazada no modifique datos.
+
+## Decisión
+
+Usar el soporte nativo de ASP.NET Core, sin librerías externas: `AddProblemDetails()`, `UseExceptionHandler()` y un `IExceptionHandler` en el proyecto Api que traduce excepciones a respuestas `application/problem+json` (`ValidationProblemDetails` para el `400`).
+
+| Excepción (capa de origen)                        | HTTP  |
+| ------------------------------------------------- | ----- |
+| Validación de FluentValidation (Application)      | `400` con `errors` por campo |
+| Usuario no identificado o inexistente (Api)       | `401` |
+| Acceso denegado por rol o dueño (Application)     | `403` |
+| Recurso no encontrado (Application)               | `404` |
+| `TransicionInvalidaException` y conflictos de estado (Domain) | `409` |
+| Cualquier otra                                    | `500` sin detalle fuera de Development |
+
+La excepción se lanza antes de `SaveChanges`, de modo que una operación rechazada no persiste cambios (RNF-04).
+
+## Consecuencias
+
+**Positivas**
+
+- Formato estándar y único para todos los errores, documentable en OpenAPI (RNF-03, RNF-09).
+- Domain y Application no conocen HTTP: solo lanzan excepciones con significado de negocio (RNF-07).
+- Un único punto donde se decide el código; las pruebas de integración verifican `type`, `title` y `status` (RNF-03).
+
+**Negativas**
+
+- Usar excepciones para casos esperados (`403`, `409`) tiene un costo de rendimiento, despreciable para el volumen del MVP.
+- La tabla de mapeo debe mantenerse al día cuando se agreguen nuevas excepciones.
+
+## Alternativas consideradas
+
+| Alternativa                                     | Motivo de descarte                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Formato de error propio (`{ "error": "..." }`)  | No es estándar, incumple RNF-03 y obliga a documentar un contrato adicional.                                         |
+| `try/catch` en cada controlador                 | Repite la lógica de mapeo, es fácil que los códigos diverjan (RNF-04) y pone lógica en los controladores (RNF-08).   |
+| Patrón `Result<T>` sin excepciones              | Válido, pero agrega código de propagación en cada handler; se puede adoptar más adelante sin cambiar el formato HTTP. |
+
+## Requisitos relacionados
+
+RNF-01, RNF-03, RNF-04, RNF-07, RNF-09 · RN-07, RN-08, RN-12, RN-13 · CA-01.5, CA-01.7, CA-02.2, CA-02.6, CA-03.4, CA-04.6, CA-05.5 · S-02
+
+## Enmienda · 28/10/2026
+
+Origen: decisiones 4, 5, 6 y 7 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-17, H-18, H-33, H-34).
+
+- **`404` solo para el recurso de la ruta.** "Recurso no encontrado" se refiere únicamente al recurso identificado en la ruta (el ticket). Una referencia inválida en el cuerpo, como un técnico inexistente al asignar, es un dato inválido y responde `400` (CA-03.3).
+- **Excepciones de dominio.** `TransicionInvalidaException` → `409`; `InvarianteVioladaException` → `500` sin detalle fuera de Development (cubierta por la fila "Cualquier otra").
+- **Orden de evaluación.** Cuando aplican varios errores, se responde el primero de: `401` → `404` → `403` → `400` → `409` (RNF-04).
+- **Actor no autorizado.** Un usuario que no figura en RN-08 como autorizado para una acción (p. ej., el técnico asignado que cierra o reabre, o el supervisor que inicia atención o resuelve) recibe `403` (CA-04.7).
+
+## Enmienda 2 · 28/10/2026
+
+Origen: corrección de la documentación, parte 2 ([auditoria-documentacion.md](../../../docs/auditoria-documentacion.md), hallazgo H-20).
+
+- En la tabla de mapeo, "Usuario no identificado o inexistente (Api)" significa que la Api decide el `401` con el usuario que obtiene a través de Application, sin acceder a Infrastructure (ver [ADR-001](ADR-001-clean-architecture.md) y [02-arquitectura-c4.md §2](../02-arquitectura-c4.md#2-nivel-2--contenedores)).
+
+## Enmienda 3 · 28/10/2026
+
+Origen: decisiones 28, 29 y 30 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos H-20, H-41 y H-43).
+
+- **Confirmación:** se confirma el mecanismo de la Enmienda 2 para el `401`.
+- **Esquema de error:** `type` y `title` usan los valores por defecto de ASP.NET Core. Se agrega el campo de extensión `codigo` con el caso de negocio, según el catálogo siguiente.
+- **`X-Usuario-Id`:** debe ser un entero positivo dentro del rango de `int`; cualquier otro valor (ausente, no numérico, `0`, negativo o fuera de rango) responde `401`.
+
+**Catálogo de `codigo` (propuesto el 28/10/2026, pendiente de aprobación):**
+
+| `codigo`                  | HTTP  | Caso                                                                                              | Origen                                                                 |
+| ------------------------- | ----- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `VALIDACION_FALLIDA`      | `400` | Datos de entrada inválidos detectados por un validador; el detalle va en `errors` por campo.     | CA-01.3, CA-01.4, CA-01.9, CA-02.4, CA-02.8, CA-04.3, CA-04.8, CA-04.9, CA-05.7 · RN-01, RN-02, RN-05, RN-09 |
+| `TECNICO_NO_VALIDO`       | `400` | Al asignar: el técnico no existe, no tiene rol Técnico o no está activo.                         | CA-03.3 · RN-06                                                        |
+| `MISMO_TECNICO`           | `400` | Reasignar al técnico que ya está asignado.                                                       | CA-03.8 · RN-06                                                        |
+| `USUARIO_NO_IDENTIFICADO` | `401` | Falta `X-Usuario-Id` o su valor no es un entero positivo dentro del rango de `int`.              | RNF-01 · S-02                                                          |
+| `USUARIO_INEXISTENTE`     | `401` | El Id es válido, pero no corresponde a ningún usuario.                                           | CA-01.5 · RNF-01                                                       |
+| `ROL_NO_AUTORIZADO`       | `403` | El rol del usuario no puede ejecutar la operación (matriz de permisos).                          | CA-01.8 (solicitante), CA-01.10, CA-03.5, CA-03.7, CA-04.7, CA-05.6, CA-06.3 |
+| `TICKET_AJENO`            | `403` | El rol puede ejecutar la operación, pero el ticket no es suyo (solicitante) o no está asignado a él (técnico). | CA-01.8 (técnico no asignado), CA-02.6, CA-04.7 · RN-04, RN-08, RN-13 |
+| `FILTRO_NO_AUTORIZADO`    | `403` | Un técnico filtra el listado por el `tecnicoId` de otro técnico.                                 | CA-02.7                                                                |
+| `TICKET_NO_ENCONTRADO`    | `404` | El ticket de la ruta no existe.                                                                  | CA-02.2                                                                |
+| `TRANSICION_INVALIDA`     | `409` | La transición no está permitida por RN-08 (incluye asignar un ticket `Resuelto` o `Cerrado`). `TransicionInvalidaException`. | CA-03.4, CA-04.6 · RN-07, RN-08 |
+| `TICKET_NO_MODIFICABLE`   | `409` | Reclasificar o cambiar la prioridad de un ticket `Resuelto` o `Cerrado`. `TransicionInvalidaException`. | CA-01.7, CA-05.5 · RN-12, RN-13                         |
+| `ERROR_INTERNO`           | `500` | Error no controlado, incluida `InvarianteVioladaException`; sin detalle fuera de Development.    | RNF-03 · ADR-003                                                       |
+
+## Enmienda 4 · 28/10/2026
+
+Origen: decisiones 39, 40 y 41 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas).
+
+- **Catálogo aprobado:** el catálogo de `codigo` de la Enmienda 3 queda aprobado tal como se propuso, con los códigos separados (decisión 39).
+- **Propiedad `Codigo` en las excepciones de dominio:** las excepciones de dominio exponen una propiedad `Codigo` con un valor del catálogo. `TransicionInvalidaException` se lanza con `TRANSICION_INVALIDA` (transición no permitida por RN-08) o con `TICKET_NO_MODIFICABLE` (reclasificar o cambiar la prioridad de un ticket `Resuelto` o `Cerrado`). El `IExceptionHandler` de la Api copia ese valor al campo `codigo` de Problem Details. Así, ambos casos comparten el `409` y la misma excepción, pero el cliente los distingue por `codigo` (decisión 40).
+- **Errores `500`:** la Api ignora el `Codigo` de la excepción, incluida `InvarianteVioladaException`, y responde siempre `ERROR_INTERNO`, sin exponer detalles internos. El detalle de la excepción se registra en el log (decisión 41).
