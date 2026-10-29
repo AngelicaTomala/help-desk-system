@@ -739,3 +739,174 @@ Prompt de corrección posterior:
 
 - `459cce7 ` docs(specs): agrega matriz de trazabilidad (45 CA, 13 endpoints)
 - `e2646c1 ` docs(specs): enlaza decisiones de la auditoría y marca trazabilidad como vigente
+
+---
+
+## E-011 · Auditoría de la documentación (docs/auditoria-documentacion.md)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+La auditoría se hizo antes del contrato de endpoints, en cuatro fases de solo lectura y dos partes de corrección, con una pausa de revisión humana al final de cada una:
+
+1. Fase 1: inventario de los 15 documentos y validación de enlaces (§1).
+2. Fase 2: contradicciones entre documentos (§2).
+3. Fase 3: definiciones incompletas, ambigüedades y glosario propuesto (§3 a §5).
+4. Fase 4: matriz de trazabilidad, suficiencia de información por operación y preguntas abiertas (§6 a §8).
+5. Corrección parte 1: aplicar las decisiones 1 a 20 sobre las preguntas de §8 y responder las preguntas P-1 a P-5 (§11, decisiones 21 a 27).
+6. Corrección parte 2: limpieza transversal, respuestas a las preguntas Q-1 a Q-10 (§12, decisiones 28 a 38), aprobación del catálogo de `codigo` (decisiones 39 a 41) y revalidación final (§13).
+
+**Resultado de la IA:**
+
+- `docs/auditoria-documentacion.md` con 55 hallazgos (2 críticos, 6 altos, 26 medios y 21 bajos) y veredicto inicial **NO LISTA** para el contrato de endpoints.
+- 20 preguntas abiertas en §8, con opciones presentadas como sugerencias y no como recomendaciones.
+- Corrección de las especificaciones funcionales, el modelo de dominio, la arquitectura C4, los ADR (mediante enmiendas), la bitácora, `README.md`, `CLAUDE.md` y `.gitignore`, según las 41 decisiones de §9.
+- HU-10 a HU-14 agregadas (H-53): 14 HU y 45 CA en total.
+- §10 con el estado de los 55 hallazgos: 55 resueltos y 0 pendientes. H-41 y H-43 se reclasificaron de Bajo a Alto.
+- §13 con la revalidación final: 94 enlaces internos y 0 rotos, sin contradicciones nuevas y las 13 operaciones con información suficiente para el contrato. Veredicto final **LISTA**.
+
+**Revisión humana:**
+
+| Elemento propuesto                                                          | Decisión (✅/✏️/❌) | Justificación                                                                                                            |
+| --------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Pregunta 1: detalle completo y listado resumido (opción B)                  | ✏️                  | Se eligió B, con técnico y solicitante como `{ id, nombre }` (decisión 1); se completó con P-1, P-2 y el `tipo` del comentario (decisiones 21, 22 y 27). |
+| Pregunta 2: `200` con el ticket actualizado (opción A)                      | ✅                  | Crear responde `201` con `Location`; las acciones, `200` con el detalle; las consultas, `200` (decisión 2).               |
+| Pregunta 3: solo el solicitante crea tickets (opción A)                     | ✅                  | Técnico o supervisor → `403` (decisión 3).                                                                               |
+| Pregunta 4: técnico inexistente al asignar                                  | ✅                  | `400`, como dice CA-03.3; `404` solo para el recurso de la ruta (decisión 4).                                            |
+| Pregunta 5: dos excepciones de dominio (`409` y `500`)                      | ✅                  | `TransicionInvalidaException` → `409` e `InvarianteVioladaException` → `500` (decisión 5).                              |
+| Pregunta 6: precedencia `401` → `404` → `403` → `400` → `409` (opción A)    | ✅                  | Decisión 6.                                                                                                               |
+| Pregunta 7: actor no autorizado → `403` (opción A)                          | ✅                  | Decisión 7.                                                                                                               |
+| Pregunta 8: una operación por acción (opción A)                             | ✅                  | Decisión 8.                                                                                                               |
+| Pregunta 9: `page` = 1 y `pageSize` = 20 (opción B)                         | ✏️                  | Se eligió B y se subió el máximo de `pageSize` de 50 a 100, con la respuesta `items`, `page`, `pageSize` y `totalItems` (decisiones 9 y 26). |
+| Pregunta 10: filtros                                                        | ✅                  | `soloVencidos` no incluye `Incumplido`; técnico que filtra por otro `tecnicoId` → `403`; filtro inválido → `400` (decisión 10). |
+| Pregunta 11: dos agrupaciones separadas en el reporte (opción A)            | ✅                  | Decisión 11.                                                                                                              |
+| Pregunta 12: consulta de técnicos activos para el supervisor (opción A)     | ✅                  | Decisión 12; P-4: lista de `{ id, nombre }` sin paginar (decisión 24).                                                   |
+| Pregunta 13: se aceptan huecos en el código (opción A)                      | ✅                  | Código "único y creciente" (decisión 13).                                                                                |
+| Pregunta 14: reasignar al mismo técnico → `400` (opción A)                  | ✅                  | Decisión 14.                                                                                                              |
+| Pregunta 15: `400` en los CA de error faltantes                             | ✅                  | Confirmado para reabrir sin motivo, textos de más de 2000 caracteres y prioridad inexistente (decisión 15).              |
+| Pregunta 16: auditoría de cambios                                           | ✏️                  | Ninguna opción tal cual: el ticket guarda `FechaCreacion` y `FechaActualizacion` y el historial queda fuera del MVP (decisión 16); al crear, ambas fechas son iguales (P-5, decisión 25). |
+| Pregunta 17: concurrencia fuera del MVP (opción B)                          | ✅                  | Limitación conocida (decisión 17).                                                                                       |
+| Pregunta 18: el MVP no elimina tickets                                      | ✅                  | Decisión 18.                                                                                                              |
+| Pregunta 19: datos semilla                                                  | ✅                  | 5 solicitantes, 4 técnicos (uno inactivo) y 1 supervisor (decisión 19).                                                  |
+| Pregunta 20: el commit `0b06fcb` debía llamarse E-008 (opción B)            | ✅                  | Nota en E-008 sin reescribir el historial (decisión 20).                                                                 |
+| P-1 a P-5: preguntas surgidas en la corrección parte 1                      | ✅                  | Respondidas con las decisiones 21 a 25; P-3: reclasificar responde `200` con el detalle (decisión 23).                   |
+| H-20: la Api obtiene el usuario a través de Application                     | ✅                  | Confirmado (decisión 28).                                                                                                |
+| Q-1: Problem Details por defecto más el campo `codigo` (opción C)           | ✅                  | Decisión 29.                                                                                                              |
+| Q-2: `X-Usuario-Id` entero positivo de `int` (opción A)                     | ✅                  | Cualquier otro valor → `401` (decisión 30).                                                                              |
+| Q-3: recortar los textos antes de validar (opción A)                        | ✅                  | Decisión 31.                                                                                                              |
+| Q-4: las migraciones de EF Core como fuente del modelo físico (opción B)    | ✅                  | Los 10 usuarios semilla se documentan con nombres y correos ficticios (decisión 32).                                     |
+| Q-5: índice único en `Usuario.Email` (opción A)                             | ✅                  | Decisión 33.                                                                                                              |
+| Q-6: constante de paginación en Application (opción A)                      | ✅                  | Decisión 34.                                                                                                              |
+| Q-7: código desde `HD-000001` con límite `HD-999999` (opción A)             | ✅                  | Limitación conocida del MVP (decisión 35).                                                                               |
+| Q-8: criterios de prueba                                                    | ✅                  | Prueba de arquitectura obligatoria, claves `CA` y `RN` en `[Trait]` y LocalDB (decisión 36).                             |
+| Q-9: justificación de ADR-002                                               | ✏️                  | La redactó la desarrolladora: más de 10 años de experiencia con .NET y SQL Server (decisión 37).                         |
+| Q-10: eliminar las líneas de la SPA del `.gitignore` (opción A)             | ✅                  | Decisión 38.                                                                                                              |
+| Catálogo de `codigo` de ADR-004                                             | ✅                  | Aprobado tal como se propuso, con los códigos separados (decisión 39).                                                   |
+| Propiedad `Codigo` en las excepciones de dominio                            | ✅                  | Propuesta de la IA que complementa el catálogo: `TransicionInvalidaException` lleva `TRANSICION_INVALIDA` o `TICKET_NO_MODIFICABLE`, y en los `500` la Api responde siempre `ERROR_INTERNO` y registra el detalle en el log (decisiones 40 y 41). |
+| Enlaces y glosario en `02-reglas-negocio.md` durante la corrección parte 1  | ❌                  | Correspondían a la parte 2; se revirtieron.                                                                              |
+| Script de validación de enlaces que revisaba el código entre comillas invertidas | ❌              | Daba falsos positivos; se ajustó para ignorar ese código.                                                                |
+| Notas no pedidas (una prueba de precedencia en RNF-04 y una frase extra en el resumen ejecutivo) | ❌ | Estaban fuera de lo pedido; se quitaron.                                                                                 |
+| Cita a "RNF-09"                                                             | ❌                  | La regla correcta es RN-09; se corrigió la cita.                                                                         |
+
+**Incidencias:**
+
+- El veredicto inicial fue **NO LISTA**: la auditoría encontró 55 hallazgos, 2 de ellos críticos.
+- Aplicar las decisiones generó preguntas nuevas: P-1 a P-5 en la parte 1 (§11) y Q-1 a Q-10 en la parte 2 (§12), que requirieron rondas adicionales de decisión.
+- H-41 y H-43 se reclasificaron de Bajo a Alto en la parte 2, porque el contrato necesita su definición; H-31 subió a Crítico en la fase 4.
+- La decisión 9 cambió un valor ya documentado: el máximo de `pageSize` pasó de 50 a 100 en RN-05, CA-02.4, RNF-05 y ADR-003.
+- El commit `0b06fcb` tenía el nombre de entrada equivocado (E-009 en lugar de E-008); se corrigió con una nota, sin reescribir el historial (H-06).
+- El cuerpo de los ADR conserva menciones que sus enmiendas corrigen ("consecutivo", "LocalDB o instancia local", el rango 1–50); se dejaron como registro, según §13.2.
+- En la corrección parte 1, la IA aplicó en `02-reglas-negocio.md` enlaces y glosario que correspondían a la parte 2; se revirtieron.
+- El script de validación de enlaces detectaba falsos positivos dentro del código entre comillas invertidas; se ajustó para ignorarlo.
+- La IA agregó notas que no se habían pedido (una prueba de precedencia en RNF-04 y una frase extra en el resumen ejecutivo); se quitaron.
+- Una cita decía "RNF-09" cuando debía decir "RN-09"; se corrigió.
+
+**Aprendizaje:**
+
+- Auditar en fases de solo lectura antes de corregir separó el diagnóstico de las decisiones; la IA presentó opciones como sugerencias y no las aplicó.
+- Corregir genera preguntas nuevas: hay que prever más de una ronda de decisión antes de declarar la documentación lista.
+- Los ADR y los registros históricos se corrigen con enmiendas y notas, no reescribiéndolos, para conservar la trazabilidad.
+- Una revalidación final con conteos (enlaces, hallazgos y operaciones) da evidencia objetiva para cambiar el veredicto.
+
+**Commit relacionado:**
+
+- `fb3a977` docs: agregar auditoría de documentación (fases 1-4, veredicto NO LISTA)
+- `801b2ff` docs: aplicar decisiones de la auditoría (parte 1)
+- `9060679` docs: limpieza transversal y revalidación de la auditoría (parte 2)
+- `4dc7c16` docs: cerrar auditoría de documentación, veredicto LISTA
+- `38ec0bd` docs: actualizar CLAUDE.md, README y .gitignore según la auditoría
+
+---
+
+## E-012 · Pull request de especificaciones técnicas (PR #1)
+
+**Herramienta:** Claude Code (VS Code) + MCP de GitHub (`create_pull_request`)
+
+**Prompt:**
+
+> **Contexto**
+> Estoy desarrollando un Help Desk System (API en .NET 10) como proyecto integrador. Terminé la fase de especificación técnica en la rama `feat/specs-tecnicas`, donde ya hice commit y push de todos los documentos. Tengo configurado el MCP de GitHub.
+>
+> **Tarea**
+> Usando el MCP de GitHub, crea un pull request de `feat/specs-tecnicas` hacia `main` en mi repositorio.
+>
+> - Título: "Especificaciones técnicas del Help Desk System"
+> - Descripción:
+>   - Lista los documentos de especificación, agrupados por carpeta, indicando cuáles son nuevos o modificados en este PR y cuáles ya existían en `main`:
+>     - **specs**: `trazabilidad.md`
+>     - **specs/functional**: `01-requisitos-funcionales.md`, `02-reglas-negocio.md`, `03-requisitos-no-funcionales.md`
+>     - **specs/technical**: `01-modelo-dominio.md`, `02-arquitectura-c4.md`, `03-contrato-api.md`
+>     - **specs/technical/adr**: `ADR-001-clean-architecture.md`, `ADR-002-sqlserver-efcore.md`, `ADR-003-fluentvalidation.md`, `ADR-004-problemdetails-errores.md`
+>   - Usa la ruta completa real de cada archivo según la rama.
+>   - Menciona que la implementación se construirá sobre el modelo de dominio y el contrato de API.
+>
+> **Restricciones**
+> - No fusiones el PR; solo créalo.
+> - Antes de crearlo, muéstrame el repositorio, la rama de origen, la rama de destino, el título y la descripción, y espera mi confirmación.
+> - Verifica que todos los archivos listados existan en la rama `feat/specs-tecnicas`; si falta alguno, avísame en lugar de crear el PR.
+> - No modifiques ningún archivo ni hagas commits nuevos.
+>
+> **Verificación**
+> - Enlace al PR creado.
+> - Lista de commits incluidos en el PR.
+> - Lista de archivos modificados en el PR, con su ruta completa.
+
+Mensaje posterior, tras modificar la bitácora antes de confirmar:
+
+> Antes de crear el PR, hice commit y push de cambios en docs/evidencias/bitacora.md. Vuelve a revisar la rama origin/feat/specs-tecnicas, actualiza el número de commits y la lista de archivos si cambiaron, y muéstrame los datos finales. Si todo coincide, crea el PR.
+
+**Resultado de la IA:**
+
+- Verificó con `git fetch` y `git diff --name-status origin/main...origin/feat/specs-tecnicas` que los 11 archivos listados existían en la rama.
+- Distinguió los archivos nuevos de los modificados: 9 nuevos en este PR y 2 que ya existían en `main` y se modifican (`specs/functional/01-requisitos-funcionales.md` y `specs/functional/02-reglas-negocio.md`).
+- Detectó 8 archivos del PR que no estaban en la lista: `specs/functional/00-vision.md`, `specs/technical/adr/README.md`, `docs/auditoria-documentacion.md`, `docs/evidencias/bitacora.md`, `README.md`, `CLAUDE.md`, `.gitignore` y `.mcp.json`. Los agregó en una sección aparte de la descripción.
+- Mostró el repositorio, las ramas, el título y la descripción, y esperó la confirmación antes de crear el PR.
+- Tras el commit `2965cab` de la bitácora, volvió a revisar la rama: los commits pasaron de 17 a 18 y los archivos siguieron siendo 19, por lo que la descripción no cambió.
+- Creó el PR #1 sin fusionarlo y entregó el enlace, los 18 commits (`f3eba20` a `2965cab`) y los 19 archivos con su ruta completa.
+
+**Revisión humana:**
+
+| Elemento propuesto                                                    | Decisión (✅/✏️/❌) | Justificación                                                                  |
+| --------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------ |
+| Repositorio `AngelicaTomala/help-desk-system`, `feat/specs-tecnicas` → `main` | ✅          | Confirmado al pedir la creación del PR con los datos finales.                  |
+| Título "Especificaciones técnicas del Help Desk System"               | ✅                  | Es el título indicado en el prompt.                                            |
+| Lista de documentos agrupada por carpeta, con la ruta completa        | ✅                  | Confirmada al pedir la creación del PR con los datos finales.                  |
+| Marcado de archivos nuevos y modificados (ya existentes en `main`)    | ✅                  | Confirmado al pedir la creación del PR con los datos finales.                  |
+| Sección "Otros archivos incluidos en el PR" con los 8 no listados     | ✅                  | Confirmada al pedir la creación del PR con los datos finales.                  |
+| Cambio en `.mcp.json` (solo de formato) incluido en el PR             | ✅                  | Revisado: no contiene secretos; es configuración del proyecto.                 |
+| Línea "Generated with Claude Code" al final de la descripción         | ✅                  | Se mantiene por transparencia sobre el uso del agente.                         |
+
+**Incidencias:**
+
+1. La bitácora se modificó antes de confirmar el PR; se hizo commit (`2965cab`) y push, y la IA volvió a revisar la rama antes de crearlo.
+2. Al registrar la E-011, la IA reportó dos veces conteos incorrectos de la tabla de revisión (6 y luego 5 filas ✏️). Al pedir verificación, recontó y confirmó 30 ✅, 4 ✏️ y 4 ❌. El archivo era correcto, pero los resúmenes no.
+
+**Aprendizaje:**
+
+- Un PR solo muestra las diferencias con la rama destino, así que conviene pedir que se distingan los archivos nuevos, los modificados y los no listados.
+- Los resúmenes del agente no sustituyen la verificación del archivo.
+
+**Commit relacionado:**
+
+- PR #1: https://github.com/AngelicaTomala/help-desk-system/pull/1
+- `2965cab` docs(bitacora): actualización de la bitácora
