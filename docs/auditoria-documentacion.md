@@ -2,14 +2,14 @@
 
 | Campo   | Valor                                  |
 | ------- | -------------------------------------- |
-| Versión | 1.2                                    |
-| Fecha   | 28/10/2026                             |
+| Versión | 1.3                                    |
+| Fecha   | 29/10/2026                             |
 | Estado  | Auditoría y corrección completas       |
 | Rama    | `feat/specs-tecnicas` (auditoría en `fb3a977`; corrección parte 1 en `801b2ff`; parte 2 en `9060679`) |
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las 41 decisiones de la sección 9. El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (82 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
@@ -423,7 +423,7 @@ Decisiones para el contrato de endpoints (28/10/2026, parte 5.1):
 
 | #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
 | -- | -------- | ---------------------- | --------------- |
-| 42 | Asignar y reasignar son dos operaciones distintas (decisión 8); el contrato tiene 13 operaciones. Según la tabla de RN-08, asignar un ticket `Asignado` y reasignar uno `Abierto` no son combinaciones permitidas: responden `409` `TRANSICION_INVALIDA`. | H-03 | Esta auditoría (§13.3 y resumen ejecutivo) |
+| 42 | Asignar y reasignar son dos operaciones distintas (decisión 8); el contrato tiene 13 operaciones. Según la tabla de RN-08, asignar un ticket `Asignado` y reasignar uno `Abierto` no son combinaciones permitidas: responden `409` `TRANSICION_INVALIDA`. | H-03 | Esta auditoría (§13.3 y resumen ejecutivo); `01-modelo-dominio.md` §1, §4 y §5; RN-07 (`02-reglas-negocio.md`); Enmienda 5 de ADR-004 |
 | 43 | Todas las rutas usan el prefijo `/api/v1`. | H-03 | RNF-06 (ejemplo corregido) |
 | 44 | Las rutas de varias palabras usan kebab-case, sin tildes. | H-03 | — (se aplica en el contrato) |
 | 45 | Técnicos activos: `GET /api/v1/tecnicos`, que devuelve solo los técnicos activos. | H-03 | Glosario §5 |
@@ -461,6 +461,21 @@ Decisiones para el contrato de endpoints (28/10/2026, parte 5.2):
 | 72 | El orden de los `400` en asignar y reasignar es: `VALIDACION_FALLIDA`, luego `TECNICO_NO_VALIDO`, luego `MISMO_TECNICO`. | H-03 | `03-contrato-api.md` §3.1 y §3.2 |
 | 73 | La lista de técnicos activos se ordena por nombre ascendente y luego por `id`. | H-03 | `03-contrato-api.md` §3.3 |
 | 74 | Toda operación que modifica el ticket actualiza `fechaActualizacion`, incluidas las que agregan comentarios; la operación sin cambios de la decisión 67 no la modifica. Complementa la decisión 16 sin contradecirla. | H-03 | `03-contrato-api.md` §1.6 y operaciones que modifican el ticket |
+
+Decisiones para la implementación de Domain (29/10/2026):
+
+Los hallazgos D-01 a D-05 salen de una revisión de solo lectura de la capa Domain del 29/10/2026; no forman parte de H-01 a H-55.
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 75 | Asignar y reasignar son dos métodos de `Ticket`: `Asignar(tecnicoId, ahora)` solo desde `Abierto` y `Reasignar(tecnicoId, ahora)` solo desde `Asignado` o `EnProgreso`. Cualquier otro estado lanza `TransicionInvalidaException` con `TRANSICION_INVALIDA` (decisión 42, tabla de RN-08). | D-01 | `01-modelo-dominio.md` §1, §4 (tabla de excepciones, RN-07 y RN-08) y §5; RN-07 (`02-reglas-negocio.md`); Enmienda 5 de ADR-004 |
+| 76 | Todo método que modifica el ticket recibe el parámetro `ahora` (`DateTime` UTC), que Application obtiene de `TimeProvider`. Afecta a `Asignar`, `Reasignar`, `IniciarAtencion`, `Reabrir`, `CambiarPrioridad` y `Reclasificar`. La operación sin cambios de la decisión 67 no modifica `FechaActualizacion`. | D-02 | `01-modelo-dominio.md` §1 (tabla de métodos y nota) y §5 |
+| 77 | `Resolver(solucion, autorId, ahora)` y `Reabrir(motivo, autorId, ahora)` reciben el autor del comentario como parámetro. Domain no valida quién es el autor; el permiso lo valida Application (`403`). | D-03 | `01-modelo-dominio.md` §1, §4 (RN-09) y §5 |
+| 78 | Firma `Ticket.Crear(codigo, titulo, descripcion, categoria, prioridad, solicitanteId, ahora)`. El código lo genera `IGeneradorCodigoTicket` antes de crear el ticket; Domain no valida su formato. | D-04 | `01-modelo-dominio.md` §1 y §5 |
+| 79 | Application recorta los textos antes de validar y de llamar a Domain; Domain valida el texto que recibe (no vacío y dentro de las longitudes) y guarda ese valor. | D-05 | `01-modelo-dominio.md` §1 (tabla de métodos y nota) y §4 (RN-01 y RN-09); Enmienda 3 de ADR-003 |
+| 80 | `InvarianteVioladaException` lleva el `Codigo` `ERROR_INTERNO` (complementa las decisiones 40 y 41). | Observación de la revisión de Domain | `01-modelo-dominio.md` §4 (tabla de excepciones); Enmienda 5 de ADR-004 |
+| 81 | Asignar y reasignar tienen un handler cada uno: `AsignarTicketHandler` y `ReasignarTicketHandler`. Ambos validan el actor supervisor (`403`) y el técnico (`TECNICO_NO_VALIDO`); `MISMO_TECNICO` solo aplica a `ReasignarTicketHandler` (contrato §3.2). | Pregunta de la revisión de Domain (fila RN-06) | `01-modelo-dominio.md` §4 (RN-06) |
+| 82 | CA-03.4 cubre los casos cruzados de la decisión 42: asignar un ticket que no está `Abierto`, o reasignar uno que no está `Asignado` ni `En progreso`, responde `409` y el ticket no cambia. | Pregunta de la revisión de Domain (CA-03.4) | CA-03.4 (`01-requisitos-funcionales.md`); Enmienda 5 de ADR-004 |
 
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 

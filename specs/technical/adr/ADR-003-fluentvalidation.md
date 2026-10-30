@@ -68,3 +68,9 @@ Origen: decisiones 31 y 34 de [auditoria-documentacion.md §9](../../../docs/aud
 
 - **Recorte de textos:** los textos se recortan antes de validar; si quedan vacíos, el validador responde `400` (RN-01, RN-09).
 - **Constantes de paginación:** viven en Application, junto a `ListarTicketsValidator`, y no en Domain. Las demás constantes (longitudes de RN-01 y RN-09) siguen en Domain.
+
+## Enmienda 3 · 29/10/2026
+
+Origen: decisión 79 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo D-05 de la revisión de Domain).
+
+- **Recorte y valor guardado:** Application recorta los textos antes de validar y de llamar a Domain. Domain no recorta: valida el texto que recibe (no vacío y dentro de las longitudes de RN-01 y RN-09) con las mismas constantes y guarda ese valor.

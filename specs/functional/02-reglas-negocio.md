@@ -2,8 +2,8 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.1                    |
-| Fecha   | 28/10/2026             |
+| Versión | 1.2                    |
+| Fecha   | 29/10/2026             |
 | Estado  | Borrador para revisión |
 
 Cada regla está referenciada desde uno o más requisitos en [01-requisitos-funcionales.md](01-requisitos-funcionales.md) y debe estar cubierta por al menos una prueba. Su ubicación por capa sigue el criterio de [01-modelo-dominio.md §4](../technical/01-modelo-dominio.md#4-ubicación-de-las-reglas-de-negocio): invariantes y reglas de estado en **Domain**; formato de la entrada y reglas que requieren consultar la base de datos o conocer al actor en **Application**.
@@ -29,7 +29,7 @@ Cada regla está referenciada desde uno o más requisitos en [01-requisitos-func
 | ID    | Regla                                                                                                                                                 | RF    |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
 | RN-06 | Solo un **supervisor** puede asignar o reasignar tickets, y solo a usuarios con rol **Técnico** que estén activos. No se puede reasignar al mismo técnico asignado. | RF-03 |
-| RN-07 | Solo se puede asignar o reasignar un ticket en estado `Abierto`, `Asignado` o `En progreso`. Tras asignar o reasignar, el ticket queda en `Asignado`. | RF-03 |
+| RN-07 | Solo se puede asignar un ticket en estado `Abierto`, y solo se puede reasignar un ticket en estado `Asignado` o `En progreso` (tabla de RN-08). Tras asignar o reasignar, el ticket queda en `Asignado`. | RF-03 |
 
 ## Ciclo de vida
 
