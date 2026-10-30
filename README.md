@@ -15,7 +15,7 @@ API REST para registrar, asignar, priorizar y consultar tickets de soporte de TI
 - SQL Server LocalDB, sin Docker: lo usan el desarrollo y las pruebas de integración ([ADR-002](specs/technical/adr/ADR-002-sqlserver-efcore.md)).
 - Usuarios cargados como datos semilla: 5 solicitantes, 4 técnicos (uno inactivo) y 1 supervisor ([tabla](specs/technical/01-modelo-dominio.md#8-datos-semilla)). La identidad se envía en el encabezado `X-Usuario-Id`.
 
-Todavía no hay una solución `.sln`; los comandos de compilación y pruebas están en [CLAUDE.md](CLAUDE.md#comandos).
+La solución es `HelpDesk.slnx`; los comandos de compilación y pruebas están en [CLAUDE.md](CLAUDE.md#comandos).
 
 ## Estructura
 
@@ -24,7 +24,7 @@ Todavía no hay una solución `.sln`; los comandos de compilación y pruebas est
 | [specs/functional/](specs/functional/)      | Visión, requisitos funcionales, reglas de negocio y RNF    |
 | [specs/technical/](specs/technical/)        | Modelo de dominio, arquitectura C4, contrato de la API y ADR |
 | [docs/](docs/)                              | Auditoría de la documentación y bitácora de evidencias     |
-| `src/`, `test/`                             | Código y pruebas (vacías hasta crear la solución)          |
+| `src/`, `test/`                             | Proyectos de la solución (`src/`) y de pruebas (`test/`)   |
 
 ## Documentación
 

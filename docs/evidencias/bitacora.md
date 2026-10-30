@@ -1110,3 +1110,94 @@ En la columna "Elemento propuesto", **[IA]** marca una decisión que la IA tomó
 **Commit relacionado:**
 
 - `8db87ac` chore: crear solución HelpDesk con Clean Architecture
+
+---
+
+## E-015 · Paso 2: /init, CLAUDE.md con imports y reglas por capa (.claude/rules/)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+Varios prompts, cada uno con diff o contenido previo y sin commit:
+
+1. **`/init`:** analizar el repositorio y crear `CLAUDE.md`, o sugerir mejoras si ya existe. Al existir, la IA propuso un diff sin guardarlo.
+2. **Selección de la propuesta:**
+   - el encabezado se queda en español;
+   - se corrigen las dos frases desactualizadas de `README.md`;
+   - de `CLAUDE.md`, se aplican solo la sección de Comandos y la línea "Referencias entre proyectos (RNF-07)", porque las demás reglas se cargarán por import desde las specs.
+3. **Comprobación de las specs a importar:** `ls` de `02-reglas-negocio.md`, `01-modelo-dominio.md` y `trazabilidad.md`.
+4. **Reglas por capa:** crear en `.claude/rules/` cinco archivos con frontmatter `paths` (`domain.md`, `application.md`, `infrastructure.md`, `api.md` y `tests.md`) con los puntos indicados para cada capa.
+   - Cada regla en una viñeta corta e imperativa, con su fuente.
+   - Lo que no tenga respaldo, marcado `[VERIFICAR]`.
+   - Sin copiar párrafos de las specs ni repetir `CLAUDE.md`.
+   - `api.md` importa el contrato.
+5. **Ajustes:**
+   - reemplazar los `[VERIFICAR]` por "(convención del proyecto, E-015)";
+   - dejar "y/o" en los `[Trait]`;
+   - agregar `.claude/settings.local.json` a `.gitignore`.
+
+   Este prompt se envió dos veces.
+6. **Verificación:** leer `HelpDesk.Domain.csproj`, `Program.cs` y `HelpDesk.Tests.csproj` sin cambiar nada.
+
+**Resultado de la IA:**
+
+- `/init`:
+  - No encontró reglas de Cursor ni de Copilot, ni configuración de Codex o Gemini.
+  - Propuso cambios en el encabezado, los comandos, las referencias entre proyectos y las reglas de Domain (decisiones 75 a 84), y señaló dos frases desactualizadas en `README.md`.
+- `CLAUDE.md`:
+  - Comandos con las rutas reales: filtro por `CA`/`RN`, `dotnet run` con el puerto 3001 y Swagger UI, `dotnet ef` y la comprobación de paquetes vulnerables.
+  - Nota sobre `dotnet-ef` y PowerShell 5.1.
+  - Línea de referencias entre proyectos, con la nota sobre `Pkcs`.
+- `README.md`: `HelpDesk.slnx` en lugar de "Todavía no hay una solución `.sln`", y la fila de `src/`/`test/` actualizada. Validación de enlaces: 134, 0 rotos.
+- `.claude/rules/`:
+  - 5 archivos con `paths`: `src/HelpDesk.Domain/**`, `src/HelpDesk.Application/**`, `src/HelpDesk.Infrastructure/**`, `src/HelpDesk.Api/**` y `test/**`.
+  - `api.md` importa el contrato con `@../../specs/technical/03-contrato-api.md`.
+  - `git check-ignore` confirmó que no están ignorados.
+- Marcó tres puntos sin respaldo en las specs como `[VERIFICAR]`:
+  - setters privados en Domain;
+  - `IEntityTypeConfiguration<T>` por entidad en Infrastructure;
+  - nombres `Metodo_Escenario_Resultado` en Tests.
+- Al leer los tres archivos de la verificación se cargaron solas las reglas de `domain.md`, `api.md` y `tests.md`, y no las de `application.md` ni `infrastructure.md`. Esto confirma que el filtro `paths` funciona.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de la IA y **[Desarrolladora]**, una decisión de la desarrolladora.
+
+| Elemento propuesto                                                              | Decisión (✅/✏️/❌) | Justificación                                                                                                   |
+| ------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [IA] `/init`: encabezado en inglés (prefijo de `/init`)                         | ❌                  | El encabezado se queda en español.                                                                              |
+| [IA] `/init`: sección de Comandos con rutas reales, filtro `CA`/`RN`, puerto 3001, `dotnet ef` y paquetes vulnerables | ✅ | Aplicada completa, con la nota de `dotnet-ef` y PowerShell.                                                      |
+| [IA] `/init`: línea "Referencias entre proyectos (RNF-07)" con la nota de `Pkcs` | ✅                 | Aplicada.                                                                                                       |
+| [IA] `/init`: "Estado del proyecto" con las decisiones 1 a 84                   | ❌                  | No se aplicó: esas reglas se cargarán por import desde las specs.                                               |
+| [IA] `/init`: "Ubicación de las reglas" con RN-02, RN-10 y los `Codigo`         | ❌                  | Mismo motivo.                                                                                                   |
+| [IA] `/init`: "Firmas de Domain" (decisiones 75 a 78)                           | ❌                  | Mismo motivo.                                                                                                   |
+| [IA] `/init`: "Textos" (decisiones 79, 83 y 84)                                 | ❌                  | Mismo motivo.                                                                                                   |
+| [IA] Aviso: dos frases desactualizadas en `README.md`                           | ✅                  | Corregidas; la redacción de la fila de la tabla es de la IA.                                                    |
+| [Desarrolladora] Imports en `CLAUDE.md`: `02-reglas-negocio.md`, `01-modelo-dominio.md` y `trazabilidad.md` | ✅ | Sección "Fuentes de verdad". Quedan bajo demanda, sin importar: `01-requisitos-funcionales.md`, `03-contrato-api.md`, ADR-001 a ADR-004 y la auditoría §9. |
+| [Desarrolladora] Cinco archivos de reglas por capa con frontmatter `paths`      | ✅                  | Cargan solo al trabajar en la carpeta de cada capa.                                                             |
+| [IA] Import del contrato en `api.md` con la ruta `@../../specs/technical/03-contrato-api.md` | ✅     | Los imports se resuelven respecto al archivo que los contiene (`.claude/rules/`), no a la raíz.                 |
+| [IA] Reglas agregadas con fuente en las specs o en §9 (p. ej. decisiones 65, 67, 70, 72, 75 a 84; RNF-01 a RNF-06) | ✅ | Aceptadas al revisar el contenido.                                                                              |
+| [IA] El orden de errores `401 → 404 → 403 → 400 → 409` queda solo en `CLAUDE.md` | ✅                 | Para no repetirlo; `api.md` dice cómo implementarlo (middleware de `X-Usuario-Id` antes de resolver el recurso). |
+| [IA] `[VERIFICAR]` en setters privados, `IEntityTypeConfiguration<T>` y `Metodo_Escenario_Resultado` | ✏️ | Se reemplazaron por "(convención del proyecto, E-015)": convenciones adoptadas desde la guía del curso.          |
+| [IA] `FakeTimeProvider` sin `[VERIFICAR]`                                       | ✅                  | RNF-08 y ADR-001 piden un reloj falso, y el paquete se instaló en E-014.                                        |
+| [Desarrolladora] "`[Trait("CA", …)]` y/o `[Trait("RN", …)]`" en `tests.md`      | ✅                  | Se deja como está, por indicación de la desarrolladora.                                                         |
+| [IA] Aviso: `.claude/settings.local.json` se subiría con `git add .`            | ❌                  | Aviso incorrecto: el archivo ya estaba ignorado (línea 491 de `.gitignore`).                                   |
+| [IA] Comprobar con `/memory` si el contrato se carga en `api.md`                | ✅                  | Resultado de `/memory`: `specs\functional\02-reglas-negocio.md`, `specs\technical\01-modelo-dominio.md`, `specs\trazabilidad.md`, `specs\technical\03-contrato-api.md` y `CLAUDE.local.md`. |
+
+**Incidencias:**
+
+1. La IA avisó que `.claude/settings.local.json` se subiría con `git add .`, pero ya estaba ignorado en la línea 491 de `.gitignore`. Al pedir que se agregara, la IA no lo duplicó y corrigió su aviso.
+2. El prompt de ajustes se envió dos veces; la segunda vez la IA comprobó que los cambios ya estaban aplicados y no modificó nada.
+3. Al cargarse `api.md`, el recordatorio de contexto mostró la línea `@../../specs/technical/03-contrato-api.md` como texto, sin confirmar que se hubiera importado el contrato (unas 1140 líneas). `/memory` confirmó que sí: `specs\technical\03-contrato-api.md` aparece cargado junto a los tres imports de `CLAUDE.md` y `CLAUDE.local.md`, así que la ruta relativa del import funciona.
+
+**Aprendizaje:**
+
+- Las reglas con frontmatter `paths` se cargan solo al leer archivos de su carpeta, así que mantienen `CLAUDE.md` corto.
+- Un import `@` se resuelve respecto al archivo que lo contiene, no a la raíz del repositorio.
+- Antes de avisar de un riesgo con Git conviene comprobarlo con `git check-ignore -v`.
+- Separar lo transversal (`CLAUDE.md`) de lo propio de cada capa (`.claude/rules/`) evita repetir reglas.
+
+**Commit relacionado:**
+
+- docs: CLAUDE.md con imports y reglas por capa en .claude/rules (E-015)
