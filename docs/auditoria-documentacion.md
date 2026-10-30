@@ -9,7 +9,7 @@
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (82 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (83 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
@@ -464,7 +464,7 @@ Decisiones para el contrato de endpoints (28/10/2026, parte 5.2):
 
 Decisiones para la implementación de Domain (29/10/2026):
 
-Los hallazgos D-01 a D-05 salen de una revisión de solo lectura de la capa Domain del 29/10/2026; no forman parte de H-01 a H-55.
+Los hallazgos D-01 a D-05 salen de la revisión de solo lectura de la capa Domain y D-06 de la revisión de regresión, ambas del 29/10/2026; no forman parte de H-01 a H-55.
 
 | #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
 | -- | -------- | ---------------------- | --------------- |
@@ -476,6 +476,7 @@ Los hallazgos D-01 a D-05 salen de una revisión de solo lectura de la capa Doma
 | 80 | `InvarianteVioladaException` lleva el `Codigo` `ERROR_INTERNO` (complementa las decisiones 40 y 41). | Observación de la revisión de Domain | `01-modelo-dominio.md` §4 (tabla de excepciones); Enmienda 5 de ADR-004 |
 | 81 | Asignar y reasignar tienen un handler cada uno: `AsignarTicketHandler` y `ReasignarTicketHandler`. Ambos validan el actor supervisor (`403`) y el técnico (`TECNICO_NO_VALIDO`); `MISMO_TECNICO` solo aplica a `ReasignarTicketHandler` (contrato §3.2). | Pregunta de la revisión de Domain (fila RN-06) | `01-modelo-dominio.md` §4 (RN-06) |
 | 82 | CA-03.4 cubre los casos cruzados de la decisión 42: asignar un ticket que no está `Abierto`, o reasignar uno que no está `Asignado` ni `En progreso`, responde `409` y el ticket no cambia. | Pregunta de la revisión de Domain (CA-03.4) | CA-03.4 (`01-requisitos-funcionales.md`); Enmienda 5 de ADR-004 |
+| 83 | Domain exige que el texto llegue ya recortado. `Ticket.Crear`, `Ticket.Resolver` y `Ticket.Reabrir` lanzan `InvarianteVioladaException` si el texto está en blanco (vacío o solo espacios) o si tiene espacios al inicio o al final. Las longitudes de RN-01 y RN-09 se miden sobre ese texto. "Espacio" es cualquier carácter de espacio en blanco, con la misma definición que `string.Trim()` y `string.IsNullOrWhiteSpace()` de .NET (incluye tabuladores y saltos de línea), tanto en Domain como en Application. Los espacios y saltos de línea en medio del texto están permitidos; la regla solo aplica a los extremos y al texto completamente en blanco. Complementa la decisión 79. | D-06 | `01-modelo-dominio.md` §1 (filas de `Crear`, `Resolver` y `Reabrir`, y nota) y §4 (RN-01 y RN-09); Enmienda 4 de ADR-003 |
 
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 

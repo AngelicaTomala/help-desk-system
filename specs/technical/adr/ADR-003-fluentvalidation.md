@@ -74,3 +74,10 @@ Origen: decisiones 31 y 34 de [auditoria-documentacion.md §9](../../../docs/aud
 Origen: decisión 79 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo D-05 de la revisión de Domain).
 
 - **Recorte y valor guardado:** Application recorta los textos antes de validar y de llamar a Domain. Domain no recorta: valida el texto que recibe (no vacío y dentro de las longitudes de RN-01 y RN-09) con las mismas constantes y guarda ese valor.
+
+## Enmienda 4 · 29/10/2026
+
+Origen: decisión 83 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo D-06 de la revisión de Domain).
+
+- **Texto recortado como invariante:** Domain exige que el texto llegue ya recortado. `Ticket.Crear`, `Ticket.Resolver` y `Ticket.Reabrir` lanzan `InvarianteVioladaException` si el texto está en blanco (vacío o solo espacios) o tiene espacios al inicio o al final. Las longitudes de RN-01 y RN-09 se miden sobre ese texto. Precisa el "no vacío" de la Enmienda 3.
+- **Definición de espacio:** "espacio" es cualquier carácter de espacio en blanco, con la misma definición que `string.Trim()` y `string.IsNullOrWhiteSpace()` de .NET (incluye tabuladores y saltos de línea), tanto en Domain como en Application. Los espacios y saltos de línea en medio del texto están permitidos; la regla solo aplica a los extremos y al texto completamente en blanco.
