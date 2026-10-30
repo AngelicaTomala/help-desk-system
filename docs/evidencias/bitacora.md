@@ -1017,3 +1017,96 @@ Varios prompts con la plantilla Contexto / Tarea / Restricciones / Formato / Ver
 - `f120971` docs: registrar y aplicar decisiones 75 a 82 para la implementación de Domain
 - `b2bbf14` docs: registrar y aplicar decisión 83 sobre el texto recortado en Domain
 - `496b0e4` docs: registrar y aplicar decisión 84 sobre valores de enum no definidos en Domain
+
+---
+
+## E-014 · Creación de la solución HelpDesk (HelpDesk.slnx)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+Un prompt principal con la plantilla Contexto / Tarea / Restricciones / Formato / Verificación y tres pedidos posteriores:
+
+1. **Crear la solución:** `HelpDesk` con `src/HelpDesk.Domain`, `src/HelpDesk.Application` y `src/HelpDesk.Infrastructure` (classlib), `src/HelpDesk.Api` (webapi con controladores) y `test/HelpDesk.Tests` (xUnit).
+   - Referencias según la regla de dependencias de RNF-07.
+   - Paquetes:
+     - Application: FluentValidation.
+     - Infrastructure: EF Core SqlServer.
+     - Api: EF Core Design y OpenAPI/Swagger UI.
+     - Tests: Mvc.Testing, TimeProvider.Testing y NetArchTest.Rules u otra librería de pruebas de arquitectura.
+   - Restricciones:
+     - Domain sin referencias ni paquetes.
+     - Sin entidades, controladores ni lógica de negocio, y borrando el código de ejemplo.
+     - Sin modificar `specs/` ni `docs/`.
+     - Detenerse si algún paquete no es compatible con .NET 10.
+   - Verificación: `dotnet build` sin errores ni advertencias, y `dotnet test` ejecutándose.
+2. **`CLAUDE.md`:** reemplazar las referencias a la solución ".sln" por "HelpDesk.slnx", sin modificar nada más.
+3. **`CLAUDE.md`:** actualizar las dos frases desactualizadas que señaló la IA: el estado del proyecto (línea 7) y la introducción de los comandos (línea 36).
+4. **Comandos de Git y de .NET:** `git add .`, `git commit`, `git commit --amend` para corregir el mensaje, `dotnet build` y `dotnet test`.
+
+**Resultado de la IA:**
+
+- Creó `HelpDesk.slnx` y los 5 proyectos, sobre .NET SDK 10.0.301.
+- Referencias según RNF-07:
+  - Domain: ninguna.
+  - Application → Domain.
+  - Infrastructure → Application y Domain.
+  - Api → Application e Infrastructure.
+  - Tests → los cuatro proyectos.
+- Paquetes:
+  - Application: FluentValidation 12.2.0.
+  - Infrastructure: Microsoft.EntityFrameworkCore.SqlServer 10.0.14 y System.Security.Cryptography.Pkcs 10.0.14.
+  - Api: Microsoft.AspNetCore.OpenApi 10.0.14, Microsoft.EntityFrameworkCore.Design 10.0.14 y Swashbuckle.AspNetCore.SwaggerUI 10.3.1.
+  - Tests: Microsoft.AspNetCore.Mvc.Testing 10.0.14, Microsoft.Extensions.TimeProvider.Testing 10.11.0 y NetArchTest.Rules 1.3.2, además de los paquetes de xUnit de la plantilla.
+- Borró el código de ejemplo de las plantillas: los tres `Class1.cs`, `WeatherForecast.cs`, `WeatherForecastController.cs`, `HelpDesk.Api.http` y `UnitTest1.cs`.
+- En `Program.cs` agregó `UseSwaggerUI` en Development, apuntando a `/openapi/v1.json`. En `launchSettings.json` cambió el puerto HTTP de 5230 a 3001.
+- Verificación:
+  - `dotnet build`: 0 advertencias, 0 errores.
+  - `dotnet test`: se ejecuta y responde "No hay ninguna prueba disponible".
+  - `dotnet list package --vulnerable --include-transitive`: ningún proyecto con paquetes vulnerables.
+- `CLAUDE.md`:
+  - Línea 36: "La solución es `HelpDesk.slnx`. Los comandos habituales son:".
+  - Línea 7: la solución ya está creada con los 5 proyectos, todavía sin entidades, controladores ni lógica de negocio.
+- Señaló como desactualizadas las dos frases de `CLAUDE.md` y el identificador "(E-013)" del primer mensaje de commit.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una decisión que la IA tomó por iniciativa propia y **[Desarrolladora]**, una que tomó la desarrolladora.
+
+| Elemento propuesto                                                              | Decisión (✅/✏️/❌) | Justificación                                                                                                   |
+| ------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [IA] Formato de solución `.slnx`, el que crea por defecto el SDK 10             | ✅                  | Se mantuvo, y la desarrolladora actualizó `CLAUDE.md` para nombrar `HelpDesk.slnx`.                             |
+| [IA] NetArchTest.Rules como librería de pruebas de arquitectura                 | ✅                  | Es la opción nombrada en el prompt.                                                                             |
+| [IA] Swagger UI con Swashbuckle.AspNetCore.SwaggerUI sobre el documento de `Microsoft.AspNetCore.OpenApi` | ✅ | Aceptado al hacer commit sin cambios; cumple RNF-09.                                                            |
+| [IA] Actualizar `Microsoft.AspNetCore.OpenApi` de 10.0.9 a 10.0.14              | ✅                  | Corrige la vulnerabilidad alta de `Microsoft.OpenApi` 2.0.0 y quita la advertencia del build.                   |
+| [IA] Referencia directa a `System.Security.Cryptography.Pkcs` 10.0.14 en Infrastructure | ✅          | Corrige las vulnerabilidades de la versión 9.0.11, que trae `Microsoft.Data.SqlClient` 6.1.7.                   |
+| [IA] Puerto de desarrollo 3001 en `launchSettings.json`                         | ✅                  | Lo indica `CLAUDE.local.md`; aceptado al hacer commit.                                                         |
+| [IA] Tests referencia Domain, Application, Infrastructure y Api                 | ✅                  | Las pruebas de arquitectura (RNF-07) y de integración necesitan esos ensamblados.                               |
+| [IA] Sin `public partial class Program`                                         | ✅                  | En ASP.NET Core 10 la clase se hace pública automáticamente. [PENDIENTE] comprobarlo con la primera prueba de integración. |
+| [IA] Conservar la carpeta `Controllers/` vacía, `UseHttpsRedirection()` y `UseAuthorization()` | ✅   | Aceptado al hacer commit sin cambios.                                                                           |
+| [Desarrolladora] Nombrar la solución como `HelpDesk.slnx` en `CLAUDE.md`         | ✅                  | Refleja el formato por defecto de .NET 10.                                                                      |
+| [IA] Aviso: dos frases de `CLAUDE.md` desactualizadas (líneas 7 y 36)           | ✏️                  | La desarrolladora pidió actualizarlas e indicó el contenido de cada una.                                        |
+| [IA] Nombres completos de los proyectos y su carpeta en la línea 7 de `CLAUDE.md` | ✅                | Aceptado al revisar el diff y hacer commit.                                                                     |
+| [IA] Aviso: el mensaje de commit dice "(E-013)", que es otra entrada            | ✏️                  | La desarrolladora corrigió el mensaje con `--amend` y quitó el identificador en lugar de usar E-014.           |
+| [IA] Línea `Co-Authored-By` agregada a los mensajes de commit                   | ✅                  | No se objetó; es la misma convención que los commits anteriores.                                               |
+
+**Incidencias:**
+
+1. Al restaurar los paquetes, NuGet avisó de dos vulnerabilidades en dependencias transitivas:
+   - `Microsoft.OpenApi` 2.0.0, de gravedad alta, a través de `Microsoft.AspNetCore.OpenApi` 10.0.9, la versión que fija la plantilla.
+   - `System.Security.Cryptography.Pkcs` 9.0.11, de gravedad alta y moderada, a través de `Microsoft.Data.SqlClient` 6.1.7.
+
+   Las advertencias impedían cumplir "sin advertencias". No eran incompatibilidades con .NET 10, así que la IA las corrigió sin detenerse y lo informó.
+2. El primer commit (`7776163`) llevaba "(E-013)" en el mensaje. Se corrigió con `git commit --amend` antes del push, y el commit pasó a ser `8db87ac`.
+3. `dotnet test` responde "No hay ninguna prueba disponible" porque `HelpDesk.Tests` todavía no tiene pruebas. Es el resultado esperado.
+
+**Aprendizaje:**
+
+- Las plantillas de `dotnet new` pueden fijar paquetes con vulnerabilidades conocidas; conviene ejecutar `dotnet list package --vulnerable --include-transitive` justo después de crear los proyectos.
+- El SDK de .NET 10 crea la solución en formato `.slnx`; los documentos que hablan de `.sln` deben actualizarse.
+- Antes del push conviene revisar los identificadores de trazabilidad del mensaje de commit; `--amend` es seguro mientras el commit no esté subido.
+
+**Commit relacionado:**
+
+- `8db87ac` chore: crear solución HelpDesk con Clean Architecture
