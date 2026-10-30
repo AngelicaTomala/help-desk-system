@@ -2,8 +2,8 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.6                    |
-| Fecha   | 29/10/2026             |
+| Versión | 1.7                    |
+| Fecha   | 30/10/2026             |
 | Estado  | Aprobado               |
 
 Deriva de [specs/functional/](../functional/) ([00 visión](../functional/00-vision.md), [01 RF/CA](../functional/01-requisitos-funcionales.md), [02 RN](../functional/02-reglas-negocio.md), [03 RNF](../functional/03-requisitos-no-funcionales.md)). Todas las fechas son `DateTime` en **UTC** (S-04) y los Id son `int` de identidad.
@@ -54,11 +54,11 @@ Los límites de RN-01 se exponen como constantes públicas de `Ticket` (`TituloL
 | -------------------------- | ------------------------------------------------------------------------- | ------------ |
 | `Crear(codigo, titulo, descripcion, categoria, prioridad, solicitanteId, ahora)` | Valida que el título y la descripción lleguen recortados, no estén en blanco y cumplan las longitudes de RN-01 (`InvarianteVioladaException` si no) y guarda el texto recibido; rechaza una categoría o prioridad no definida en el enum (`InvarianteVioladaException`); estado `Abierto`, sin técnico; `FechaCreacion` y `FechaActualizacion` iguales a `ahora`; calcula vencimiento. No valida el formato de `codigo`, que genera `IGeneradorCodigoTicket` | RN-01, RN-02, RN-03, RN-10 |
 | `Asignar(tecnicoId, ahora)` | Solo desde `Abierto`; fija el técnico; queda `Asignado`                  | RN-07, RN-08 |
-| `Reasignar(tecnicoId, ahora)` | Solo desde `Asignado` o `EnProgreso`; cambia el técnico; queda `Asignado` | RN-07, RN-08 |
+| `Reasignar(tecnicoId, ahora)` | Solo desde `Asignado` o `EnProgreso`; cambia el técnico; queda `Asignado`. No rechaza al mismo técnico: `MISMO_TECNICO` lo valida `ReasignarTicketHandler` (decisiones 81 y 86) | RN-07, RN-08 |
 | `IniciarAtencion(ahora)`   | `Asignado` → `EnProgreso`                                                 | RN-08        |
-| `Resolver(solucion, autorId, ahora)` | Valida la solución (recortada, no en blanco, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`); `EnProgreso` → `Resuelto`; fija FechaResolucion; agrega comentario `Solucion` de `autorId` | RN-08, RN-09 |
+| `Resolver(solucion, autorId, ahora)` | Valida la solución (recortada, no en blanco, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`) antes que el estado (decisión 85); `EnProgreso` → `Resuelto`; fija FechaResolucion; agrega comentario `Solucion` de `autorId` | RN-08, RN-09 |
 | `Cerrar(ahora)`            | `Resuelto` → `Cerrado`; fija FechaCierre                                  | RN-08        |
-| `Reabrir(motivo, autorId, ahora)` | Valida el motivo (recortado, no en blanco, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`); `Resuelto` → `EnProgreso`; borra FechaResolucion; conserva técnico; agrega comentario `Reapertura` de `autorId` | RN-08, RN-09 |
+| `Reabrir(motivo, autorId, ahora)` | Valida el motivo (recortado, no en blanco, ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`) antes que el estado (decisión 85); `Resuelto` → `EnProgreso`; borra FechaResolucion; conserva técnico; agrega comentario `Reapertura` de `autorId` | RN-08, RN-09 |
 | `CambiarPrioridad(prioridad, ahora)` | Rechaza una prioridad no definida en el enum (`InvarianteVioladaException`), antes que la guarda de estado; recalcula FechaVencimiento desde FechaCreacion | RN-02, RN-10, RN-12 |
 | `Reclasificar(categoria, ahora)` | Rechaza una categoría no definida en el enum (`InvarianteVioladaException`), antes que la guarda de estado; cambia la categoría | RN-02, RN-13 |
 | `CalcularEstadoSla(ahora)` | Devuelve `EstadoSla`; **no se persiste**                                  | RN-11        |
@@ -123,10 +123,10 @@ Criterio (ver [ADR-003](adr/ADR-003-fluentvalidation.md)): el formato de la entr
 | RN-03 | Domain + Application | `Ticket.Crear` (`Abierto`, sin técnico) · `IGeneradorCodigoTicket` (único y creciente; en Infrastructure con una SEQUENCE de SQL Server)            |
 | RN-04 | Application          | `ListarTicketsHandler` / `ObtenerTicketHandler` (filtro por rol; `403` si el ticket no le corresponde)                                        |
 | RN-05 | Application          | `ListarTicketsValidator` (`page` ≥ 1, por defecto 1; `pageSize` 1–100, por defecto 20; filtros válidos). Las constantes de paginación viven en Application · consulta paginada ordenada por FechaCreacion descendente                             |
-| RN-06 | Application + Domain | `AsignarTicketHandler` y `ReasignarTicketHandler` (actor supervisor, si no `403`; técnico existente y `Usuario.EsTecnicoActivo()`, si no `400` `TECNICO_NO_VALIDO`) · solo `ReasignarTicketHandler`: reasignar al mismo técnico, `400` `MISMO_TECNICO`, en el orden de la decisión 72 (decisión 81) |
+| RN-06 | Application + Domain | `AsignarTicketHandler` y `ReasignarTicketHandler` (actor supervisor, si no `403`; técnico existente y `Usuario.EsTecnicoActivo()`, si no `400` `TECNICO_NO_VALIDO`) · solo `ReasignarTicketHandler`: reasignar al mismo técnico, `400` `MISMO_TECNICO`, en el orden de la decisión 72 (decisión 81) · `Ticket.Reasignar` no rechaza al mismo técnico y aplica la reasignación (decisión 86) |
 | RN-07 | Domain               | `Ticket.Asignar` (solo desde `Abierto`) y `Ticket.Reasignar` (solo desde `Asignado` o `EnProgreso`); ambos dejan el ticket en `Asignado`; en otro estado, `TransicionInvalidaException` con `TRANSICION_INVALIDA` → `409` (decisiones 42 y 75) |
 | RN-08 | Domain + Application | `Ticket` (métodos de transición `Asignar`, `Reasignar`, `IniciarAtencion`, `Resolver`, `Cerrar` y `Reabrir`; una transición inválida lanza `TransicionInvalidaException` con `TRANSICION_INVALIDA` → `409`) · handlers verifican quién puede (`403`) |
-| RN-09 | Domain + Application | `Ticket.Resolver` / `Ticket.Reabrir` (invariante: texto recortado, no en blanco y ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`; guardan el texto recibido y el `autorId` del comentario) · `ResolverTicketValidator` / `ReabrirTicketValidator` (mismas constantes; `400` con detalle, CA-04.3) · Application recorta el texto antes de validar y de llamar a Domain, y fija `autorId` (decisiones 77, 79 y 83) · `Resolver` fija FechaResolucion; `Reabrir` la borra y conserva el técnico |
+| RN-09 | Domain + Application | `Ticket.Resolver` / `Ticket.Reabrir` (invariante: texto recortado, no en blanco y ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`, comprobada antes que el estado, decisión 85; guardan el texto recibido y el `autorId` del comentario) · `ResolverTicketValidator` / `ReabrirTicketValidator` (mismas constantes; `400` con detalle, CA-04.3) · Application recorta el texto antes de validar y de llamar a Domain, y fija `autorId` (decisiones 77, 79 y 83) · `Resolver` fija FechaResolucion; `Reabrir` la borra y conserva el técnico |
 | RN-10 | Domain               | `PoliticaSla.HorasPara(Prioridad)` (`InvarianteVioladaException` con una prioridad no definida, decisión 84) · `Ticket.Crear` calcula FechaVencimiento |
 | RN-11 | Domain               | `Ticket.CalcularEstadoSla(ahora)`; `ahora` se obtiene de `TimeProvider` (RNF-08)                                                              |
 | RN-12 | Domain + Application | `Ticket.CambiarPrioridad` (`TransicionInvalidaException` con `TICKET_NO_MODIFICABLE` → `409` si `Resuelto`/`Cerrado`; recalcula desde FechaCreacion) · `CambiarPrioridadHandler` (solo supervisor, si no `403`) |

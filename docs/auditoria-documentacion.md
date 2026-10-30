@@ -2,14 +2,14 @@
 
 | Campo   | Valor                                  |
 | ------- | -------------------------------------- |
-| Versión | 1.3                                    |
-| Fecha   | 29/10/2026                             |
+| Versión | 1.4                                    |
+| Fecha   | 30/10/2026                             |
 | Estado  | Auditoría y corrección completas       |
 | Rama    | `feat/specs-tecnicas` (auditoría en `fb3a977`; corrección parte 1 en `801b2ff`; parte 2 en `9060679`) |
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (84 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (86 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
@@ -478,6 +478,15 @@ Los hallazgos D-01 a D-05 salen de la revisión de solo lectura de la capa Domai
 | 82 | CA-03.4 cubre los casos cruzados de la decisión 42: asignar un ticket que no está `Abierto`, o reasignar uno que no está `Asignado` ni `En progreso`, responde `409` y el ticket no cambia. | Pregunta de la revisión de Domain (CA-03.4) | CA-03.4 (`01-requisitos-funcionales.md`); Enmienda 5 de ADR-004 |
 | 83 | Domain exige que el texto llegue ya recortado. `Ticket.Crear`, `Ticket.Resolver` y `Ticket.Reabrir` lanzan `InvarianteVioladaException` si el texto está en blanco (vacío o solo espacios) o si tiene espacios al inicio o al final. Las longitudes de RN-01 y RN-09 se miden sobre ese texto. "Espacio" es cualquier carácter de espacio en blanco, con la misma definición que `string.Trim()` y `string.IsNullOrWhiteSpace()` de .NET (incluye tabuladores y saltos de línea), tanto en Domain como en Application. Los espacios y saltos de línea en medio del texto están permitidos; la regla solo aplica a los extremos y al texto completamente en blanco. Complementa la decisión 79. | D-06 | `01-modelo-dominio.md` §1 (filas de `Crear`, `Resolver` y `Reabrir`, y nota) y §4 (RN-01 y RN-09); Enmienda 4 de ADR-003 |
 | 84 | `Ticket.Crear`, `Ticket.CambiarPrioridad` y `Ticket.Reclasificar` lanzan `InvarianteVioladaException` (`Codigo` `ERROR_INTERNO`, decisión 80) si reciben un valor de `Categoria` o `Prioridad` que no está definido en el enum. `PoliticaSla.HorasPara` lanza la misma excepción con una prioridad no definida. La comprobación del valor del enum se hace antes que la guarda de estado: un valor no definido sobre un ticket `Resuelto` o `Cerrado` lanza `InvarianteVioladaException`, no `TICKET_NO_MODIFICABLE`, en el mismo orden que el `400` antes del `409` de la decisión 6. Por un caso de uso no ocurre, porque la decisión 58 lo rechaza antes con `400`. | D-07 | `01-modelo-dominio.md` §1 (filas de `Crear`, `CambiarPrioridad` y `Reclasificar`) y §4 (tabla de excepciones, RN-02 y RN-10); `02-arquitectura-c4.md` §3; Enmienda 5 de ADR-003 |
+
+Decisiones de la implementación de Domain (30/10/2026):
+
+Salen del plan de implementación de la capa Domain; no forman parte de H-01 a H-55 ni de D-01 a D-07.
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 85 | En `Ticket.Resolver` y `Ticket.Reabrir`, el texto se valida antes que el estado. Un texto inválido sobre un estado no permitido lanza `InvarianteVioladaException` (`ERROR_INTERNO`), no `TRANSICION_INVALIDA`, con el mismo criterio que las decisiones 6 y 84. Lo cubren las pruebas `Resolver_TextoEnBlancoEnEstadoNoPermitido_LanzaInvarianteViolada` y `Reabrir_TextoEnBlancoEnEstadoNoPermitido_LanzaInvarianteViolada`. | Plan de implementación de Domain | `01-modelo-dominio.md` §1 (filas de `Resolver` y `Reabrir`) y §4 (RN-09); Enmienda 6 de ADR-003 |
+| 86 | `Ticket.Reasignar` no rechaza reasignar al mismo técnico, porque `MISMO_TECNICO` se valida en `ReasignarTicketHandler` (decisión 81). Domain aplica la reasignación y fija `FechaActualizacion`. Lo documenta la prueba `Reasignar_MismoTecnico_NoLanzaExcepcion`. | Plan de implementación de Domain | `01-modelo-dominio.md` §1 (fila de `Reasignar`) y §4 (RN-06); Enmienda 6 de ADR-003 |
 
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 

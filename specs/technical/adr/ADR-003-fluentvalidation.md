@@ -88,3 +88,10 @@ Origen: decisión 84 de [auditoria-documentacion.md §9](../../../docs/auditoria
 
 - **Valores de enum no definidos:** `Ticket.Crear`, `Ticket.CambiarPrioridad` y `Ticket.Reclasificar` lanzan `InvarianteVioladaException` (`Codigo` `ERROR_INTERNO`) si reciben un valor de `Categoria` o `Prioridad` que no está definido en el enum, y `PoliticaSla.HorasPara` lanza la misma excepción con una prioridad no definida. Así, las invariantes de Domain de la tabla de reparto se amplían a RN-02. Por un caso de uso no ocurre: el validador lo rechaza antes con `400` (decisión 58).
 - **Orden:** la comprobación del valor del enum se hace antes que la guarda de estado. Un valor no definido sobre un ticket `Resuelto` o `Cerrado` lanza `InvarianteVioladaException`, no `TICKET_NO_MODIFICABLE`, en el mismo orden que el `400` antes del `409` (decisión 6).
+
+## Enmienda 6 · 30/10/2026
+
+Origen: decisiones 85 y 86 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (plan de implementación de Domain).
+
+- **Orden en `Resolver` y `Reabrir`:** la invariante del texto (RN-09) se comprueba antes que la regla de estado (RN-08). Un texto inválido sobre un estado no permitido lanza `InvarianteVioladaException` (`Codigo` `ERROR_INTERNO`), no `TransicionInvalidaException` con `TRANSICION_INVALIDA`. Sigue el mismo orden que el `400` antes del `409` (decisión 6) y que la Enmienda 5. Por un caso de uso no ocurre: el validador rechaza antes el texto con `400` (CA-04.3, CA-04.8, CA-04.9).
+- **Reasignar al mismo técnico:** CA-03.8 responde `400` `MISMO_TECNICO` desde `ReasignarTicketHandler`, no desde un validador, porque necesita conocer el técnico actual del ticket (decisiones 81 y 86). `Ticket.Reasignar` no lo rechaza. Precisa lo que dice la Enmienda 1 sobre CA-03.8.
