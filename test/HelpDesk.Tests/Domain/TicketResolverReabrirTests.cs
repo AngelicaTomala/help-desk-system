@@ -75,7 +75,7 @@ public class TicketResolverReabrirTests
     [Trait("RN", "RN-09")]
     public void Resolver_TextoEnBlancoEnEstadoNoPermitido_LanzaInvarianteViolada()
     {
-        // El texto se valida antes que el estado (decisión de la desarrolladora en el plan de Domain).
+        // El texto se valida antes que el estado (decisión 85).
         AfirmarResolverRechazado(EstadoTicket.Abierto, "");
     }
 
@@ -151,7 +151,7 @@ public class TicketResolverReabrirTests
     [Trait("RN", "RN-09")]
     public void Reabrir_TextoEnBlancoEnEstadoNoPermitido_LanzaInvarianteViolada()
     {
-        // El texto se valida antes que el estado (decisión de la desarrolladora en el plan de Domain).
+        // El texto se valida antes que el estado (decisión 85).
         AfirmarReabrirRechazado(EstadoTicket.Cerrado, "");
     }
 
