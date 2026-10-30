@@ -910,3 +910,110 @@ Mensaje posterior, tras modificar la bitácora antes de confirmar:
 
 - PR #1: https://github.com/AngelicaTomala/help-desk-system/pull/1
 - `2965cab` docs(bitacora): actualización de la bitácora
+
+---
+
+## E-013 · Revisiones del modelo de dominio y decisiones 75 a 84 (specs/technical/01-modelo-dominio.md)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+Varios prompts con la plantilla Contexto / Tarea / Restricciones / Formato / Verificación, cada uno con diff previo y sin commit hasta la revisión. Las fases fueron:
+
+1. **Revisión a ciegas de la capa Domain** (solo lectura): comprobar si las entidades y los métodos de `Ticket` (§1 y §4 del modelo) se pueden implementar tal como están escritos y cumplir el contrato y las decisiones 1 a 74. Para cada método se revisan los estados de origen, los parámetros para fijar todos los atributos (fechas y comentarios incluidos) y el `codigo` de error. Formato: tabla de hallazgos D-xx con cita textual y opciones sin recomendación.
+2. **Aplicación de decisiones:** registrar en la auditoría §9 las decisiones 75 a 80 y aplicarlas en el modelo y en RN-07. En rondas sucesivas, respondiendo a las preguntas de la IA, se agregaron las decisiones 81 y 82, la Enmienda 3 de ADR-003, la Enmienda 5 de ADR-004, la ampliación de CA-03.4 y los ajustes del resumen ejecutivo y del índice de ADR.
+3. **Primera revisión de regresión:** el mismo prompt de la fase 1, confirmando además que D-01 a D-05 quedaron resueltos. Encontró D-06; se registró y aplicó la decisión 83 (Enmienda 4 de ADR-003).
+4. **Segunda revisión de regresión:** confirma D-01 a D-06. Encontró D-07; se registró y aplicó la decisión 84 (Enmienda 5 de ADR-003 y `02-arquitectura-c4.md` §3).
+5. **Cierre:** antes de la segunda revisión de regresión se definió un criterio de salida: 0 hallazgos o solo menores → cerrar; un hallazgo que cambia una firma o un código → resolverlo. Tras la decisión 84 se cerró sin una cuarta revisión.
+
+**Resultado de la IA:**
+
+- Revisión a ciegas:
+  - 5 hallazgos, cada uno con su cita textual:
+    - D-01 (contradicción): un único `Asignar` frente a la decisión 42.
+    - D-02 (vacío): métodos sin `ahora`.
+    - D-03 (vacío): autor del comentario.
+    - D-04 (vacío): firma de `Crear`.
+    - D-05 (vacío): qué capa recorta los textos.
+  - Excluyó de forma explícita lo que ya resolvían las decisiones de §9 y lo que no era de Domain.
+- Decisiones 75 a 82:
+  - Commit `f120971`, 7 archivos (+66/−33).
+  - Modelo 1.6:
+    - §1: firmas nuevas, `Reasignar` y la nota sobre `ahora`, `autorId` y el recorte.
+    - §4: tabla de excepciones y filas RN-01 y RN-06 a RN-09.
+    - §5: diagrama con `Crear` y `Reasignar`.
+  - RN-07 alineada con la tabla de RN-08 (`02-reglas-negocio.md` 1.2) y CA-03.4 ampliado (`01-requisitos-funcionales.md` 1.2, siguen 45 CA).
+  - Enmienda 3 de ADR-003, Enmienda 5 de ADR-004 e índice de ADR actualizado.
+  - Validación de enlaces: 132 enlaces internos, 0 rotos.
+- Primera revisión de regresión:
+  - Revisó los 10 métodos de `Ticket` y confirmó D-01 a D-05 con citas del modelo.
+  - Encontró D-06 (vacío): sin recorte en Domain, no se define qué es un texto "vacío".
+  - Decisión 83: commit `b2bbf14`, 4 archivos (+17/−9). Validación de enlaces: 133, 0 rotos.
+- Segunda revisión de regresión:
+  - Revisó los 10 métodos y confirmó D-01 a D-06.
+  - Encontró D-07 (vacío): valores de enum no definidos en `Crear`, `CambiarPrioridad`, `Reclasificar` y `PoliticaSla.HorasPara`.
+  - Decisión 84: commit `496b0e4`, 4 archivos (+19/−11). Validación de enlaces: 134, 0 rotos.
+- En cada diff, la IA listó las decisiones propias que no estaban en el prompt y señaló sin resolverlos los textos desactualizados y las enmiendas de ADR que harían falta.
+
+**Revisión humana:**
+
+| Elemento propuesto                                                              | Decisión (✅/✏️/❌) | Justificación                                                                                                   |
+| ------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| D-01: un único `Asignar(tecnicoId)` contradice la decisión 42                   | ✅                  | Opción a: dos métodos, `Asignar` solo desde `Abierto` y `Reasignar` desde `Asignado` o `EnProgreso` (decisión 75). |
+| D-02: métodos que modifican el ticket sin la hora actual                        | ✅                  | Opción a: parámetro `ahora` (UTC) que Application obtiene de `TimeProvider` (decisión 76).                      |
+| D-03: `Resolver` y `Reabrir` sin el autor del comentario                        | ✅                  | Opción b: `autorId` como parámetro; el permiso lo valida Application (decisión 77).                             |
+| D-04: firma de `Crear(...)` sin definir                                         | ✅                  | Opción a: firma con `codigo`, `solicitanteId` y `ahora`; Domain no valida el formato del código (decisión 78).  |
+| D-05: qué capa recorta los textos y qué valor se guarda                         | ✅                  | Opción b: Application recorta y Domain guarda el texto que recibe (decisión 79).                                |
+| Observación: `Codigo` de `InvarianteVioladaException`                           | ✅                  | Lleva `ERROR_INTERNO`; complementa las decisiones 40 y 41 (decisión 80).                                        |
+| Observación: el texto de RN-07 contradice la tabla de RN-08                     | ✅                  | RN-07 se corrigió y la decisión 42 indica dónde se aplicó.                                                      |
+| Decisiones propias al registrar y aplicar 75 a 80 (9)                           | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Pregunta: un handler o dos para asignar y reasignar (fila RN-06)                | ✅                  | Dos handlers; `MISMO_TECNICO` solo en `ReasignarTicketHandler` (decisión 81).                                   |
+| Pregunta: CA-03.4 no cubre los casos cruzados de la decisión 42                 | ✅                  | Se amplió CA-03.4 sin cambiar el número de CA (decisión 82).                                                    |
+| Pregunta: la fila RN-01 del §4 no menciona la decisión 79                       | ✅                  | Se actualizó la fila.                                                                                           |
+| Propuesta: Enmienda 3 de ADR-003 (decisión 79)                                  | ✅                  | Precisa que Application recorta y Domain no.                                                                    |
+| Propuesta: Enmienda 5 de ADR-004 (decisión 80)                                  | ✅                  | Fija el `Codigo` de `InvarianteVioladaException`.                                                               |
+| Aviso: el resumen ejecutivo dice "las 41 decisiones de la sección 9"            | ✏️                  | Se corrigió el número y luego la redacción a "las decisiones de la sección 9 (N en total)".                     |
+| Decisiones propias en las decisiones 81 y 82 y las enmiendas (5)                | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Aviso: el índice de ADR no menciona las enmiendas del 29/10/2026                | ✅                  | Se actualizó el índice.                                                                                         |
+| Pregunta: la fila `TRANSICION_INVALIDA` del catálogo de ADR-004 no menciona los casos cruzados | ✅   | Se agregaron a la Enmienda 5 de ADR-004.                                                                        |
+| Aviso: dos documentos funcionales siguen en "Borrador para revisión"            | ✅                  | Se mantuvo; los prompts siguientes prohíben cambiar el campo Estado.                                           |
+| Decisiones propias en los ajustes del resumen, el índice y la Enmienda 5 (3)    | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Pregunta: la decisión 42 no menciona la Enmienda 5 de ADR-004                   | ✅                  | Se agregó en "Dónde se aplicó".                                                                                 |
+| D-06: no se define qué es un texto "vacío" si Domain no recorta                 | ✅                  | Opción b: Domain exige el texto ya recortado y mide las longitudes sobre él (decisión 83).                      |
+| Enmienda 4 de ADR-003 en lugar de ampliar la Enmienda 3                         | ✅                  | `git log` mostró que la Enmienda 3 ya tenía commit (`f120971`).                                                 |
+| Decisiones propias en la decisión 83 (4)                                        | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Aviso: la introducción del bloque de §9 solo menciona D-01 a D-05               | ✅                  | Se indicó que D-06 sale de la revisión de regresión.                                                            |
+| Aviso: el índice de ADR dice "una del 29/10/2026" para ADR-003                  | ✅                  | Se cambió a "enmiendas del 29/10/2026".                                                                         |
+| Pregunta: si "espacio" incluye tabuladores y saltos de línea                    | ✏️                  | Cualquier espacio en blanco, como `string.Trim()` y `string.IsNullOrWhiteSpace()`; se agregó que los del medio del texto están permitidos. |
+| Observación: un `\r\n` cuenta 2 caracteres en la longitud                       | ❌                  | No hace falta ningún cambio.                                                                                    |
+| Decisiones propias en los ajustes de la decisión 83 (3)                         | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| D-07: valores de enum no definidos en Domain                                    | ✅                  | Opción a: `InvarianteVioladaException` en `Crear`, `CambiarPrioridad`, `Reclasificar` y `PoliticaSla.HorasPara` (decisión 84). |
+| Decisiones propias en la decisión 84 (4)                                        | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Pregunta: la tabla de excepciones del §4 no menciona RN-02                      | ✅                  | La fila pasó a "(RN-01, RN-02, RN-09 y RN-10)".                                                                 |
+| Aviso: ADR-001 y `02-arquitectura-c4.md` §3 no mencionan RN-02                  | ✏️                  | Se actualizó C4 §3; ADR-001 no, porque la definición de las invariantes de Domain está en ADR-003.             |
+| Pregunta: orden entre el valor del enum y la guarda de estado                   | ✅                  | El enum se comprueba antes, igual que el `400` antes del `409` de la decisión 6.                                |
+| Decisiones propias en los ajustes de la decisión 84 (4)                         | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Aviso: fechas 29/10/2026 en cambios guardados el 30/10/2026                     | ✅                  | La decisión 84 se tomó y aprobó el 29/10/2026, y el bloque de §9 tiene esa fecha.                               |
+
+**Incidencias:**
+
+1. La herramienta de edición avisó tres veces que un archivo había cambiado en disco desde la última lectura: `02-reglas-negocio.md`, `adr/README.md` y `02-arquitectura-c4.md`. En los tres casos, `git diff` confirmó que solo contenían los cambios aprobados.
+2. Windows PowerShell 5.1 no admite `&&` ni `||`, así que la comprobación con `git merge-base --is-ancestor` se ejecutó con Bash.
+3. La IA agregó la línea `Co-Authored-By` a los tres mensajes de commit, aunque no estaba en el comando indicado.
+4. D-06 surgió de la propia decisión 79: al dejar Domain de recortar, quedó sin definir qué es un texto "vacío".
+5. Las fechas aprobadas (29/10/2026) quedaron en cambios que se guardaron el 30/10/2026. La IA lo avisó antes del commit `496b0e4`.
+
+**Aprendizaje:**
+
+- Una revisión de regresión después de aplicar decisiones encuentra huecos que crean las propias decisiones (D-06).
+- Las invariantes de Domain tienen que valer también fuera de los casos de uso, por ejemplo en las pruebas; D-06 y D-07 salieron de ese criterio.
+- Definir el criterio de salida antes de revisar evita encadenar revisiones sin fin.
+- Comprobar con `git log` si una enmienda ya tiene commit decide si se amplía o si se crea una nueva.
+- Pedir que la IA liste sus decisiones propias en cada diff hace visibles los cambios que no estaban en el prompt.
+
+**Commit relacionado:**
+
+- `f120971` docs: registrar y aplicar decisiones 75 a 82 para la implementación de Domain
+- `b2bbf14` docs: registrar y aplicar decisión 83 sobre el texto recortado en Domain
+- `496b0e4` docs: registrar y aplicar decisión 84 sobre valores de enum no definidos en Domain
