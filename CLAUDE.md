@@ -4,7 +4,7 @@ Este archivo contiene instrucciones específicas para que Claude Code (la herram
 
 ## Estado del proyecto
 
-API REST de tickets de soporte de TI (curso "Agentic Software Development .NET 10"). Existen las especificaciones funcionales y técnicas, incluido el contrato de endpoints; todavía no hay código. Las carpetas `src/` y `test/` están vacías y Git no las versiona hasta que tengan contenido; se completarán al crear la solución.
+API REST de tickets de soporte de TI (curso "Agentic Software Development .NET 10"). Existen las especificaciones funcionales y técnicas, incluido el contrato de endpoints; la solución ya está creada con los 5 proyectos (`HelpDesk.Domain`, `HelpDesk.Application`, `HelpDesk.Infrastructure` y `HelpDesk.Api` en `src/`, y `HelpDesk.Tests` en `test/`), pero todavía sin entidades, controladores ni lógica de negocio.
 
 Especificaciones funcionales ([specs/functional/](specs/functional/)):
 
@@ -33,7 +33,7 @@ Antes de implementar un RF, lee sus CA y las RN que referencia.
 
 ## Comandos
 
-Todavía no hay una solución `.sln`. Una vez creada, los comandos habituales son:
+La solución es `HelpDesk.slnx`. Los comandos habituales son:
 
 ```powershell
 dotnet build
