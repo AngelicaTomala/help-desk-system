@@ -81,3 +81,10 @@ Origen: decisión 83 de [auditoria-documentacion.md §9](../../../docs/auditoria
 
 - **Texto recortado como invariante:** Domain exige que el texto llegue ya recortado. `Ticket.Crear`, `Ticket.Resolver` y `Ticket.Reabrir` lanzan `InvarianteVioladaException` si el texto está en blanco (vacío o solo espacios) o tiene espacios al inicio o al final. Las longitudes de RN-01 y RN-09 se miden sobre ese texto. Precisa el "no vacío" de la Enmienda 3.
 - **Definición de espacio:** "espacio" es cualquier carácter de espacio en blanco, con la misma definición que `string.Trim()` y `string.IsNullOrWhiteSpace()` de .NET (incluye tabuladores y saltos de línea), tanto en Domain como en Application. Los espacios y saltos de línea en medio del texto están permitidos; la regla solo aplica a los extremos y al texto completamente en blanco.
+
+## Enmienda 5 · 29/10/2026
+
+Origen: decisión 84 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo D-07 de la revisión de regresión de Domain).
+
+- **Valores de enum no definidos:** `Ticket.Crear`, `Ticket.CambiarPrioridad` y `Ticket.Reclasificar` lanzan `InvarianteVioladaException` (`Codigo` `ERROR_INTERNO`) si reciben un valor de `Categoria` o `Prioridad` que no está definido en el enum, y `PoliticaSla.HorasPara` lanza la misma excepción con una prioridad no definida. Así, las invariantes de Domain de la tabla de reparto se amplían a RN-02. Por un caso de uso no ocurre: el validador lo rechaza antes con `400` (decisión 58).
+- **Orden:** la comprobación del valor del enum se hace antes que la guarda de estado. Un valor no definido sobre un ticket `Resuelto` o `Cerrado` lanza `InvarianteVioladaException`, no `TICKET_NO_MODIFICABLE`, en el mismo orden que el `400` antes del `409` (decisión 6).

@@ -2,8 +2,8 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.1                    |
-| Fecha   | 28/10/2026             |
+| Versión | 1.2                    |
+| Fecha   | 29/10/2026             |
 | Estado  | Borrador para revisión |
 
 Describe la arquitectura del MVP en los niveles 1 (Contexto) y 2 (Contenedores) del modelo C4, y la organización interna de la API en Clean Architecture. Deriva de [00-vision.md](../functional/00-vision.md), [03-requisitos-no-funcionales.md](../functional/03-requisitos-no-funcionales.md) y [01-modelo-dominio.md](01-modelo-dominio.md). Las decisiones de arquitectura están en el [índice de ADR](adr/README.md).
@@ -70,7 +70,7 @@ La API se divide en cuatro proyectos. Las dependencias apuntan siempre hacia el 
 
 | Capa               | Contiene                                                                                                                                                                                                                                  | Puede referenciar                       |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| **Domain**         | Entidades (`Ticket`, `Usuario`, `Comentario`), enumeraciones, `PoliticaSla`, invariantes y transiciones (RN-01, RN-03, RN-07 a RN-13), excepciones de dominio (`TransicionInvalidaException` → `409`, `InvarianteVioladaException` → `500`). Sin EF Core ni ASP.NET Core.                | Ninguna                                 |
+| **Domain**         | Entidades (`Ticket`, `Usuario`, `Comentario`), enumeraciones, `PoliticaSla`, invariantes y transiciones (RN-01 a RN-03, RN-07 a RN-13), excepciones de dominio (`TransicionInvalidaException` → `409`, `InvarianteVioladaException` → `500`). Sin EF Core ni ASP.NET Core.                | Ninguna                                 |
 | **Application**    | Casos de uso (handlers), validadores FluentValidation, DTOs, reglas que dependen de datos o del actor (RN-04, RN-05, RN-06), interfaces de persistencia y de `IGeneradorCodigoTicket`. Usa `TimeProvider` para la hora actual (RNF-08). | Domain                                  |
 | **Infrastructure** | `DbContext` de EF Core, configuraciones de entidades, migraciones, datos semilla de usuarios, implementación de repositorios y del generador de código con SEQUENCE de SQL Server.                                                         | Application, Domain                     |
 | **Api**            | Controladores, lectura del encabezado `X-Usuario-Id` (`401`, con el usuario obtenido a través de Application), traducción de excepciones a Problem Details (`400`, `403`, `404`, `409`, `500`), configuración de OpenAPI y Swagger UI, registro de dependencias (`Program.cs`).          | Application, Infrastructure (solo para registrar dependencias) |
