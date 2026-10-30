@@ -1201,3 +1201,127 @@ En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de 
 **Commit relacionado:**
 
 - docs: CLAUDE.md con imports y reglas por capa en .claude/rules (E-015)
+
+---
+
+## E-016 · Implementación de la capa Domain (entidades, reglas y pruebas)
+
+**Herramienta:** Claude Code (VS Code) en modo Plan para el plan; la implementación, al aprobarlo.
+
+**Prompt:**
+
+Varios prompts, por fases:
+
+1. **Implementación en modo Plan:** implementar Domain según el modelo 1.6 y las decisiones de la auditoría §9:
+   - los 6 enums;
+   - `Usuario`, `Ticket` y `Comentario`;
+   - `PoliticaSla`;
+   - las dos excepciones con `Codigo`;
+   - las constantes de RN-01 y RN-09;
+   - pruebas unitarias en `test/HelpDesk.Tests/Domain/`.
+
+   Restricciones:
+   - firmas exactas del modelo;
+   - setters privados;
+   - sin recortar textos en Domain (decisión 83);
+   - sin `DateTime.Now` ni `DateTime.UtcNow`;
+   - Domain sin referencias (RNF-07);
+   - cada prueba con `[Trait("RN", …)]`;
+   - no inventar reglas;
+   - no tocar otras capas ni la documentación.
+
+   La salida pedida: una tabla de métodos y pruebas, y una lista de las decisiones no previstas.
+2. **Corrección del plan:** rechazo del primer plan con cuatro correcciones:
+   - 23 transiciones inválidas, no 28;
+   - ninguna prueba de Domain menciona códigos HTTP;
+   - una prueba de reasignar al mismo técnico;
+   - separar las decisiones que cambian el comportamiento de Domain de las que son solo de implementación.
+3. **Implementación** del plan aprobado.
+4. **Verificación:**
+   - `dotnet build`;
+   - `dotnet test`;
+   - filtros `RN=RN-08` y `CA=CA-04.6`;
+   - búsqueda de `DateTime.Now`, `DateTime.UtcNow` y `Trim(` en Domain;
+   - búsqueda de las pruebas con `"RN-06"`.
+5. **Corrección del Trait RN-06:** quitarlo de `Reasignar_MismoTecnico_NoLanzaExcepcion` y dejar un comentario de una línea.
+6. **Registro de las decisiones 85 y 86:** auditoría §9, `01-modelo-dominio.md` §1 y §4, Enmienda 6 de ADR-003 y resumen ejecutivo. Después se agregó una viñeta sobre CA-03.8 a la Enmienda 6 y se citó la decisión 85 en los comentarios de dos pruebas.
+
+**Resultado de la IA:**
+
+- **Domain (13 archivos):**
+  - `Enumeraciones/`: `EstadoTicket`, `Prioridad`, `Rol`, `EstadoSla`, `Categoria` y `TipoComentario`.
+  - `Entidades/`: `Usuario`, `Ticket` y `Comentario`.
+  - `Excepciones/`: `TransicionInvalidaException`, `InvarianteVioladaException` y `CodigosError`.
+  - `PoliticaSla.cs`.
+- **Pruebas (8 archivos en `test/HelpDesk.Tests/Domain/`):**
+  - El ayudante `TicketsDePrueba`.
+  - `TicketCrearTests`, `TicketTransicionesTests`, `TicketResolverReabrirTests`, `TicketReclasificarCambiarPrioridadTests`, `TicketSlaTests`, `PoliticaSlaTests` y `UsuarioTests`.
+- **128 pruebas.** Las 23 transiciones inválidas de RN-08 comprueban la excepción, el `Codigo` y que no cambiaron `Estado`, `TecnicoId` ni `FechaActualizacion`.
+- **Verificación:**
+  - `dotnet build HelpDesk.slnx`: 0 advertencias y 0 errores.
+  - `dotnet test`: 128 superadas, 0 con error.
+  - Filtros: `RN=RN-08` → 46, `CA=CA-04.6` → 23, `CA=CA-03.4` → 7 y `RN=RN-06` → 4 (tras la corrección, solo `EsTecnicoActivo_SegunRolYActivo_DevuelveSoloTecnicoActivo`).
+  - `DateTime.Now` y `DateTime.UtcNow` en Domain: 0 coincidencias.
+  - `Trim(` en Domain: 2 coincidencias en `Ticket.cs`, el comentario XML y la comparación de longitudes de `ValidarTexto`. Ninguna recorta el texto (decisión 83).
+  - `HelpDesk.Domain.csproj` sin `ProjectReference` ni `PackageReference`.
+  - Enlaces de la documentación: 135, 0 rotos (los 134 anteriores más el de la Enmienda 6).
+- **Documentación:**
+  - Decisiones 85 y 86 en la auditoría §9, que pasa a la versión 1.4 con "(86 en total)".
+  - `01-modelo-dominio.md` en la versión 1.7, con las filas de `Reasignar`, `Resolver` y `Reabrir` (§1) y RN-06 y RN-09 (§4).
+  - Enmienda 6 de ADR-003.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de la IA y **[Desarrolladora]**, una decisión de la desarrolladora.
+
+| Elemento propuesto | Decisión (✅/✏️/❌) | Justificación |
+| ------------------ | ------------------- | ------------- |
+| [Desarrolladora] Respuesta a la pregunta del plan: `Comentarios` como `IReadOnlyCollection<Comentario>`, respaldada por una lista privada | ✅ | Elegida al responder la pregunta del plan. |
+| [Desarrolladora] Respuesta a la pregunta del plan: en `Resolver` y `Reabrir`, la invariante del texto se comprueba antes que el estado | ✅ | Registrada después como decisión 85. |
+| [Desarrolladora] Respuesta a la pregunta del plan: `Usuario` con un constructor público sin validaciones, más uno privado sin parámetros para EF Core | ✅ | Elegida al responder la pregunta del plan. |
+| [IA] Plan: 28 transiciones inválidas | ✏️ | Son 23: 6 acciones × 5 estados − 7 transiciones válidas. |
+| [IA] Plan: pruebas de Domain que mencionaban códigos HTTP | ✏️ | Ninguna prueba de Domain menciona códigos HTTP; comprueban el tipo de excepción, el `Codigo` y que el ticket no cambió. |
+| [IA] Plan sin prueba de reasignar al mismo técnico | ✏️ | Se agregó `Reasignar_MismoTecnico_NoLanzaExcepcion`. |
+| [IA] Plan: decisiones no previstas en una sola lista | ✏️ | Se separaron las que cambian el comportamiento de Domain, para registrarlas en la auditoría, de las que son solo de implementación. |
+| [Desarrolladora] Decisión 85: el texto se valida antes que el estado en `Resolver` y `Reabrir` | ✅ | Registrada en la auditoría §9, `01-modelo-dominio.md` §1 y §4 y la Enmienda 6 de ADR-003. |
+| [IA] Decisión 86: `Ticket.Reasignar` no rechaza al mismo técnico | ✅ | Registrada en la auditoría §9, `01-modelo-dominio.md` §1 y §4 y la Enmienda 6 de ADR-003. |
+| [IA] Carpetas y espacios de nombres en español (`Enumeraciones`, `Entidades`, `Excepciones`) | ✅ | Aprobada con el plan. |
+| [IA] Clase `CodigosError` con los tres códigos; excepciones sin base común | ✅ | Aprobada con el plan. |
+| [IA] Constructores privados sin parámetros en las tres entidades, para EF Core | ✅ | Aprobada con el plan. |
+| [IA] Texto `null` tratado como texto en blanco | ✅ | Aprobada con el plan. |
+| [IA] Pruebas con instantes UTC fijos, sin `FakeTimeProvider` | ✅ | Aprobada con el plan: Domain no lee el reloj; `FakeTimeProvider` se usará en Application. |
+| [IA] Mensajes de las excepciones en español | ✅ | Aprobada con el plan: el contrato solo fija el `Codigo`. |
+| [IA] Textos con espacios en los extremos que cumplen la longitud una vez recortados (`"\tWi-Fi"`, `"Wi-Fi "`) | ✅ | Sin objeciones; incluido en `7a04a34`. |
+| [IA] Teoría aparte para los 7 casos cruzados de asignar y reasignar (RN-07, CA-03.4), que también están en la teoría de las 23 | ✅ | Sin objeciones; incluido en `7a04a34`. |
+| [IA] Observación: el Trait RN-06 de `Reasignar_MismoTecnico_NoLanzaExcepcion` da una cobertura falsa; opciones: quitarlo o aclararlo con un comentario | ✅ | Se eligió quitarlo (opción 1) y dejar un comentario de una línea. |
+| [IA] Reemplazar el comentario que ya tenía la prueba en lugar de agregar otro | ✅ | Sin objeciones. |
+| [IA] Las dos coincidencias de `Trim(` en `Ticket.cs` no recortan el texto | ✅ | Son el comentario XML y la comparación de longitudes; Domain cumple la decisión 83. |
+| [IA] Sugerencia: crear una rama propia (`feat/dominio`) antes del commit de Domain | ❌ | La solución, la capa Domain y su documentación forman parte del mismo arranque del código y se revisarán en un solo PR. |
+| [IA] Aviso: el mensaje del commit de Domain estaba en español y sin IDs de RN o RF | ❌ | Todos los commits del proyecto están en español, y los IDs de RN y CA se trazan en la bitácora y en `specs/trazabilidad.md`, no en el mensaje. |
+| [IA] Decisiones propias al registrar 85 y 86: la línea introductoria del bloque, citar las decisiones 81 y 86 en `Reasignar`, comas en la fila RN-09, la frase "Por un caso de uso no ocurre…" en la Enmienda 6 y la nota de §1 sin cambios | ✅ | Aprobadas al revisar los diffs. |
+| [IA] Observación: la Enmienda 1 de ADR-003 ubica `MISMO_TECNICO` (CA-03.8) en los validadores, pero la decisión 81 lo ubica en `ReasignarTicketHandler` | ✅ | Se precisó con una viñeta en la Enmienda 6, sin modificar la Enmienda 1. |
+| [IA] Observación: los comentarios de dos pruebas decían "decisión de la desarrolladora en el plan de Domain" | ✅ | Se cambiaron por "decisión 85". |
+| [IA] "Origen" de la Enmienda 6 con las decisiones 85 y 86, y la frase "`Ticket.Reasignar` no lo rechaza" | ✅ | Aprobadas al revisar los diffs. |
+| [IA] Con la API en ejecución, ejecutar las pruebas compilando solo el proyecto de pruebas (`-p:BuildProjectReferences=false`) | ✏️ | Se confirmó después con una compilación completa de la solución. |
+| [IA] El PID 9148 ya no existía: no se detuvo ningún proceso y se pidió confirmación antes de seguir | ✅ | La desarrolladora indicó continuar. |
+
+**Incidencias:**
+
+1. El prompt original del paso decía "Los textos se recortan antes de validar (decisión 31)", que contradecía la decisión 83. Se reemplazó por "Domain no recorta textos: exige el texto ya recortado (decisión 83)" antes de enviarlo.
+2. El plan contaba 28 transiciones inválidas en lugar de 23 (6 acciones × 5 estados − 7 válidas). Se corrigió al rechazar el plan.
+3. La prueba `Reasignar_MismoTecnico_NoLanzaExcepcion` llevaba `[Trait("RN", "RN-06")]`, aunque documenta lo contrario de la regla: Domain no rechaza al mismo técnico. Se quitó para que el filtro `RN=RN-06` no la contara como cobertura; ahora ejecuta solo los 4 casos de `EsTecnicoActivo`.
+4. `Select-String -Path … -Recurse` no existe en Windows PowerShell 5.1. Se usó `Get-ChildItem -Recurse -Filter *.cs | Select-String`.
+5. La API en ejecución (`HelpDesk.Api`, PID 9148) bloqueó `HelpDesk.Api.exe` y `HelpDesk.Api.dll`, y `dotnet test` falló, también con `-p:UseAppHost=false`. Se ejecutaron las pruebas compilando solo el proyecto de pruebas. Después se confirmó con una compilación completa (0 advertencias, 0 errores, 128 pruebas), sin detener ningún proceso: el PID 9148 ya no existía.
+6. La Enmienda 1 de ADR-003 era ambigua sobre CA-03.8: decía que responde `400` "desde los validadores". Se precisó en la Enmienda 6: lo responde `ReasignarTicketHandler`, porque necesita conocer el técnico actual del ticket.
+
+**Aprendizaje:**
+
+- Esta fue la primera vez que la documentación se comprobó contra el código real. Al implementar Domain aparecieron dos decisiones que el modelo no fijaba (85 y 86) y una ambigüedad en la Enmienda 1 de ADR-003.
+- Un `Trait` mal puesto da una cobertura falsa en la trazabilidad: el filtro `RN=RN-06` contaba como cobertura una prueba que documenta lo contrario de la regla.
+- Un proceso de la API en ejecución bloquea la compilación de la solución completa. Las pruebas pueden ejecutarse compilando solo el proyecto de pruebas, pero la confirmación final necesita la compilación completa.
+
+**Commit relacionado:**
+
+- `7a04a34` feat(domain): entidades, enumeraciones y reglas del dominio con sus pruebas
+- `ebec49c` docs: registrar y aplicar decisiones 85 y 86 de la implementación de Domain
+- `7577e08` test(domain): citar la decisión 85 en las pruebas de orden de validación
