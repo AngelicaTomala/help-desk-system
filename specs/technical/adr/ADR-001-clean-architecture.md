@@ -59,3 +59,10 @@ Origen: corrección de la documentación, parte 2 ([auditoria-documentacion.md](
 - La "sección 3" citada en Decisión es [02-arquitectura-c4.md §3](../02-arquitectura-c4.md#3-clean-architecture-organización-interna-de-la-api).
 - La Api decide el `401` obteniendo el usuario a través de Application; no usa Infrastructure ni el `DbContext` directamente, conforme a la regla de dependencias.
 - Documentos relacionados: [ADR-002](ADR-002-sqlserver-efcore.md), [ADR-003](ADR-003-fluentvalidation.md), [ADR-004](ADR-004-problemdetails-errores.md).
+
+## Enmienda 3 · 30/10/2026
+
+Origen: decisión 97 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo R-06 de la revisión de RF-01).
+
+- **Interfaces de persistencia:** las "interfaces de persistencia (repositorios, `IGeneradorCodigoTicket`)" de la Decisión son `ITicketRepositorio` (escritura del agregado `Ticket`), `IUsuarioRepositorio` (lectura de usuarios), una unidad de trabajo, `IConsultasTicket` (lectura del detalle del ticket con los nombres del solicitante, del técnico y de los autores de los comentarios) e `IGeneradorCodigoTicket`. Las define Application y las implementa Infrastructure.
+- **Usuario actual:** el middleware de `X-Usuario-Id` obtiene el usuario a través de Application (Enmienda 2, decisión 28) y lo guarda en `IUsuarioActual`, un servicio con alcance por petición que usan los handlers.

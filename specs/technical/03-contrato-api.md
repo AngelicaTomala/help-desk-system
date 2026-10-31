@@ -2,11 +2,11 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 0.1                    |
-| Fecha   | 28/10/2026             |
+| Versión | 0.2                    |
+| Fecha   | 30/10/2026             |
 | Estado  | Borrador en redacción  |
 
-Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [auditoría](../../docs/auditoria-documentacion.md). Fuentes: decisiones 1 a 74 de la [auditoría §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas), [requisitos funcionales](../functional/01-requisitos-funcionales.md), [reglas de negocio](../functional/02-reglas-negocio.md), [RNF](../functional/03-requisitos-no-funcionales.md), [modelo de dominio](01-modelo-dominio.md) y [ADR-004](adr/ADR-004-problemdetails-errores.md).
+Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [auditoría](../../docs/auditoria-documentacion.md). Fuentes: decisiones 1 a 74 y 93 a 95 de la [auditoría §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas), [requisitos funcionales](../functional/01-requisitos-funcionales.md), [reglas de negocio](../functional/02-reglas-negocio.md), [RNF](../functional/03-requisitos-no-funcionales.md), [modelo de dominio](01-modelo-dominio.md) y [ADR-004](adr/ADR-004-problemdetails-errores.md).
 
 ## Índice
 
@@ -25,15 +25,15 @@ Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [au
 - Todas las rutas empiezan por `/api/v1` (decisión 43).
 - Recursos en plural y una operación por acción, no una operación genérica de cambio de estado (decisiones 8 y 42).
 - Las rutas de varias palabras usan kebab-case, sin tildes, por ejemplo `iniciar-atencion` (decisión 44).
-- Un `{id}` de ruta que no sea un entero positivo responde `404` `TICKET_NO_ENCONTRADO` con Problem Details completo (decisión 65).
+- Un `{id}` de ruta que no sea un entero positivo responde `404` `TICKET_NO_ENCONTRADO` con Problem Details completo (decisión 65). Solo es entero positivo con el formato de §1.2 (decisión 95): por ejemplo, `012` y `+12` responden `404`.
 
 > **Nota de implementación.** Una restricción de ruta como `{id:int:min(1)}` produce un `404` sin Problem Details, por lo que no cumple la decisión 65. Además, la validación de `X-Usuario-Id` debe ejecutarse en un middleware, antes de resolver el recurso, para respetar el orden `401` → `404` de §1.4.
 
 ### 1.2 Encabezado `X-Usuario-Id`
 
 - Identifica al usuario en cada petición; no hay JWT en el MVP (S-02, RNF-01).
-- **Formato:** entero positivo dentro del rango de `int` (RNF-01, decisión 30).
-- **Si falta o no es válido** (no numérico, `0`, negativo o fuera de rango): `401` con `codigo` `USUARIO_NO_IDENTIFICADO`. **Si es válido pero no corresponde a ningún usuario:** `401` con `USUARIO_INEXISTENTE` ([ADR-004](adr/ADR-004-problemdetails-errores.md#enmienda-3--28102026)).
+- **Formato:** entero positivo dentro del rango de `int` (RNF-01, decisión 30), formado solo por dígitos ASCII, sin signo, sin espacios y sin ceros a la izquierda (decisión 95). Por ejemplo, `+1`, ` 1`, `01` y `1,2` no son válidos.
+- **Si falta, no es válido** (no numérico, `0`, negativo, fuera de rango o con otro formato que el anterior) **o el encabezado aparece más de una vez** (decisión 95): `401` con `codigo` `USUARIO_NO_IDENTIFICADO`. **Si es válido pero no corresponde a ningún usuario:** `401` con `USUARIO_INEXISTENTE` ([ADR-004](adr/ADR-004-problemdetails-errores.md#enmienda-3--28102026)).
 - La Api obtiene el usuario a través de Application (decisión 28, ADR-001 Enmienda 2).
 - **Exentos:** Swagger UI y el documento OpenAPI no exigen el encabezado (RNF-01, decisión 52).
 - El solicitante de un ticket nuevo se toma de este encabezado; nunca viene en el cuerpo (decisión 54).
@@ -42,9 +42,10 @@ Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [au
 
 - Todas las respuestas de error usan Problem Details (RFC 9457) con `Content-Type: application/problem+json` (RNF-03, [ADR-004](adr/ADR-004-problemdetails-errores.md)).
 - `type` y `title` toman los valores por defecto de ASP.NET Core. Se agrega el campo de extensión `codigo` (decisión 29).
-- `codigo` solo toma valores del [catálogo de ADR-004](adr/ADR-004-problemdetails-errores.md#enmienda-3--28102026), aprobado en la decisión 39.
+- `codigo` solo toma valores del [catálogo de ADR-004](adr/ADR-004-problemdetails-errores.md#enmienda-3--28102026), aprobado en la decisión 39. Las respuestas del framework que no son casos de negocio también usan Problem Details (RNF-03), con `traceId` y sin `codigo`: ruta inexistente (`404`), método no admitido (`405`) y tipo de contenido no admitido (`415`). El `415` se responde cuando el `Content-Type` está presente y no es JSON; si falta, aplica el punto del cuerpo de esta sección (decisión 94).
 - En los `409`, `codigo` es el `Codigo` de `TransicionInvalidaException` (`TRANSICION_INVALIDA` o `TICKET_NO_MODIFICABLE`), que la Api copia (decisión 40).
-- En los `400` de validación, el detalle por campo va en `errors` (ValidationProblemDetails, RNF-05, ADR-003). Las claves de `errors` son los nombres de campo en camelCase. Los mensajes van en español y su redacción queda a la implementación; el contrato fija solo las claves y el `codigo` (decisión 61).
+- En los `400` de validación, el detalle por campo va en `errors` (ValidationProblemDetails, RNF-05, ADR-003). Las claves de `errors` son los nombres de campo en camelCase, salvo la clave `cuerpo` del punto siguiente. Los mensajes van en español y su redacción queda a la implementación; el contrato fija solo las claves y el `codigo` (decisión 61).
+- Un cuerpo ausente, vacío, `null`, que no es un objeto JSON o con JSON mal formado responde `400` `VALIDACION_FALLIDA` con la clave `cuerpo` en `errors`. Una petición sin `Content-Type` se trata como un cuerpo ausente o ilegible. Un campo con un tipo JSON incorrecto (por ejemplo, `"titulo": 123` o `"categoria": 3`) responde `400` `VALIDACION_FALLIDA` con la clave de ese campo, y solo se informa ese error, porque la lectura del JSON se detiene en el primer error de tipo (decisión 93).
 - Todos los Problem Details incluyen `traceId`. `detail` e `instance` no forman parte del contrato, y `detail` nunca expone información interna (decisión 62).
 - En los `500`, `codigo` es siempre `ERROR_INTERNO`, sin detalles internos; el detalle de la excepción se registra en el log (decisión 41, RNF-03).
 - El `404` aplica solo al recurso de la ruta. Un dato inválido del cuerpo, como un técnico inexistente, es `400` (decisión 4, RNF-04).
@@ -58,11 +59,15 @@ Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [au
 | `TRANSICION_INVALIDA`, `TICKET_NO_MODIFICABLE` | `409` |
 | `ERROR_INTERNO` | `500` |
 
+Sin `codigo`, con `traceId`: `404` de ruta inexistente, `405` y `415` (decisión 94).
+
 El caso de cada código está en el catálogo de ADR-004.
 
 ### 1.4 Orden de evaluación de errores
 
 Cuando aplican varios errores se responde el primero de esta secuencia: `401` → `404` → `403` → `400` → `409` (RNF-04, decisión 6). Una operación rechazada no modifica datos (RNF-04).
+
+**Excepción:** todo error de lectura del cuerpo (§1.3, decisión 93), incluido un campo con tipo JSON incorrecto, ocurre antes del handler, así que su `400` se responde antes que el `404` y el `403`. El `401` sigue siendo el primero.
 
 ### 1.5 Respuesta paginada
 
