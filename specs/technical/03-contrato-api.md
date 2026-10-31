@@ -2,11 +2,11 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 0.2                    |
-| Fecha   | 30/10/2026             |
+| Versión | 0.3                    |
+| Fecha   | 31/10/2026             |
 | Estado  | Borrador en redacción  |
 
-Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [auditoría](../../docs/auditoria-documentacion.md). Fuentes: decisiones 1 a 74 y 93 a 95 de la [auditoría §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas), [requisitos funcionales](../functional/01-requisitos-funcionales.md), [reglas de negocio](../functional/02-reglas-negocio.md), [RNF](../functional/03-requisitos-no-funcionales.md), [modelo de dominio](01-modelo-dominio.md) y [ADR-004](adr/ADR-004-problemdetails-errores.md).
+Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [auditoría](../../docs/auditoria-documentacion.md). Fuentes: decisiones 1 a 74, 93 a 95 y 100 a 106 de la [auditoría §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas), [requisitos funcionales](../functional/01-requisitos-funcionales.md), [reglas de negocio](../functional/02-reglas-negocio.md), [RNF](../functional/03-requisitos-no-funcionales.md), [modelo de dominio](01-modelo-dominio.md) y [ADR-004](adr/ADR-004-problemdetails-errores.md).
 
 ## Índice
 
@@ -67,7 +67,7 @@ El caso de cada código está en el catálogo de ADR-004.
 
 Cuando aplican varios errores se responde el primero de esta secuencia: `401` → `404` → `403` → `400` → `409` (RNF-04, decisión 6). Una operación rechazada no modifica datos (RNF-04).
 
-**Excepción:** todo error de lectura del cuerpo (§1.3, decisión 93), incluido un campo con tipo JSON incorrecto, ocurre antes del handler, así que su `400` se responde antes que el `404` y el `403`. El `401` sigue siendo el primero.
+**Excepción:** todo error de lectura del cuerpo (§1.3, decisión 93), incluido un campo con tipo JSON incorrecto, ocurre antes del handler, así que su `400` se responde antes que el `404` y el `403`. El `401` sigue siendo el primero. Los errores de los parámetros de la URL no son errores de lectura del cuerpo: siguen el orden general (§1.11, decisión 101).
 
 ### 1.5 Respuesta paginada
 
@@ -97,7 +97,7 @@ Los listados paginados responden con este envoltorio (decisión 9, CA-02.4):
 
 ### 1.7 Nombres de campos
 
-Los campos JSON, del cuerpo y de la respuesta, van en camelCase (decisión 47). Los campos no previstos en el cuerpo se ignoran; por ejemplo, un `solicitanteId` enviado al crear un ticket (decisiones 54 y 66).
+Los campos JSON, del cuerpo y de la respuesta, van en camelCase (decisión 47). Los campos no previstos en el cuerpo se ignoran; por ejemplo, un `solicitanteId` enviado al crear un ticket (decisiones 54 y 66). Los parámetros de la URL desconocidos también se ignoran (§1.11, decisión 106).
 
 ### 1.8 Enums
 
@@ -138,6 +138,16 @@ Los Id de los ejemplos son ilustrativos: los reales los fija la migración ([01-
 - **Ticket 16:** no existe antes del ejemplo de crear ticket; es el que ese ejemplo crea.
 - **Vencimientos:** cumplen RN-10 (Crítica 2 h, Alta 4 h, Media 8 h, Baja 24 h).
 - **Estado del SLA:** cumple RN-11 respecto del instante de referencia.
+
+### 1.11 Parámetros de la URL
+
+- **Lectura:** los parámetros de la URL se reciben como texto y los valida el validador de la operación, que el handler invoca después de comprobar el permiso (`403`), en el orden de §1.4 (decisiones 92 y 101), igual que los enums del cuerpo (decisión 96). No son errores de lectura del cuerpo, así que no aplica la excepción de §1.4. El documento OpenAPI anota sus valores y su formato (RNF-09, decisión 101).
+- **Repetidos:** un parámetro que aparece más de una vez responde `400` `VALIDACION_FALLIDA` con la clave de ese parámetro en `errors` (decisión 103).
+- **Vacíos:** un parámetro presente con valor vacío (por ejemplo, `?page=` o `?estado=`) responde `400` `VALIDACION_FALLIDA` con su clave. Solo un parámetro ausente toma su valor por defecto o no filtra (decisión 104).
+- **Números:** `tecnicoId`, `page` y `pageSize` usan el formato de §1.2: solo dígitos ASCII, sin signo, sin espacios y sin ceros a la izquierda, dentro del rango de `int` y mayor que 0. Después, el validador comprueba los rangos de RN-05 (decisión 105). Por ejemplo, `+2`, `02`, ` 2` y `2.0` responden `400`.
+- **Booleanos:** `soloVencidos` acepta solo `true` y `false`, sin distinguir mayúsculas; cualquier otro valor responde `400` `VALIDACION_FALLIDA` (decisión 102).
+- **Enums:** siguen §1.8 (decisión 58).
+- **Desconocidos y nombres:** los parámetros desconocidos se ignoran, y los nombres de los parámetros no distinguen mayúsculas y minúsculas (decisión 106, que extiende la decisión 66 de §1.7).
 
 ---
 
@@ -291,12 +301,12 @@ Content-Type: application/json
 | --------- | --------- | ---- | ----------- | --------------- |
 | `estado` | Query | `EstadoTicket` | Sin filtro | Valores de §1.8 (decisión 58) |
 | `prioridad` | Query | `Prioridad` | Sin filtro | Valores de §1.8 (decisión 58) |
-| `tecnicoId` | Query | entero positivo | Sin filtro | Id de un usuario (decisión 53). Un técnico solo puede usar su propio Id (CA-02.7); el solicitante puede usarlo dentro de su visibilidad (decisión 51). Si no corresponde a un técnico existente, `200` con lista vacía (decisión 69) |
-| `soloVencidos` | Query | booleano | Sin filtro | `true` devuelve solo tickets con estado del SLA `Vencido`, sin `Incumplido` (CA-02.3, decisiones 10 y 53) |
-| `page` | Query | entero | `1` | ≥ 1 (RN-05, RNF-05) |
-| `pageSize` | Query | entero | `20` | 1–100 (RN-05, RNF-05, decisión 9) |
+| `tecnicoId` | Query | entero positivo | Sin filtro | Id de un usuario con el formato de §1.11 (decisiones 53 y 105). Un técnico solo puede usar su propio Id: cualquier otro valor, incluido uno mal formado, responde `403` sin consultar la base (CA-02.7, decisión 100). Por el orden `403` → `400` de §1.4, un `tecnicoId` vacío, o repetido con algún valor distinto de su Id, responde `403`; repetido con todos los valores iguales a su Id, `400` (decisiones 100 y 103). El solicitante puede usarlo dentro de su visibilidad (decisión 51). Para el solicitante y el supervisor, un Id que no corresponde a un técnico existente responde `200` con lista vacía (decisiones 69 y 100) |
+| `soloVencidos` | Query | booleano | Sin filtro | `true` o `false`, sin distinguir mayúsculas (decisión 102). `true` devuelve solo tickets con estado del SLA `Vencido`, sin `Incumplido` (CA-02.3, decisiones 10 y 53); `false` equivale a no enviarlo (decisión 102) |
+| `page` | Query | entero | `1` | ≥ 1, con el formato de §1.11 (RN-05, RNF-05, decisión 105) |
+| `pageSize` | Query | entero | `20` | 1–100, con el formato de §1.11 (RN-05, RNF-05, decisiones 9 y 105) |
 
-Los filtros se combinan: solo se devuelven los tickets que cumplen todos (CA-02.3). Orden: `fechaCreacion` descendente y luego `id` descendente (decisión 59).
+Los parámetros se leen según §1.11 (decisiones 101 a 106). Los filtros se combinan: solo se devuelven los tickets que cumplen todos (CA-02.3). Orden: `fechaCreacion` descendente y luego `id` descendente (decisión 59).
 
 ```http
 GET /api/v1/tickets?page=1&pageSize=20
@@ -342,8 +352,8 @@ Content-Type: application/json
 | ---- | -------- | --------- | ------ |
 | `401` | `USUARIO_NO_IDENTIFICADO` | Falta `X-Usuario-Id` o no es válido | RNF-01, decisión 30 |
 | `401` | `USUARIO_INEXISTENTE` | El Id no corresponde a ningún usuario | RNF-01 |
-| `403` | `FILTRO_NO_AUTORIZADO` | Un técnico filtra por el `tecnicoId` de otro técnico | CA-02.7 |
-| `400` | `VALIDACION_FALLIDA` | `page` < 1; `pageSize` < 1 o > 100; filtro con valor inválido o enum numérico | CA-02.4, CA-02.8, RNF-05, decisiones 53 y 58 |
+| `403` | `FILTRO_NO_AUTORIZADO` | Un técnico envía un `tecnicoId` distinto de su propio Id, incluido uno mal formado, vacío o repetido con algún valor distinto de su Id | CA-02.7, decisión 100 |
+| `400` | `VALIDACION_FALLIDA` | `page` < 1; `pageSize` < 1 o > 100; filtro con valor inválido o enum numérico; número con otro formato que el de §1.11; `soloVencidos` distinto de `true` o `false`; parámetro repetido o presente con valor vacío | CA-02.4, CA-02.8, RNF-05, decisiones 53, 58 y 102 a 105 |
 
 ### 2.4 Reclasificar
 

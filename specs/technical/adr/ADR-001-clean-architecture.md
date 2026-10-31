@@ -66,3 +66,9 @@ Origen: decisión 97 de [auditoria-documentacion.md §9](../../../docs/auditoria
 
 - **Interfaces de persistencia:** las "interfaces de persistencia (repositorios, `IGeneradorCodigoTicket`)" de la Decisión son `ITicketRepositorio` (escritura del agregado `Ticket`), `IUsuarioRepositorio` (lectura de usuarios), una unidad de trabajo, `IConsultasTicket` (lectura del detalle del ticket con los nombres del solicitante, del técnico y de los autores de los comentarios) e `IGeneradorCodigoTicket`. Las define Application y las implementa Infrastructure.
 - **Usuario actual:** el middleware de `X-Usuario-Id` obtiene el usuario a través de Application (Enmienda 2, decisión 28) y lo guarda en `IUsuarioActual`, un servicio con alcance por petición que usan los handlers.
+
+## Enmienda 4 · 31/10/2026
+
+Origen: decisión 108 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo R2-09 de la revisión de RF-02).
+
+- **Lectura del listado:** `IConsultasTicket`, descrita en la Enmienda 3 como lectura del detalle del ticket, se amplía con la lectura paginada del listado de tickets (RF-02). La lista de interfaces de la Enmienda 3 no cambia.

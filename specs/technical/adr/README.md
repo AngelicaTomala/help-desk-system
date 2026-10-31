@@ -2,7 +2,7 @@
 
 Cada ADR sigue el formato de Michael Nygard: título, estado, fecha, contexto, decisión, consecuencias y alternativas consideradas.
 
-Los ADR aceptados no se reescriben: los cambios posteriores se agregan al final como "Enmienda" con su fecha. ADR-001 a ADR-004 tienen enmiendas del 28/10/2026, y ADR-003 y ADR-004 tienen además enmiendas del 29/10/2026.
+Los ADR aceptados no se reescriben: los cambios posteriores se agregan al final como "Enmienda" con su fecha. ADR-001 a ADR-004 tienen enmiendas del 28/10/2026 y del 30/10/2026; ADR-003 y ADR-004 tienen además enmiendas del 29/10/2026, y ADR-001, ADR-003 y ADR-004, del 31/10/2026.
 
 Ver también: [arquitectura C4](../02-arquitectura-c4.md), [modelo de dominio](../01-modelo-dominio.md) y [auditoría de la documentación](../../../docs/auditoria-documentacion.md).
 

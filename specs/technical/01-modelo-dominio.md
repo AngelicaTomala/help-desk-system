@@ -2,8 +2,8 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.8                    |
-| Fecha   | 30/10/2026             |
+| Versión | 1.9                    |
+| Fecha   | 31/10/2026             |
 | Estado  | Aprobado               |
 
 Deriva de [specs/functional/](../functional/) ([00 visión](../functional/00-vision.md), [01 RF/CA](../functional/01-requisitos-funcionales.md), [02 RN](../functional/02-reglas-negocio.md), [03 RNF](../functional/03-requisitos-no-funcionales.md)). Todas las fechas son `DateTime` en **UTC** (S-04) y los Id son `int` de identidad.
@@ -129,7 +129,7 @@ Criterio (ver [ADR-003](adr/ADR-003-fluentvalidation.md)): el formato de la entr
 | RN-08 | Domain + Application | `Ticket` (métodos de transición `Asignar`, `Reasignar`, `IniciarAtencion`, `Resolver`, `Cerrar` y `Reabrir`; una transición inválida lanza `TransicionInvalidaException` con `TRANSICION_INVALIDA` → `409`) · handlers verifican quién puede (`403`) |
 | RN-09 | Domain + Application | `Ticket.Resolver` / `Ticket.Reabrir` (invariante: texto recortado, no en blanco y ≤ `Comentario.TextoLongitudMaxima`; `InvarianteVioladaException`, comprobada antes que el estado, decisión 85; guardan el texto recibido y el `autorId` del comentario) · `ResolverTicketValidator` / `ReabrirTicketValidator` (mismas constantes; `400` con detalle, CA-04.3) · Application recorta el texto antes de validar y de llamar a Domain, y fija `autorId` (decisiones 77, 79 y 83) · `Resolver` fija FechaResolucion; `Reabrir` la borra y conserva el técnico |
 | RN-10 | Domain               | `PoliticaSla.HorasPara(Prioridad)` (`InvarianteVioladaException` con una prioridad no definida, decisión 84) · `Ticket.Crear` calcula FechaVencimiento |
-| RN-11 | Domain               | `Ticket.CalcularEstadoSla(ahora)`; `ahora` se obtiene de `TimeProvider` (RNF-08)                                                              |
+| RN-11 | Domain               | `Ticket.CalcularEstadoSla(ahora)`; `ahora` se obtiene de `TimeProvider` (RNF-08) · la condición "ticket vencido" de RN-11 (no resuelto y `ahora` > vencimiento) se expone como una expresión `Expression<Func<Ticket, bool>>` que recibe `ahora`; Infrastructure la usa para filtrar en SQL (`soloVencidos`, RNF-06) y `CalcularEstadoSla` se apoya en la misma condición; una prueba comprueba que la expresión y `CalcularEstadoSla` coinciden en todos los estados (decisión 107) |
 | RN-12 | Domain + Application | `Ticket.CambiarPrioridad` (`TransicionInvalidaException` con `TICKET_NO_MODIFICABLE` → `409` si `Resuelto`/`Cerrado`; recalcula desde FechaCreacion) · `CambiarPrioridadHandler` (solo supervisor, si no `403`) |
 | RN-13 | Domain + Application | `Ticket.Reclasificar` (`TransicionInvalidaException` con `TICKET_NO_MODIFICABLE` → `409` si `Resuelto`/`Cerrado`, CA-01.7) · `ReclasificarTicketValidator` (categoría válida, si no `400`) · `ReclasificarTicketHandler` (técnico asignado o supervisor, si no `403`, CA-01.8) |
 

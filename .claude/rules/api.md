@@ -14,5 +14,8 @@ paths:
 - Responde los `400` de validación con `ValidationProblemDetails` y claves de `errors` en camelCase (decisión 61).
 - Serializa JSON en camelCase y enums como texto; acepta enums sin distinguir mayúsculas y rechaza los numéricos con `400` (decisiones 47, 48 y 58).
 - Ignora los campos no previstos del cuerpo (decisión 66).
+- Recibe los parámetros de la URL como texto y pásalos a Application sin convertirlos, con lo necesario para que el validador detecte un parámetro repetido o presente con valor vacío; no respondas `400` por ellos antes del handler, que los valida después del `403` (decisiones 101, 103 y 104).
+- Ignora los parámetros de la URL desconocidos; sus nombres no distinguen mayúsculas y minúsculas (decisión 106).
+- Anota en el documento OpenAPI los valores y el formato de los parámetros de la URL (RNF-09, decisión 101).
 - Usa una ruta relativa en el `Location` de crear ticket (decisión 64).
 - Swagger UI y el documento OpenAPI no exigen `X-Usuario-Id` (decisión 52).

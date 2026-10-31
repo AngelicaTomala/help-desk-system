@@ -104,3 +104,13 @@ Origen: decisiones 92, 93 y 96 de [auditoria-documentacion.md §9](../../../docs
 - **Errores de lectura del cuerpo:** un campo con un tipo JSON incorrecto se rechaza al leer el cuerpo, antes del handler y del validador, y solo se informa el error de ese campo, porque la lectura del JSON se detiene en el primer error de tipo. Es una excepción a "Devuelve todos los errores a la vez" de las Consecuencias (decisión 93).
 - **Enums de entrada como texto:** los DTO de petición reciben `categoria` y `prioridad` como texto. El validador los convierte sin distinguir mayúsculas y rechaza los textos numéricos con `400` (decisión 58). El esquema OpenAPI de esos campos se anota con los valores del enum (RNF-09).
 - **`{id}` de la ruta:** llega a Application como `int`, ya validado por la Api con el formato de la decisión 95.
+
+## Enmienda 8 · 31/10/2026
+
+Origen: decisiones 101 a 105 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos R2-02 a R2-06 de la revisión de RF-02).
+
+- **Parámetros de la URL como texto:** los parámetros de la URL del listado (`estado`, `prioridad`, `tecnicoId`, `soloVencidos`, `page` y `pageSize`) llegan a Application como texto, igual que los enums del cuerpo de la Enmienda 7. Los valida `ListarTicketsValidator`, que el handler invoca después del `403` (Enmienda 7, decisión 92). Un error de la URL no es un error de lectura del cuerpo, así que no aplica la excepción de la decisión 93. El documento OpenAPI anota sus valores y su formato (RNF-09) (decisión 101).
+- **`soloVencidos`:** acepta solo `true` y `false`, sin distinguir mayúsculas; `false` equivale a no enviarlo; cualquier otro valor responde `400` `VALIDACION_FALLIDA` (decisión 102).
+- **Parámetros repetidos:** un parámetro que aparece más de una vez responde `400` `VALIDACION_FALLIDA` con la clave de ese parámetro (decisión 103).
+- **Valores vacíos:** un parámetro presente con valor vacío responde `400` `VALIDACION_FALLIDA` con su clave; solo un parámetro ausente toma su valor por defecto o no filtra (decisión 104).
+- **Formato de los números:** `tecnicoId`, `page` y `pageSize` usan el formato de la decisión 95; después, el validador comprueba los rangos de RN-05 con las constantes de paginación de Application (Enmienda 2) (decisión 105).

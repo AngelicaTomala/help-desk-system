@@ -2,14 +2,14 @@
 
 | Campo   | Valor                                  |
 | ------- | -------------------------------------- |
-| Versión | 1.4                                    |
-| Fecha   | 30/10/2026                             |
+| Versión | 1.5                                    |
+| Fecha   | 31/10/2026                             |
 | Estado  | Auditoría y corrección completas       |
 | Rama    | `feat/specs-tecnicas` (auditoría en `fb3a977`; corrección parte 1 en `801b2ff`; parte 2 en `9060679`) |
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (99 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (110 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
@@ -514,6 +514,24 @@ Salen de los hallazgos R-01 a R-08 de la revisión de solo lectura de RF-01 del 
 | 97 | Application define `ITicketRepositorio` (escritura del agregado), `IUsuarioRepositorio` (lectura de usuarios), una unidad de trabajo e `IConsultasTicket` (lectura del detalle del ticket con los nombres de solicitante, técnico y autores). El middleware de `X-Usuario-Id` obtiene el usuario a través de Application (decisión 28) y lo guarda en un servicio con alcance por petición, `IUsuarioActual`, que usan los handlers. | R-06 | Enmienda 3 de ADR-001 |
 | 98 | Application señala sus errores con excepciones que llevan `Codigo`: una para el `404`, otra para el `403`, que admite cualquier `codigo` `403` del catálogo (`ROL_NO_AUTORIZADO`, `TICKET_AJENO` y `FILTRO_NO_AUTORIZADO`), y otra para los `400`, que admite cualquier `codigo` `400` del catálogo (`VALIDACION_FALLIDA` con `errors`, `TECNICO_NO_VALIDO` y `MISMO_TECNICO`). Las constantes de los códigos de Application viven en Application. La Api las traduce a Problem Details. | R-07 | Enmienda 6 de ADR-004 |
 | 99 | Las pruebas de extremo a extremo usan la base de pruebas de la decisión 91 en una colección serializada. Antes de cada prueba se borran los tickets y comentarios y se reinicia la SEQUENCE con `RESTART WITH 1`. La factory de pruebas sobrescribe `ConnectionStrings:HelpDesk` con la cadena de pruebas, conserva la guarda contra la base `HelpDesk` y usa `FakeTimeProvider`. | R-08 | Enmienda 5 de ADR-002; `.claude/rules/tests.md` |
+
+Decisiones para la implementación de RF-02 (31/10/2026):
+
+Salen de los hallazgos R2-01 a R2-11 de la revisión de solo lectura de RF-02 del 31/10/2026; no forman parte de H-01 a H-55, de D-01 a D-07, de I-01 e I-02 ni de R-01 a R-08.
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 100 | Para un técnico, cualquier valor de `tecnicoId` distinto de su propio Id, incluido uno mal formado, responde `403` `FILTRO_NO_AUTORIZADO`, sin consultar la base. La decisión 69 (lista vacía) aplica solo al solicitante y al supervisor. Por el orden `403` → `400` (decisión 6), un técnico que envía `tecnicoId` vacío, o repetido con algún valor distinto de su Id, recibe `403`; si lo repite con todos los valores iguales a su Id, recibe `400` `VALIDACION_FALLIDA` (decisión 103). | R2-01 | `03-contrato-api.md` §2.3 (fila `tecnicoId` y tabla de errores); Enmienda 7 de ADR-004; `.claude/rules/application.md` |
+| 101 | Los parámetros de la URL del listado se reciben como texto y los valida el validador, invocado por el handler después del `403` (decisión 92), igual que la decisión 96 con el cuerpo. El documento OpenAPI anota sus valores y su formato. | R2-02 | `03-contrato-api.md` §1.4, §1.11 y §2.3; Enmienda 8 de ADR-003; `.claude/rules/api.md` y `.claude/rules/application.md` |
+| 102 | `soloVencidos` acepta solo `true` y `false`, sin distinguir mayúsculas; `false` equivale a no enviarlo; cualquier otro valor responde `400` `VALIDACION_FALLIDA`. | R2-03 | `03-contrato-api.md` §1.11 y §2.3; Enmienda 8 de ADR-003; `.claude/rules/application.md` |
+| 103 | Un parámetro de la URL repetido responde `400` `VALIDACION_FALLIDA` con la clave de ese parámetro. | R2-04 | `03-contrato-api.md` §1.11 y §2.3; Enmienda 8 de ADR-003; `.claude/rules/api.md` y `.claude/rules/application.md` |
+| 104 | Un parámetro de la URL presente con valor vacío responde `400` `VALIDACION_FALLIDA` con su clave; solo un parámetro ausente toma su valor por defecto o no filtra. | R2-05 | `03-contrato-api.md` §1.11 y §2.3; Enmienda 8 de ADR-003; `.claude/rules/api.md` y `.claude/rules/application.md` |
+| 105 | `tecnicoId`, `page` y `pageSize` usan el formato de la decisión 95; después, el validador comprueba los rangos de RN-05. | R2-06 | `03-contrato-api.md` §1.11 y §2.3; Enmienda 8 de ADR-003; `.claude/rules/application.md` |
+| 106 | Los parámetros de la URL desconocidos se ignoran, y sus nombres no distinguen mayúsculas y minúsculas (extiende la decisión 66). | R2-07 | `03-contrato-api.md` §1.7 y §1.11; `.claude/rules/api.md` |
+| 107 | Domain expone la condición "ticket vencido" de RN-11 como una expresión (`Expression<Func<Ticket, bool>>`) que recibe la hora actual. Infrastructure la usa para filtrar en SQL (RNF-06) y el cálculo de `estadoSla` se apoya en la misma condición. Una prueba comprueba que la expresión y `CalcularEstadoSla` coinciden en todos los estados. | R2-08 | `01-modelo-dominio.md` §4 (RN-11) |
+| 108 | `IConsultasTicket` se amplía con la lectura paginada del listado. | R2-09 | Enmienda 4 de ADR-001 |
+| 109 | En RNF-01, la prueba del `403` se hace "con un usuario sin permiso para la operación". En consultar por Id y en listar, esa prueba usa `TICKET_AJENO` y `FILTRO_NO_AUTORIZADO`, porque los tres roles pueden ejecutar esas operaciones. | R2-10 | RNF-01 (`03-requisitos-no-funcionales.md`); `.claude/rules/tests.md` |
+| 110 | La prueba manual de rendimiento de RNF-06 es una prueba explícita, que no se ejecuta con `dotnet test` normal: siembra 10 000 tickets en la base de pruebas y mide el listado. La revisión del SQL generado se hace con un solicitante, que siempre filtra. | R2-11 | RNF-06 (`03-requisitos-no-funcionales.md`); `.claude/rules/tests.md` |
 
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 
