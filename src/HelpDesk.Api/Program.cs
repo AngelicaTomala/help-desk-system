@@ -1,4 +1,5 @@
 using HelpDesk.Api.Configuracion;
+using HelpDesk.Api.Identidad;
 using HelpDesk.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// El middleware de X-Usuario-Id necesita el endpoint elegido y va antes de la acción (orden 401 → 404, §1.4).
+app.UseRouting();
+app.UseUsuarioActual();
 
 app.UseAuthorization();
 

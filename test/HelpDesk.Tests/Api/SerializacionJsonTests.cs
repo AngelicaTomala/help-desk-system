@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using HelpDesk.Tests.Integracion;
 
 namespace HelpDesk.Tests.Api;
 
@@ -8,9 +9,10 @@ namespace HelpDesk.Tests.Api;
 /// JSON del contrato: camelCase, enums como texto, fechas UTC con <c>Z</c> y campos no previstos ignorados
 /// (decisiones 47, 48, 60 y 66).
 /// </summary>
+[Collection(BaseDePruebasColeccion.Nombre)]
 public class SerializacionJsonTests(HelpDeskApiFactory factory) : IClassFixture<HelpDeskApiFactory>
 {
-    private readonly HttpClient _cliente = factory.CreateClient();
+    private readonly HttpClient _cliente = factory.CrearClienteIdentificado();
 
     [Fact]
     public async Task Serializar_RespuestaConEnumYFechas_EnumComoTextoYFechasConZ()

@@ -1,4 +1,6 @@
 using FluentValidation.Results;
+using HelpDesk.Api.Identificadores;
+using HelpDesk.Application.Abstracciones;
 using HelpDesk.Application.Excepciones;
 using HelpDesk.Domain.Enumeraciones;
 using HelpDesk.Domain.Excepciones;
@@ -7,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace HelpDesk.Tests.Api.Dobles;
 
 /// <summary>
-/// Endpoints solo de pruebas: lanzan cada tipo de excepción o reciben un cuerpo JSON. La factory los agrega con
+/// Endpoints solo de pruebas: lanzan cada tipo de excepción, reciben un cuerpo JSON o devuelven el usuario actual y el
+/// <c>{id}</c> leído de la ruta. Como toda acción de controlador, exigen <c>X-Usuario-Id</c>. La factory los agrega con
 /// <c>AddApplicationPart</c>; no existen en la Api compilada.
 /// </summary>
 [ApiController]
@@ -61,7 +64,18 @@ public sealed class PruebasController : ControllerBase
         new DateTime(2026, 10, 28, 14, 30, 0, DateTimeKind.Utc),
         new DateTime(2026, 10, 28, 9, 0, 0, DateTimeKind.Unspecified),
         null);
+
+    [HttpGet("usuario-actual")]
+    public ActionResult<UsuarioDePrueba> UsuarioActual([FromServices] IUsuarioActual usuarioActual) =>
+        new UsuarioDePrueba(usuarioActual.Id, usuarioActual.Rol);
+
+    [HttpGet("tickets/{id}")]
+    public ActionResult<IdDePrueba> Ticket(string id) => new IdDePrueba(IdRuta.LeerTicket(id));
 }
+
+public sealed record UsuarioDePrueba(int Id, Rol Rol);
+
+public sealed record IdDePrueba(int Id);
 
 public sealed record CuerpoDePrueba(string? Titulo, string? Categoria, int? TecnicoId);
 

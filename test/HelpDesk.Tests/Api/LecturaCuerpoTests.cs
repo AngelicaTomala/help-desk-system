@@ -4,6 +4,7 @@ using System.Text;
 using HelpDesk.Api.Errores;
 using HelpDesk.Application.Excepciones;
 using HelpDesk.Tests.Api.Dobles;
+using HelpDesk.Tests.Integracion;
 using static HelpDesk.Tests.Api.AfirmacionesProblemDetails;
 
 namespace HelpDesk.Tests.Api;
@@ -11,11 +12,12 @@ namespace HelpDesk.Tests.Api;
 /// <summary>
 /// Errores de lectura del cuerpo (decisión 93) y validación implícita de MVC desactivada (decisión 92).
 /// </summary>
+[Collection(BaseDePruebasColeccion.Nombre)]
 public class LecturaCuerpoTests(HelpDeskApiFactory factory) : IClassFixture<HelpDeskApiFactory>
 {
     private const string RutaCuerpo = "pruebas/cuerpo";
 
-    private readonly HttpClient _cliente = factory.CreateClient();
+    private readonly HttpClient _cliente = factory.CrearClienteIdentificado();
 
     [Theory]
     [InlineData("")]

@@ -1,12 +1,16 @@
 using System.Net;
 using System.Text;
+using HelpDesk.Api.Identidad;
+using HelpDesk.Tests.Integracion;
 using static HelpDesk.Tests.Api.AfirmacionesProblemDetails;
 
 namespace HelpDesk.Tests.Api;
 
 /// <summary>
-/// Respuestas del framework con Problem Details, <c>traceId</c> y sin <c>codigo</c> (decisión 94, RNF-03).
+/// Respuestas del framework con Problem Details, <c>traceId</c> y sin <c>codigo</c> (decisión 94, RNF-03). La ruta
+/// inexistente y el método no admitido no exigen <c>X-Usuario-Id</c>: no son acciones de la API.
 /// </summary>
+[Collection(BaseDePruebasColeccion.Nombre)]
 public class RespuestasFrameworkTests(HelpDeskApiFactory factory) : IClassFixture<HelpDeskApiFactory>
 {
     private readonly HttpClient _cliente = factory.CreateClient();
@@ -32,7 +36,10 @@ public class RespuestasFrameworkTests(HelpDeskApiFactory factory) : IClassFixtur
     {
         var contenido = new StringContent("{\"titulo\": \"Monitor sin imagen\"}", Encoding.UTF8, "text/plain");
 
-        var respuesta = await _cliente.PostAsync("pruebas/cuerpo", contenido);
+        using var peticion = new HttpRequestMessage(HttpMethod.Post, "pruebas/cuerpo") { Content = contenido };
+        peticion.Headers.Add(MiddlewareUsuarioActual.Encabezado, HelpDeskApiFactory.IdUsuarioPorDefecto);
+
+        var respuesta = await _cliente.SendAsync(peticion);
 
         await AfirmarProblemaAsync(respuesta, HttpStatusCode.UnsupportedMediaType, codigo: null);
     }

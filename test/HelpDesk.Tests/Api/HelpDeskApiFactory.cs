@@ -1,3 +1,4 @@
+using HelpDesk.Api.Identidad;
 using HelpDesk.Tests.Api.Dobles;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -19,7 +20,22 @@ public class HelpDeskApiFactory : WebApplicationFactory<Program>
     private const string NombreCadenaPruebas = "HelpDeskPruebas";
     private const string BaseDeDesarrollo = "HelpDesk";
 
+    /// <summary>
+    /// Ana Solicitante, usuario semilla 1 (decisión 89); las pruebas que no dependen del rol lo usan.
+    /// </summary>
+    public const string IdUsuarioPorDefecto = "1";
+
     public RegistroDeLogs Logs { get; } = new();
+
+    /// <summary>
+    /// Cliente con <c>X-Usuario-Id</c> en todas las peticiones, para llegar a las acciones (RNF-01).
+    /// </summary>
+    public HttpClient CrearClienteIdentificado(string idUsuario = IdUsuarioPorDefecto)
+    {
+        var cliente = CreateClient();
+        cliente.DefaultRequestHeaders.Add(MiddlewareUsuarioActual.Encabezado, idUsuario);
+        return cliente;
+    }
 
     public FakeTimeProvider Reloj { get; } = new(new DateTimeOffset(2026, 10, 28, 14, 30, 0, TimeSpan.Zero));
 

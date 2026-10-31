@@ -3,6 +3,7 @@ using HelpDesk.Api.Errores;
 using HelpDesk.Application.Excepciones;
 using HelpDesk.Domain.Excepciones;
 using HelpDesk.Tests.Api.Dobles;
+using HelpDesk.Tests.Integracion;
 using Microsoft.Extensions.Logging;
 using static HelpDesk.Tests.Api.AfirmacionesProblemDetails;
 
@@ -11,9 +12,10 @@ namespace HelpDesk.Tests.Api;
 /// <summary>
 /// Traducción de las excepciones de Application y Domain a Problem Details (ADR-004, decisiones 40, 41 y 98).
 /// </summary>
+[Collection(BaseDePruebasColeccion.Nombre)]
 public class ManejadorExcepcionesTests(HelpDeskApiFactory factory) : IClassFixture<HelpDeskApiFactory>
 {
-    private readonly HttpClient _cliente = factory.CreateClient();
+    private readonly HttpClient _cliente = factory.CrearClienteIdentificado();
 
     [Fact]
     public async Task ManejarExcepcion_SolicitudInvalidaConErrores_Responde400ConErroresEnCamelCase()
