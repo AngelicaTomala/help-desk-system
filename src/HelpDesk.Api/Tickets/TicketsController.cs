@@ -3,14 +3,16 @@ using HelpDesk.Api.Errores;
 using HelpDesk.Api.Identificadores;
 using HelpDesk.Application.Tickets;
 using HelpDesk.Application.Tickets.Crear;
+using HelpDesk.Application.Tickets.Listar;
+using HelpDesk.Application.Tickets.Obtener;
 using HelpDesk.Application.Tickets.Reclasificar;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HelpDesk.Api.Tickets;
 
 /// <summary>
-/// Operaciones de RF-01 (contrato §2.1 y §2.4). Solo traduce HTTP a comandos y llama a los handlers, que aplican el
-/// orden de la decisión 92; el <c>401</c> lo responde antes el middleware de <c>X-Usuario-Id</c>.
+/// Operaciones de RF-01 y RF-02 (contrato §2.1 a §2.4). Solo traduce HTTP a comandos y consultas y llama a los
+/// handlers, que aplican el orden de la decisión 92; el <c>401</c> lo responde antes el middleware de <c>X-Usuario-Id</c>.
 /// </summary>
 [ApiController]
 [Route(Ruta)]
@@ -59,4 +61,40 @@ public sealed class TicketsController : ControllerBase
 
         return await handler.ManejarAsync(new ReclasificarTicketComando(ticketId, cuerpo.Categoria), cancellationToken);
     }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<TicketDetalleDto>> Obtener(
+        string id,
+        [FromServices] ObtenerTicketHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var ticketId = IdRuta.LeerTicket(id);
+
+        return await handler.ManejarAsync(new ObtenerTicketConsulta(ticketId), cancellationToken);
+    }
+
+    // Los parámetros de la URL llegan como texto, sin convertir: los valida Application después del 403 (decisión 101).
+    [HttpGet]
+    public async Task<ActionResult<PaginaDto<TicketResumenDto>>> Listar(
+        [FromServices] ListarTicketsHandler handler,
+        CancellationToken cancellationToken) =>
+        await handler.ManejarAsync(
+            new ListarTicketsConsulta(
+                Estado: ValoresParametro("estado"),
+                Prioridad: ValoresParametro("prioridad"),
+                TecnicoId: ValoresParametro("tecnicoId"),
+                SoloVencidos: ValoresParametro("soloVencidos"),
+                Page: ValoresParametro("page"),
+                PageSize: ValoresParametro("pageSize")),
+            cancellationToken);
+
+    /// <summary>
+    /// Todos los valores con que aparece el parámetro: <c>null</c> si falta, varios si está repetido y <c>""</c> si está
+    /// vacío (decisiones 103 y 104). <c>Request.Query</c> no distingue mayúsculas en los nombres y los parámetros que
+    /// no se leen aquí se ignoran (decisión 106).
+    /// </summary>
+    private string[]? ValoresParametro(string nombre) =>
+        Request.Query.TryGetValue(nombre, out var valores)
+            ? valores.Select(valor => valor ?? string.Empty).ToArray()
+            : null;
 }

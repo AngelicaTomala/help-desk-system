@@ -3,6 +3,8 @@ using HelpDesk.Api.Configuracion;
 using HelpDesk.Api.Identidad;
 using HelpDesk.Application.Abstracciones;
 using HelpDesk.Application.Tickets.Crear;
+using HelpDesk.Application.Tickets.Listar;
+using HelpDesk.Application.Tickets.Obtener;
 using HelpDesk.Application.Tickets.Reclasificar;
 using HelpDesk.Domain.Enumeraciones;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,9 @@ public class InyeccionAplicacionTests(HelpDeskApiFactory factory) : IClassFixtur
     [InlineData(typeof(IValidator<ReclasificarTicketComando>), typeof(ReclasificarTicketValidator))]
     [InlineData(typeof(CrearTicketHandler), typeof(CrearTicketHandler))]
     [InlineData(typeof(ReclasificarTicketHandler), typeof(ReclasificarTicketHandler))]
+    [InlineData(typeof(ObtenerTicketHandler), typeof(ObtenerTicketHandler))]
+    [InlineData(typeof(IValidator<ListarTicketsConsulta>), typeof(ListarTicketsValidator))]
+    [InlineData(typeof(ListarTicketsHandler), typeof(ListarTicketsHandler))]
     public void AgregarAplicacion_CasosDeUso_RegistraScoped(Type servicio, Type implementacion)
     {
         var services = new ServiceCollection().AgregarAplicacion();
@@ -52,6 +57,8 @@ public class InyeccionAplicacionTests(HelpDeskApiFactory factory) : IClassFixtur
     [Theory]
     [InlineData(typeof(CrearTicketHandler))]
     [InlineData(typeof(ReclasificarTicketHandler))]
+    [InlineData(typeof(ObtenerTicketHandler))]
+    [InlineData(typeof(ListarTicketsHandler))]
     public void ResolverHandler_ConLaApi_ResuelveSusDependencias(Type handler)
     {
         using var scope = factory.Services.CreateScope();

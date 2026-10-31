@@ -2,6 +2,8 @@ using FluentValidation;
 using HelpDesk.Api.Identidad;
 using HelpDesk.Application.Abstracciones;
 using HelpDesk.Application.Tickets.Crear;
+using HelpDesk.Application.Tickets.Listar;
+using HelpDesk.Application.Tickets.Obtener;
 using HelpDesk.Application.Tickets.Reclasificar;
 
 namespace HelpDesk.Api.Configuracion;
@@ -26,6 +28,11 @@ public static class InyeccionAplicacion
 
         services.AddScoped<IValidator<ReclasificarTicketComando>, ReclasificarTicketValidator>();
         services.AddScoped<ReclasificarTicketHandler>();
+
+        services.AddScoped<ObtenerTicketHandler>();
+
+        services.AddScoped<IValidator<ListarTicketsConsulta>, ListarTicketsValidator>();
+        services.AddScoped<ListarTicketsHandler>();
 
         return services;
     }
