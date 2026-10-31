@@ -14,6 +14,13 @@ public class HelpDeskDbContext(DbContextOptions<HelpDeskDbContext> options) : Db
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HelpDeskDbContext).Assembly);
+
+        // Código del ticket desde HD-000001 hasta el límite HD-999999 (RN-03, Enmienda 2 de ADR-002, decisión 35).
+        modelBuilder.HasSequence<int>(GeneradorCodigoTicket.NombreSecuencia)
+            .StartsAt(1)
+            .IncrementsBy(1)
+            .HasMax(FormatoCodigoTicket.NumeroMaximo)
+            .IsCyclic(false);
     }
 
     /// <summary>
