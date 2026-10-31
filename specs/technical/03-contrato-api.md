@@ -6,7 +6,7 @@
 | Fecha   | 30/10/2026             |
 | Estado  | Borrador en redacción  |
 
-Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [auditoría](../../docs/auditoria-documentacion.md). Fuentes: decisiones 1 a 74 y 93 a 95 de la [auditoría §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas), [requisitos funcionales](../functional/01-requisitos-funcionales.md), [reglas de negocio](../functional/02-reglas-negocio.md), [RNF](../functional/03-requisitos-no-funcionales.md), [modelo de dominio](01-modelo-dominio.md) y [ADR-004](adr/ADR-004-problemdetails-errores.md).
+Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [auditoría](../../docs/auditoria-documentacion.md). Fuentes: decisiones 1 a 74, 93 a 95, 114, 116 y 117 de la [auditoría §9](../../docs/auditoria-documentacion.md#9-decisiones-tomadas), [requisitos funcionales](../functional/01-requisitos-funcionales.md), [reglas de negocio](../functional/02-reglas-negocio.md), [RNF](../functional/03-requisitos-no-funcionales.md), [modelo de dominio](01-modelo-dominio.md) y [ADR-004](adr/ADR-004-problemdetails-errores.md).
 
 ## Índice
 
@@ -32,10 +32,11 @@ Contrato REST de las 13 operaciones del MVP. Resuelve el hallazgo H-03 de la [au
 ### 1.2 Encabezado `X-Usuario-Id`
 
 - Identifica al usuario en cada petición; no hay JWT en el MVP (S-02, RNF-01).
-- **Formato:** entero positivo dentro del rango de `int` (RNF-01, decisión 30), formado solo por dígitos ASCII, sin signo, sin espacios y sin ceros a la izquierda (decisión 95). Por ejemplo, `+1`, ` 1`, `01` y `1,2` no son válidos.
+- **Formato:** entero positivo dentro del rango de `int` (RNF-01, decisión 30), formado solo por dígitos ASCII, sin signo, sin espacios y sin ceros a la izquierda (decisión 95). Por ejemplo, `+1`, `01` y `1,2` no son válidos.
+- HTTP quita los espacios al inicio y al final del valor del encabezado (RFC 9110) antes de que la Api lo lea, y el formato se comprueba sobre el valor ya sin ellos: ` 1` equivale a `1` (decisión 117).
 - **Si falta, no es válido** (no numérico, `0`, negativo, fuera de rango o con otro formato que el anterior) **o el encabezado aparece más de una vez** (decisión 95): `401` con `codigo` `USUARIO_NO_IDENTIFICADO`. **Si es válido pero no corresponde a ningún usuario:** `401` con `USUARIO_INEXISTENTE` ([ADR-004](adr/ADR-004-problemdetails-errores.md#enmienda-3--28102026)).
 - La Api obtiene el usuario a través de Application (decisión 28, ADR-001 Enmienda 2).
-- **Exentos:** Swagger UI y el documento OpenAPI no exigen el encabezado (RNF-01, decisión 52).
+- **Exentos:** Swagger UI y el documento OpenAPI no exigen el encabezado (RNF-01, decisión 52). Tampoco lo exigen las peticiones que no llegan a una operación: una ruta inexistente responde `404` y un método no admitido `405` aunque falte el encabezado (decisión 116).
 - El solicitante de un ticket nuevo se toma de este encabezado; nunca viene en el cuerpo (decisión 54).
 
 ### 1.3 Formato de error (Problem Details)
@@ -104,6 +105,7 @@ Los campos JSON, del cuerpo y de la respuesta, van en camelCase (decisión 47). 
 - Se serializan como texto, con el nombre del valor en el modelo de dominio (decisión 48, RNF-09).
 - En la entrada (cuerpo y query) no distinguen mayúsculas y minúsculas; las respuestas usan siempre la grafía canónica (decisión 58).
 - Los valores numéricos se rechazan con `400` `VALIDACION_FALLIDA` (decisión 58).
+- Los valores de enum no se recortan: un valor con espacios al inicio o al final (por ejemplo, `" Red "`) responde `400` `VALIDACION_FALLIDA`. El recorte de §1.6 se aplica solo a los textos libres (decisión 114).
 
 | Enum             | Valores                                                  | Fuente |
 | ---------------- | -------------------------------------------------------- | ------ |

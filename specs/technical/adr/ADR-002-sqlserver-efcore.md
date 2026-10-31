@@ -83,3 +83,9 @@ Origen: decisiones 90 y 91 de [auditoria-documentacion.md §9](../../../docs/aud
 Origen: decisión 99 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo R-08 de la revisión de RF-01).
 
 - **Pruebas de extremo a extremo:** usan la base de pruebas de la Enmienda 4 (decisión 91) en una colección serializada. Antes de cada prueba se borran los tickets y comentarios y se reinicia la SEQUENCE `CodigoTicket` con `RESTART WITH 1`, porque la SEQUENCE no se revierte con una transacción. La factory de pruebas sobrescribe `ConnectionStrings:HelpDesk` con la cadena de pruebas, conserva la guarda que impide usar la base `HelpDesk` y usa `FakeTimeProvider`.
+
+## Enmienda 6 · 31/10/2026
+
+Origen: decisión 118 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (implementación de RF-01).
+
+- **Limpieza después de cada prueba:** las pruebas de extremo a extremo borran los tickets y comentarios y reinician la SEQUENCE `CodigoTicket` con `RESTART WITH 1` antes **y después** de cada prueba, no solo antes (Enmienda 5). Así no dejan datos que choquen con el índice único del código en las pruebas de integración que usan la misma base.

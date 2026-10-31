@@ -66,3 +66,10 @@ Origen: decisión 97 de [auditoria-documentacion.md §9](../../../docs/auditoria
 
 - **Interfaces de persistencia:** las "interfaces de persistencia (repositorios, `IGeneradorCodigoTicket`)" de la Decisión son `ITicketRepositorio` (escritura del agregado `Ticket`), `IUsuarioRepositorio` (lectura de usuarios), una unidad de trabajo, `IConsultasTicket` (lectura del detalle del ticket con los nombres del solicitante, del técnico y de los autores de los comentarios) e `IGeneradorCodigoTicket`. Las define Application y las implementa Infrastructure.
 - **Usuario actual:** el middleware de `X-Usuario-Id` obtiene el usuario a través de Application (Enmienda 2, decisión 28) y lo guarda en `IUsuarioActual`, un servicio con alcance por petición que usan los handlers.
+
+## Enmienda 5 · 31/10/2026
+
+Origen: decisiones 111 y 112 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (implementación de RF-01).
+
+- **Usuario actual:** `IUsuarioActual` (Enmienda 3) expone solo `Id` y `Rol`. Leerlo sin un usuario fijado, o fijarlo dos veces en la misma petición, lanza `InvalidOperationException`, que la Api responde como `500` `ERROR_INTERNO`: es un error de programación, no un caso de negocio (decisión 111).
+- **Consulta del detalle:** `IConsultasTicket` (Enmienda 3) recibe la hora de la operación (`ahora`), que Application obtiene de `TimeProvider`, y calcula `estadoSla` con `Ticket.CalcularEstadoSla(ahora)`. La regla RN-11 sigue solo en Domain (decisión 112).

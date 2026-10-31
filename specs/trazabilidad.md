@@ -19,16 +19,18 @@ Une cada criterio de aceptación de [01-requisitos-funcionales.md](functional/01
 
 | RF | HU | CA | RN relacionadas | Endpoint | Test | Commit | Estado |
 | -- | -- | -- | --------------- | -------- | ---- | ------ | ------ |
-| RF-01 | HU-01 | CA-01.1 | RN-01, RN-02, RN-03 | `POST /tickets` | | | Especificado |
-| RF-01 | HU-01 | CA-01.2 | RN-10 | `POST /tickets` | | | Especificado |
-| RF-01 | HU-01 | CA-01.3 | RN-01 | `POST /tickets` | | | Especificado |
-| RF-01 | HU-01 | CA-01.4 | RN-02 | `POST /tickets` | | | Especificado |
-| RF-01 | HU-01 | CA-01.5 | — | `POST /tickets` | | | Especificado |
-| RF-01 | HU-09 | CA-01.6 | RN-02, RN-13 | `POST /tickets/{id}/reclasificar` | | | Especificado |
-| RF-01 | HU-09 | CA-01.7 | RN-13 | `POST /tickets/{id}/reclasificar` | | | Especificado |
-| RF-01 | HU-09 | CA-01.8 | RN-13 | `POST /tickets/{id}/reclasificar` | | | Especificado |
-| RF-01 | HU-09 | CA-01.9 | RN-02, RN-13 | `POST /tickets/{id}/reclasificar` | | | Especificado |
-| RF-01 | HU-01 | CA-01.10 | RN-03 | `POST /tickets` | | | Especificado |
+| RF-01 | HU-01 | CA-01.1 | RN-01, RN-02, RN-03 | `POST /tickets` | `Crear_DatosValidos_Responde201ConDetalleYLocationRelativo`, `Crear_TextosConEspacios_GuardaTextosRecortados` | `eebf67e` | Implementado |
+| RF-01 | HU-01 | CA-01.2 | RN-10 | `POST /tickets` | `Crear_PrioridadAlta_VenceCuatroHorasDespues` | `eebf67e` | Implementado |
+| RF-01 | HU-01 | CA-01.3 | RN-01 | `POST /tickets` | `Crear_TextoFueraDeRango_Responde400YNoCrea`, `Crear_TextoEnBlanco_Responde400YNoCrea`, `Crear_TextosEnLosLimites_Responde201`, `Crear_EjemploDelContrato_Responde400ConTresClaves` | `eebf67e` | Implementado |
+| RF-01 | HU-01 | CA-01.4 | RN-02 | `POST /tickets` | `Crear_CategoriaOPrioridadInvalida_Responde400YNoCrea`, `Crear_EjemploDelContrato_Responde400ConTresClaves` | `eebf67e` | Implementado |
+| RF-01 | HU-01 | CA-01.5 | — | `POST /tickets` | `Crear_UsuarioInexistente_Responde401YNoCrea` | `eebf67e` | Implementado |
+| RF-01 | HU-09 | CA-01.6 | RN-02, RN-13 | `POST /tickets/{id}/reclasificar` | `Reclasificar_TecnicoAsignado_Responde200ConCategoriaNueva`, `Reclasificar_SupervisorTicketAbierto_Responde200ConCategoriaNueva`, `Reclasificar_MismaCategoria_Responde200SinCambiarFechaActualizacion` | `eebf67e` | Implementado |
+| RF-01 | HU-09 | CA-01.7 | RN-13 | `POST /tickets/{id}/reclasificar` | `Reclasificar_TicketResueltoOCerrado_Responde409YNoCambia` | `eebf67e` | Implementado |
+| RF-01 | HU-09 | CA-01.8 | RN-13 | `POST /tickets/{id}/reclasificar` | `Reclasificar_Solicitante_Responde403RolNoAutorizado`, `Reclasificar_TecnicoNoAsignado_Responde403TicketAjeno` | `eebf67e` | Implementado |
+| RF-01 | HU-09 | CA-01.9 | RN-02, RN-13 | `POST /tickets/{id}/reclasificar` | `Reclasificar_CategoriaInvalida_Responde400YNoCambia` | `eebf67e` | Implementado |
+| RF-01 | HU-01 | CA-01.10 | RN-03 | `POST /tickets` | `Crear_TecnicoOSupervisor_Responde403YNoCrea`, `Crear_TecnicoConTituloInvalido_Responde403YNoCrea` | `eebf67e` | Implementado |
+
+La columna Test nombra las pruebas de extremo a extremo de `test/HelpDesk.Tests/Api`. Todas las pruebas de un CA, incluidas las de otras capas, se listan con `dotnet test --filter "CA=CA-xx.y"`.
 
 ## RF-02 · Consultar, filtrar y paginar tickets
 
@@ -74,7 +76,7 @@ Une cada criterio de aceptación de [01-requisitos-funcionales.md](functional/01
 
 | RF | HU | CA | RN relacionadas | Endpoint | Test | Commit | Estado |
 | -- | -- | -- | --------------- | -------- | ---- | ------ | ------ |
-| RF-05 | HU-07 | CA-05.1 | RN-10 | `POST /tickets`, `POST /tickets/{id}/cambiar-prioridad` | | | Especificado |
+| RF-05 | HU-07 | CA-05.1 | RN-10 | `POST /tickets`, `POST /tickets/{id}/cambiar-prioridad` | `Crear_CadaPrioridad_VenceSegunSuSla` | `eebf67e` | Implementado (`POST /tickets`) |
 | RF-05 | HU-07 | CA-05.2 | RN-11 | `GET /tickets/{id}`, `GET /tickets` | | | Especificado |
 | RF-05 | HU-07 | CA-05.3 | RN-11 | `GET /tickets/{id}`, `GET /tickets`, `POST /tickets/{id}/resolver`, `POST /tickets/{id}/reabrir` | | | Especificado |
 | RF-05 | HU-10 | CA-05.4 | RN-10, RN-12 | `POST /tickets/{id}/cambiar-prioridad` | | | Especificado |

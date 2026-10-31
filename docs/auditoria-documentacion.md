@@ -9,7 +9,7 @@
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (99 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (108 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
@@ -514,6 +514,22 @@ Salen de los hallazgos R-01 a R-08 de la revisión de solo lectura de RF-01 del 
 | 97 | Application define `ITicketRepositorio` (escritura del agregado), `IUsuarioRepositorio` (lectura de usuarios), una unidad de trabajo e `IConsultasTicket` (lectura del detalle del ticket con los nombres de solicitante, técnico y autores). El middleware de `X-Usuario-Id` obtiene el usuario a través de Application (decisión 28) y lo guarda en un servicio con alcance por petición, `IUsuarioActual`, que usan los handlers. | R-06 | Enmienda 3 de ADR-001 |
 | 98 | Application señala sus errores con excepciones que llevan `Codigo`: una para el `404`, otra para el `403`, que admite cualquier `codigo` `403` del catálogo (`ROL_NO_AUTORIZADO`, `TICKET_AJENO` y `FILTRO_NO_AUTORIZADO`), y otra para los `400`, que admite cualquier `codigo` `400` del catálogo (`VALIDACION_FALLIDA` con `errors`, `TECNICO_NO_VALIDO` y `MISMO_TECNICO`). Las constantes de los códigos de Application viven en Application. La Api las traduce a Problem Details. | R-07 | Enmienda 6 de ADR-004 |
 | 99 | Las pruebas de extremo a extremo usan la base de pruebas de la decisión 91 en una colección serializada. Antes de cada prueba se borran los tickets y comentarios y se reinicia la SEQUENCE con `RESTART WITH 1`. La factory de pruebas sobrescribe `ConnectionStrings:HelpDesk` con la cadena de pruebas, conserva la guarda contra la base `HelpDesk` y usa `FakeTimeProvider`. | R-08 | Enmienda 5 de ADR-002; `.claude/rules/tests.md` |
+
+Decisiones de la implementación de RF-01 (31/10/2026):
+
+Salen de los planes de implementación de RF-01; no forman parte de H-01 a H-55, de D-01 a D-07, de I-01 e I-02 ni de R-01 a R-08.
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 111 | `IUsuarioActual` (decisión 97) expone solo `Id` y `Rol`. Leerlo sin un usuario fijado, o fijarlo dos veces en la misma petición, lanza `InvalidOperationException` (`500`, decisión 41): es un error de programación, no un caso de negocio. | Plan de implementación de RF-01 | Enmienda 5 de ADR-001 |
+| 112 | `IConsultasTicket` (decisión 97) recibe la hora de la operación (`ahora`) y calcula `estadoSla` con `Ticket.CalcularEstadoSla(ahora)`, sin duplicar RN-11. | Plan de implementación de RF-01 | Enmienda 5 de ADR-001 |
+| 113 | Las claves de `errors` se convierten a camelCase (decisión 61) en Application, al crear la excepción de validación (decisión 98). | Plan de implementación de RF-01 | Enmienda 8 de ADR-004 |
+| 114 | Los valores de enum con espacios (por ejemplo, `" Red "`) se rechazan con `400` `VALIDACION_FALLIDA`: el recorte de la decisión 31 se aplica solo a los textos libres. | Plan de implementación de RF-01 | `03-contrato-api.md` §1.8 |
+| 115 | Reclasificar guarda siempre, también en la operación sin cambios de la decisión 67. EF Core no envía ningún `UPDATE` si nada cambió, así que `fechaActualizacion` no se modifica. | Plan de implementación de RF-01 | — (código: `ReclasificarTicketHandler` en `abc4a3d`) |
+| 116 | El middleware de `X-Usuario-Id` actúa solo sobre acciones de controlador, después del enrutamiento: una ruta inexistente responde `404` y un método no admitido `405` aunque falte el encabezado (decisión 94). | Plan de implementación de RF-01 | `03-contrato-api.md` §1.2 (Exentos) |
+| 117 | HTTP quita los espacios al inicio y al final del valor de un encabezado (RFC 9110) antes de que la Api lo lea, y la regla de la decisión 95 se aplica al valor ya sin ellos. Por eso `" 1"` en `X-Usuario-Id` equivale a `"1"`. Las pruebas con `TestServer` comprueban el valor tal como llega a la Api, porque `TestServer` no quita esos espacios como Kestrel; en ellas, `" 1"` responde `401`. | Plan de implementación de RF-01 | `03-contrato-api.md` §1.2 (ejemplo corregido) |
+| 118 | Las pruebas de extremo a extremo borran los tickets y comentarios y reinician la SEQUENCE antes **y después** de cada prueba, para no dejar datos que choquen con el índice único del código en las pruebas de integración. Completa la decisión 99. | Plan de implementación de RF-01 | Enmienda 6 de ADR-002; `.claude/rules/tests.md` |
+| 119 | El documento OpenAPI declara el `415` (decisión 94) en las operaciones con cuerpo. El esquema de Problem Details incluye `codigo`, con los 12 valores del catálogo de ADR-004 y no obligatorio, y `traceId`. El `{id}` de la ruta no lleva patrón, para que se pueda probar el `404` de la decisión 65. | Plan de implementación de RF-01 | — (código: transformadores de `src/HelpDesk.Api/Documentacion/` en `e6030c9`) |
 
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 

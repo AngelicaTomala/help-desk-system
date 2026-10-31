@@ -1437,52 +1437,102 @@ En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de 
 
 ---
 
-## E-018 · Implementación de RF-01 (crear y reclasificar ticket) · BORRADOR
+## E-018 · Implementación de RF-01 (crear y reclasificar ticket)
 
-> **BORRADOR preparado por la IA el 31/10/2026 a partir de `git log` y de la auditoría §9.** Falta completar el prompt, la columna de decisión (✅/✏️/❌) y las justificaciones. Las sesiones de RF-01 no quedaron registradas en el repositorio, así que la columna "Propuesta de la IA" describe lo que llegó al commit (todos llevan `Co-Authored-By: Claude`), no la conversación.
+**Herramienta:** Claude Code (VS Code), en modo Plan para los subpasos de código; Claude (chat) para diseñar los prompts y revisar los planes.
 
-**Herramienta:** Claude Code (VS Code). [PENDIENTE: confirmar si se usó modo Plan y Claude (chat), como en E-017]
+**Prompt:**
 
-**Prompt:** [PENDIENTE: completar con los prompts de cada subpaso]
+Un prompt por subpaso, diseñado en Claude (chat):
+
+- **5.0 Preparación y PR #2.**
+- **5.1 Prueba de arquitectura de RNF-07**, provocando cuatro violaciones para ver fallar la prueba.
+- **5.2 Revisión de solo lectura** de RF-01: hallazgos R-01 a R-08, registrados como decisiones 92 a 99.
+- **5.3 Application para crear.**
+- **5.4 Application para reclasificar.**
+- **5.5 Repositorios, unidad de trabajo y consulta del detalle.**
+- **5.6.a JSON, Problem Details y registro de Application.**
+- **5.6.b Middleware de `X-Usuario-Id` y lectura del `{id}`.**
+- **5.7.a Endpoints y pruebas de extremo a extremo.**
+- **5.7.b OpenAPI.**
+- **5.8 Prueba manual en Swagger UI:** no se realizó (incidencia 9).
+- **Cierre:** decisiones 111 a 119, enmiendas, matriz de trazabilidad y esta entrada.
 
 **Resultado de la IA:**
 
+- **Prueba de arquitectura de RNF-07** (`75c7cfd`): `DependenciasEntreCapasTests` y `ReferenciasProyectosTests` en `test/HelpDesk.Tests/Arquitectura/`.
 - **Decisiones 92 a 99** (`7f0f2b0`), a partir de los hallazgos R-01 a R-08 de la revisión de solo lectura de RF-01 (30/10/2026). 10 archivos (+66/−15): auditoría §9, contrato §1.1-§1.4, RNF, enmiendas de ADR-001 a ADR-004 y `.claude/rules/`.
 - **Application:** crear ticket (`530463f`, 20 archivos, +770) y reclasificar ticket (`abc4a3d`, 7 archivos, +456), con validadores, handlers, excepciones con `Codigo`, interfaces y dobles de prueba.
 - **Infrastructure:** repositorios, unidad de trabajo y consulta del detalle (`5be7323`, 12 archivos, +515/−2), con pruebas de integración contra LocalDB.
 - **Api:** configuración JSON y Problem Details (`5027dfc`, 20 archivos, +964/−1), middleware de `X-Usuario-Id` y lectura del `{id}` (`6851b9c`, 14 archivos, +399/−6), endpoints con pruebas de extremo a extremo (`eebf67e`, 8 archivos, +753/−61) y documento OpenAPI (`e6030c9`, 10 archivos, +447/−4).
 - **Pruebas:** 472 superadas, 0 con error (`dotnet test` del 31/10/2026 sobre `e6030c9`). `dotnet build`: 0 advertencias, 0 errores.
+- **Documentación de RF-01:** casos de uso CU-01 y CU-02 (`353a0b2`) y endpoints de RF-01 en el README (`9a34355`).
+- **Cierre:**
+  - Decisiones 111 a 119 en la auditoría §9, que queda con 108 en total.
+  - Enmienda 5 de ADR-001, Enmienda 6 de ADR-002 y Enmienda 8 de ADR-004.
+  - Contrato §1.2 (ejemplo ` 1` corregido y exentos) y §1.8 (enums con espacios).
+  - `.claude/rules/tests.md`.
+  - Test, Commit y Estado de CA-01.1 a CA-01.10 y CA-05.1 en `specs/trazabilidad.md`.
 
 **Revisión humana:**
 
 | Elemento propuesto | Archivo | Qué cambió | Decisión (✅/✏️/❌) | Justificación |
 | ------------------ | ------- | ---------- | ------------------- | ------------- |
-| R-01: el handler aplica el orden `404` → `403` → `400` → `409` e invoca el validador | `docs/auditoria-documentacion.md`, ADR-003 (Enmienda 7), `.claude/rules/application.md` | Decisión 92; la Decisión de ADR-003 decía "se invoca antes del handler" | | |
-| R-02: errores de lectura del cuerpo (`400` con clave `cuerpo`) antes del `404` y el `403` | `03-contrato-api.md` §1.3 y §1.4, ADR-003, ADR-004 | Decisión 93; excepción al orden de la decisión 6 | | |
-| R-03: `404`, `405` y `415` del framework con Problem Details y sin `codigo` | `03-contrato-api.md` §1.3, ADR-004 (Enmienda 6), RNF-03 | Decisión 94 | | |
-| R-04: formato válido de `X-Usuario-Id` y `{id}`; encabezado repetido → `401` | `03-contrato-api.md` §1.1 y §1.2 | Decisión 95 | | |
-| R-05: `categoria` y `prioridad` llegan como texto y las convierte el validador | ADR-003 (Enmienda 7) | Decisión 96 | | |
-| R-06: interfaces `ITicketRepositorio`, `IUsuarioRepositorio`, unidad de trabajo, `IConsultasTicket` e `IUsuarioActual` | ADR-001 (Enmienda 3) | Decisión 97 | | |
-| R-07: excepciones de Application con `Codigo` para `404`, `403` y `400` | ADR-004 (Enmienda 6) | Decisión 98 | | |
-| R-08: pruebas de extremo a extremo en colección serializada, con `RESTART WITH 1` y `FakeTimeProvider` | ADR-002 (Enmienda 5), `.claude/rules/tests.md` | Decisión 99 | | |
-| `CrearTicketHandler`: rol → recorte → validador → código → `Ticket.Crear` | `src/HelpDesk.Application/Tickets/Crear/CrearTicketHandler.cs` | Nuevo (`530463f`) | | |
-| `CrearTicketValidator` con las constantes de Domain | `src/HelpDesk.Application/Tickets/Crear/CrearTicketValidator.cs` | Nuevo (`530463f`) | | |
-| `ReclasificarTicketHandler`: ticket → rol → técnico asignado → validador → `Ticket.Reclasificar` | `src/HelpDesk.Application/Tickets/Reclasificar/ReclasificarTicketHandler.cs` | Nuevo (`abc4a3d`) | | |
-| Repositorios, unidad de trabajo y `ConsultasTicket` (detalle con nombres) | `src/HelpDesk.Infrastructure/Persistencia/` | Nuevos (`5be7323`) | | |
-| `ManejadorExcepciones` y respuesta de modelo inválido como Problem Details | `src/HelpDesk.Api/Errores/` | Nuevos (`5027dfc`) | | |
-| `FiltroContentTypeAusente`: petición sin `Content-Type` → `400` (decisión 93) | `src/HelpDesk.Api/Errores/FiltroContentTypeAusente.cs` | Nuevo (`5027dfc`) | | |
-| `MiddlewareUsuarioActual` y `FormatoId` (`401` antes del `404`) | `src/HelpDesk.Api/Identidad/`, `src/HelpDesk.Api/Identificadores/` | Nuevos (`6851b9c`) | | |
-| `TicketsController` con crear (`201` + `Location` relativo) y reclasificar | `src/HelpDesk.Api/Tickets/TicketsController.cs` | Nuevo (`eebf67e`); respuestas documentadas en `e6030c9` | | |
-| `HelpDeskApiFactory` y `BaseDePruebasFixture` sobre la base de pruebas | `test/HelpDesk.Tests/Api/HelpDeskApiFactory.cs`, `test/HelpDesk.Tests/Integracion/BaseDePruebasFixture.cs` | Modificados (`eebf67e`, +753/−61) | | |
-| Prueba de la SEQUENCE agotada: `500` sin crear el ticket (pendiente de E-017, decisión 90) | `test/HelpDesk.Tests/Api/CrearTicketEndpointTests.cs` | `Crear_SecuenciaAgotada_Responde500YNoCreaElTicket` (`eebf67e`) | | |
-| Transformadores OpenAPI: `X-Usuario-Id`, `Location` y valores de enum (RNF-09) | `src/HelpDesk.Api/Documentacion/` | Nuevos (`e6030c9`), con `DocumentoOpenApiTests` | | |
+| R-01: el handler aplica el orden `404` → `403` → `400` → `409` e invoca el validador | `docs/auditoria-documentacion.md`, ADR-003 (Enmienda 7), `.claude/rules/application.md` | Decisión 92; la Decisión de ADR-003 decía "se invoca antes del handler" | ✅ | Registrada como decisión 92 (`7f0f2b0`). La revisión de solo lectura encontró que ADR-003 contradecía el orden `403` antes que `400` del contrato (incidencia 4). |
+| R-02: errores de lectura del cuerpo (`400` con clave `cuerpo`) antes del `404` y el `403` | `03-contrato-api.md` §1.3 y §1.4, ADR-003, ADR-004 | Decisión 93; excepción al orden de la decisión 6 | ✏️ | Registrada como decisión 93 (`7f0f2b0`). Se precisó que una petición sin `Content-Type` se trata como un cuerpo ausente, y que un campo con tipo incorrecto también va antes del `404` y el `403` y solo informa ese campo. |
+| R-03: `404`, `405` y `415` del framework con Problem Details y sin `codigo` | `03-contrato-api.md` §1.3, ADR-004 (Enmienda 6), RNF-03 | Decisión 94 | ✏️ | Registrada como decisión 94 (`7f0f2b0`). Se agregó el `traceId` a los `404`, `405` y `415` del framework, y se ajustaron `api.md`, `tests.md` y RNF-03 para que `codigo` aplique solo a los errores de negocio. |
+| R-04: formato válido de `X-Usuario-Id` y `{id}`; encabezado repetido → `401` | `03-contrato-api.md` §1.1 y §1.2 | Decisión 95 | ✅ | Registrada como decisión 95 (`7f0f2b0`); la decisión 117 corrige el ejemplo ` 1` de §1.2. |
+| R-05: `categoria` y `prioridad` llegan como texto y las convierte el validador | ADR-003 (Enmienda 7) | Decisión 96 | ✅ | Registrada como decisión 96 (`7f0f2b0`). |
+| R-06: interfaces `ITicketRepositorio`, `IUsuarioRepositorio`, unidad de trabajo, `IConsultasTicket` e `IUsuarioActual` | ADR-001 (Enmienda 3) | Decisión 97 | ✅ | Registrada como decisión 97 (`7f0f2b0`); la precisan las decisiones 111 y 112. |
+| R-07: excepciones de Application con `Codigo` para `404`, `403` y `400` | ADR-004 (Enmienda 6) | Decisión 98 | ✏️ | Registrada como decisión 98 (`7f0f2b0`). Se generalizó para que el `403` y el `400` admitan cualquier `codigo` de su tipo del catálogo, incluido `FILTRO_NO_AUTORIZADO`; la precisa la decisión 113. |
+| R-08: pruebas de extremo a extremo en colección serializada, con `RESTART WITH 1` y `FakeTimeProvider` | ADR-002 (Enmienda 5), `.claude/rules/tests.md` | Decisión 99 | ✅ | Registrada como decisión 99 (`7f0f2b0`); la completa la decisión 118. |
+| Prueba de arquitectura de RNF-07 | `test/HelpDesk.Tests/Arquitectura/` | Nueva (`75c7cfd`) | ✅ | El plan del 4.3 la daba por existente; se creó en el 5.1 y se comprobó provocando cuatro violaciones (incidencias 1 y 3). |
+| `CrearTicketHandler`: rol → recorte → validador → código → `Ticket.Crear` | `src/HelpDesk.Application/Tickets/Crear/CrearTicketHandler.cs` | Nuevo (`530463f`) | ✅ | Incluido en `530463f`. Crear no tiene recurso de ruta, así que el orden de la decisión 92 empieza por el permiso. |
+| `CrearTicketValidator` con las constantes de Domain | `src/HelpDesk.Application/Tickets/Crear/CrearTicketValidator.cs` | Nuevo (`530463f`) | ✅ | Incluido en `530463f`; reutiliza las constantes de Domain (ADR-003) y rechaza enums con espacios (decisión 114). |
+| `ReclasificarTicketHandler`: ticket → rol → técnico asignado → validador → `Ticket.Reclasificar` | `src/HelpDesk.Application/Tickets/Reclasificar/ReclasificarTicketHandler.cs` | Nuevo (`abc4a3d`) | ✅ | Incluido en `abc4a3d`; guarda también en la operación sin cambios (decisión 115). |
+| Repositorios, unidad de trabajo y `ConsultasTicket` (detalle con nombres) | `src/HelpDesk.Infrastructure/Persistencia/` | Nuevos (`5be7323`) | ✏️ | Se quitaron dos Traits (CA-01.5 y CA-02.2) que daban cobertura falsa en pruebas de Infrastructure (incidencia 5). `ConsultasTicket` calcula `estadoSla` con `Ticket.CalcularEstadoSla(ahora)` (decisión 112). |
+| `ManejadorExcepciones` y respuesta de modelo inválido como Problem Details | `src/HelpDesk.Api/Errores/`, `src/HelpDesk.Api/Configuracion/` | Nuevos (`5027dfc`) | ✏️ | Se agregó la desactivación de la validación implícita de MVC (`SuppressImplicitRequiredAttributeForNonNullableReferenceTypes` en `InyeccionPresentacion.cs`, incidencia 6). Ese cambio y `NumberHandling.Strict` en `ConfiguracionJson.cs` (incidencia 7) están en `5027dfc`, según `git show 5027dfc`. |
+| `FiltroContentTypeAusente`: petición sin `Content-Type` → `400` (decisión 93) | `src/HelpDesk.Api/Errores/FiltroContentTypeAusente.cs` | Nuevo (`5027dfc`) | ✅ | Incluido en `5027dfc`; lo cubre `LeerCuerpo_SinContentType_Responde400ConClaveCuerpo`. |
+| `MiddlewareUsuarioActual` y `FormatoId` (`401` antes del `404`) | `src/HelpDesk.Api/Identidad/`, `src/HelpDesk.Api/Identificadores/` | Nuevos (`6851b9c`) | ✅ | Incluido en `6851b9c`; actúa solo sobre acciones de controlador (decisión 116) y aplica el formato al valor que recibe (decisión 117). |
+| `TicketsController` con crear (`201` + `Location` relativo) y reclasificar | `src/HelpDesk.Api/Tickets/TicketsController.cs` | Nuevo (`eebf67e`); respuestas documentadas en `e6030c9` | ✅ | Incluido en `eebf67e`; el `415` se documenta en `e6030c9` (decisión 119). |
+| `HelpDeskApiFactory` y `BaseDePruebasFixture` sobre la base de pruebas | `test/HelpDesk.Tests/Api/HelpDeskApiFactory.cs`, `test/HelpDesk.Tests/Integracion/BaseDePruebasFixture.cs` | Modificados (`eebf67e`, +753/−61) | ✅ | Incluido en `eebf67e`; reinicia los datos antes y después de cada prueba (decisiones 99 y 118). |
+| Prueba de la SEQUENCE agotada: `500` sin crear el ticket (pendiente de E-017, decisión 90) | `test/HelpDesk.Tests/Api/CrearTicketEndpointTests.cs` | `Crear_SecuenciaAgotada_Responde500YNoCreaElTicket` (`eebf67e`) | ✅ | Cierra el pendiente de E-017: `500` `ERROR_INTERNO` sin crear el ticket (decisión 90). |
+| Transformadores OpenAPI: `X-Usuario-Id`, `Location` y valores de enum (RNF-09) | `src/HelpDesk.Api/Documentacion/` | Nuevos (`e6030c9`), con `DocumentoOpenApiTests` | ✅ | El agente propuso corregir los tipos de los enums y las fechas, y se aceptó (incidencia 8). Declaran el `415`, `codigo` y `traceId` (decisión 119). |
+| Decisión 111: `IUsuarioActual` con `Id` y `Rol`; `InvalidOperationException` si no está fijado o se fija dos veces | `docs/auditoria-documentacion.md` §9, ADR-001 | Decisión 111; Enmienda 5 de ADR-001 | ✅ | Registrada en la auditoría §9 y en la Enmienda 5 de ADR-001. |
+| Decisión 112: `IConsultasTicket` recibe `ahora` y usa `CalcularEstadoSla` | `docs/auditoria-documentacion.md` §9, ADR-001 | Decisión 112; Enmienda 5 de ADR-001 | ✅ | Registrada en la auditoría §9 y en la Enmienda 5 de ADR-001. |
+| Decisión 113: claves de `errors` en camelCase desde Application | `docs/auditoria-documentacion.md` §9, ADR-004 | Decisión 113; Enmienda 8 de ADR-004 | ✅ | Registrada en la auditoría §9 y en la Enmienda 8 de ADR-004. |
+| Decisión 114: enums con espacios → `400` | `docs/auditoria-documentacion.md` §9, `03-contrato-api.md` §1.8 | Decisión 114; viñeta nueva en §1.8 | ✅ | Registrada en la auditoría §9 y aplicada en el contrato. |
+| Decisión 115: reclasificar guarda siempre | `docs/auditoria-documentacion.md` §9 | Decisión 115 | ✅ | Registrada en la auditoría §9; no contradice ningún ADR ni el contrato. |
+| Decisión 116: middleware solo sobre acciones de controlador | `docs/auditoria-documentacion.md` §9, `03-contrato-api.md` §1.2 | Decisión 116; viñeta "Exentos" ampliada | ✅ | Registrada en la auditoría §9 y aplicada en el contrato. |
+| Decisión 117: espacios del encabezado quitados por HTTP; `TestServer` no los quita | `docs/auditoria-documentacion.md` §9, `03-contrato-api.md` §1.2 | Decisión 117; ejemplo ` 1` corregido | ✅ | Registrada en la auditoría §9 y aplicada en el contrato. |
+| Decisión 118: reinicio de datos antes y después de cada prueba | `docs/auditoria-documentacion.md` §9, ADR-002, `.claude/rules/tests.md` | Decisión 118; Enmienda 6 de ADR-002 | ✅ | Registrada en la auditoría §9, en la Enmienda 6 de ADR-002 y en la regla de pruebas. |
+| Decisión 119: `415`, `codigo` y `traceId` en OpenAPI; `{id}` sin patrón | `docs/auditoria-documentacion.md` §9 | Decisión 119 | ✅ | Registrada en la auditoría §9; no contradice ningún ADR ni el contrato. |
 
-**Incidencias:** [PENDIENTE]
+**Incidencias:**
 
-**Aprendizaje:** [PENDIENTE]
+1. El plan del subpaso 4.3 dio por existente una prueba de arquitectura que no existía: solo estaba el paquete NetArchTest. Se detectó al preparar el PR #2 y se creó en el 5.1.
+2. La rama `feat/rf-01` se creó antes de fusionar el PR #2. El agente se detuvo antes de compilar y la rama se recreó desde `main`.
+3. En el 5.1, al provocar una violación de la regla 5, la edición del `.csproj` falló y la prueba pasó sin la violación. Se detectó porque se exigía ver el fallo, y se corrigió.
+4. La revisión de solo lectura encontró que ADR-003 (validador antes del handler) contradecía el orden `403` antes que `400` del contrato (R-01, decisión 92).
+5. Dos Traits (CA-01.5 y CA-02.2) daban cobertura falsa en pruebas de Infrastructure y se quitaron.
+6. Con Nullable activado, MVC habría respondido `400` por un campo obligatorio ausente antes del handler. Se desactivó esa validación implícita.
+7. La configuración web de ASP.NET Core aceptaba números como texto (`"8"`). Se usó `NumberHandling.Strict` (decisión 93).
+8. El documento OpenAPI mostraba los enums y las fechas sin tipo. Se corrigió con un transformador.
+9. La prueba manual en Swagger UI (subpaso 5.8) no se realizó. Los CA de RF-01 quedan cubiertos por las pruebas de extremo a extremo por HTTP.
+
+**Aprendizaje:**
+
+- Provocar un fallo es la única forma de saber que una prueba protege algo: la prueba de arquitectura pasaba sin la violación porque la edición del `.csproj` no se había aplicado.
+- Una revisión de solo lectura antes del código encontró una contradicción entre un ADR y el contrato (R-01).
+- Un Trait mal puesto da cobertura falsa, como ya pasó en E-016.
+
+**Pendientes:**
+
+- CA-05.1 en `POST /tickets/{id}/cambiar-prioridad`: se comprobará con RF-05.
 
 **Commit relacionado:**
 
+- `75c7cfd` test(arquitectura): pruebas de la regla de dependencias entre capas (RNF-07)
 - `7f0f2b0` docs: registrar y aplicar decisiones 92 a 99 para la implementación de RF-01
 - `530463f` feat(application): crear ticket con validador, handler y pruebas (RF-01)
 - `abc4a3d` feat(application): reclasificar ticket con validador, handler y pruebas (RF-01)
@@ -1491,3 +1541,6 @@ En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de 
 - `6851b9c` feat(api): middleware de X-Usuario-Id y lectura del id de la ruta
 - `eebf67e` feat(api): endpoints de crear y reclasificar con pruebas de extremo a extremo (RF-01)
 - `e6030c9` feat(api): documento OpenAPI de RF-01 según RNF-09
+- `353a0b2` docs: casos de uso CU-01 y CU-02 de RF-01 derivados de HU-01, HU-09 y sus CA
+- `9a34355` docs: README refleja los endpoints de RF-01 implementados
+- `0b8e5df` docs(bitacora): borrador de la entrada E-018 (RF-01)
