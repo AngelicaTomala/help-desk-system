@@ -1434,3 +1434,60 @@ En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de 
 - `00943b8` docs(infrastructure): citar las decisiones 13 y 90 en el generador del código
 - `31da275` docs: agregar la puesta en marcha al README (user-secrets, migración, Api y pruebas)
 - `849d6a0` chore(scripts): verificación de enlaces versionada, con pruebas
+
+---
+
+## E-018 · Implementación de RF-01 (crear y reclasificar ticket) · BORRADOR
+
+> **BORRADOR preparado por la IA el 31/10/2026 a partir de `git log` y de la auditoría §9.** Falta completar el prompt, la columna de decisión (✅/✏️/❌) y las justificaciones. Las sesiones de RF-01 no quedaron registradas en el repositorio, así que la columna "Propuesta de la IA" describe lo que llegó al commit (todos llevan `Co-Authored-By: Claude`), no la conversación.
+
+**Herramienta:** Claude Code (VS Code). [PENDIENTE: confirmar si se usó modo Plan y Claude (chat), como en E-017]
+
+**Prompt:** [PENDIENTE: completar con los prompts de cada subpaso]
+
+**Resultado de la IA:**
+
+- **Decisiones 92 a 99** (`7f0f2b0`), a partir de los hallazgos R-01 a R-08 de la revisión de solo lectura de RF-01 (30/10/2026). 10 archivos (+66/−15): auditoría §9, contrato §1.1-§1.4, RNF, enmiendas de ADR-001 a ADR-004 y `.claude/rules/`.
+- **Application:** crear ticket (`530463f`, 20 archivos, +770) y reclasificar ticket (`abc4a3d`, 7 archivos, +456), con validadores, handlers, excepciones con `Codigo`, interfaces y dobles de prueba.
+- **Infrastructure:** repositorios, unidad de trabajo y consulta del detalle (`5be7323`, 12 archivos, +515/−2), con pruebas de integración contra LocalDB.
+- **Api:** configuración JSON y Problem Details (`5027dfc`, 20 archivos, +964/−1), middleware de `X-Usuario-Id` y lectura del `{id}` (`6851b9c`, 14 archivos, +399/−6), endpoints con pruebas de extremo a extremo (`eebf67e`, 8 archivos, +753/−61) y documento OpenAPI (`e6030c9`, 10 archivos, +447/−4).
+- **Pruebas:** 472 superadas, 0 con error (`dotnet test` del 31/10/2026 sobre `e6030c9`). `dotnet build`: 0 advertencias, 0 errores.
+
+**Revisión humana:**
+
+| Elemento propuesto | Archivo | Qué cambió | Decisión (✅/✏️/❌) | Justificación |
+| ------------------ | ------- | ---------- | ------------------- | ------------- |
+| R-01: el handler aplica el orden `404` → `403` → `400` → `409` e invoca el validador | `docs/auditoria-documentacion.md`, ADR-003 (Enmienda 7), `.claude/rules/application.md` | Decisión 92; la Decisión de ADR-003 decía "se invoca antes del handler" | | |
+| R-02: errores de lectura del cuerpo (`400` con clave `cuerpo`) antes del `404` y el `403` | `03-contrato-api.md` §1.3 y §1.4, ADR-003, ADR-004 | Decisión 93; excepción al orden de la decisión 6 | | |
+| R-03: `404`, `405` y `415` del framework con Problem Details y sin `codigo` | `03-contrato-api.md` §1.3, ADR-004 (Enmienda 6), RNF-03 | Decisión 94 | | |
+| R-04: formato válido de `X-Usuario-Id` y `{id}`; encabezado repetido → `401` | `03-contrato-api.md` §1.1 y §1.2 | Decisión 95 | | |
+| R-05: `categoria` y `prioridad` llegan como texto y las convierte el validador | ADR-003 (Enmienda 7) | Decisión 96 | | |
+| R-06: interfaces `ITicketRepositorio`, `IUsuarioRepositorio`, unidad de trabajo, `IConsultasTicket` e `IUsuarioActual` | ADR-001 (Enmienda 3) | Decisión 97 | | |
+| R-07: excepciones de Application con `Codigo` para `404`, `403` y `400` | ADR-004 (Enmienda 6) | Decisión 98 | | |
+| R-08: pruebas de extremo a extremo en colección serializada, con `RESTART WITH 1` y `FakeTimeProvider` | ADR-002 (Enmienda 5), `.claude/rules/tests.md` | Decisión 99 | | |
+| `CrearTicketHandler`: rol → recorte → validador → código → `Ticket.Crear` | `src/HelpDesk.Application/Tickets/Crear/CrearTicketHandler.cs` | Nuevo (`530463f`) | | |
+| `CrearTicketValidator` con las constantes de Domain | `src/HelpDesk.Application/Tickets/Crear/CrearTicketValidator.cs` | Nuevo (`530463f`) | | |
+| `ReclasificarTicketHandler`: ticket → rol → técnico asignado → validador → `Ticket.Reclasificar` | `src/HelpDesk.Application/Tickets/Reclasificar/ReclasificarTicketHandler.cs` | Nuevo (`abc4a3d`) | | |
+| Repositorios, unidad de trabajo y `ConsultasTicket` (detalle con nombres) | `src/HelpDesk.Infrastructure/Persistencia/` | Nuevos (`5be7323`) | | |
+| `ManejadorExcepciones` y respuesta de modelo inválido como Problem Details | `src/HelpDesk.Api/Errores/` | Nuevos (`5027dfc`) | | |
+| `FiltroContentTypeAusente`: petición sin `Content-Type` → `400` (decisión 93) | `src/HelpDesk.Api/Errores/FiltroContentTypeAusente.cs` | Nuevo (`5027dfc`) | | |
+| `MiddlewareUsuarioActual` y `FormatoId` (`401` antes del `404`) | `src/HelpDesk.Api/Identidad/`, `src/HelpDesk.Api/Identificadores/` | Nuevos (`6851b9c`) | | |
+| `TicketsController` con crear (`201` + `Location` relativo) y reclasificar | `src/HelpDesk.Api/Tickets/TicketsController.cs` | Nuevo (`eebf67e`); respuestas documentadas en `e6030c9` | | |
+| `HelpDeskApiFactory` y `BaseDePruebasFixture` sobre la base de pruebas | `test/HelpDesk.Tests/Api/HelpDeskApiFactory.cs`, `test/HelpDesk.Tests/Integracion/BaseDePruebasFixture.cs` | Modificados (`eebf67e`, +753/−61) | | |
+| Prueba de la SEQUENCE agotada: `500` sin crear el ticket (pendiente de E-017, decisión 90) | `test/HelpDesk.Tests/Api/CrearTicketEndpointTests.cs` | `Crear_SecuenciaAgotada_Responde500YNoCreaElTicket` (`eebf67e`) | | |
+| Transformadores OpenAPI: `X-Usuario-Id`, `Location` y valores de enum (RNF-09) | `src/HelpDesk.Api/Documentacion/` | Nuevos (`e6030c9`), con `DocumentoOpenApiTests` | | |
+
+**Incidencias:** [PENDIENTE]
+
+**Aprendizaje:** [PENDIENTE]
+
+**Commit relacionado:**
+
+- `7f0f2b0` docs: registrar y aplicar decisiones 92 a 99 para la implementación de RF-01
+- `530463f` feat(application): crear ticket con validador, handler y pruebas (RF-01)
+- `abc4a3d` feat(application): reclasificar ticket con validador, handler y pruebas (RF-01)
+- `5be7323` feat(infrastructure): repositorios, unidad de trabajo y consulta del detalle del ticket (RF-01)
+- `5027dfc` feat(api): configuración JSON, Problem Details y registro de Application
+- `6851b9c` feat(api): middleware de X-Usuario-Id y lectura del id de la ruta
+- `eebf67e` feat(api): endpoints de crear y reclasificar con pruebas de extremo a extremo (RF-01)
+- `e6030c9` feat(api): documento OpenAPI de RF-01 según RNF-09
