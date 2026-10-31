@@ -70,3 +70,10 @@ Origen: decisiones 87, 88 y 89 de [auditoria-documentacion.md §9](../../../docs
 - **Enums:** las columnas `Ticket.Estado`, `Ticket.Prioridad`, `Ticket.Categoria`, `Usuario.Rol` y `Comentario.Tipo` son `nvarchar(20)`. Al tener una longitud acotada, admiten el índice sobre `Estado` (RNF-06).
 - **Datos semilla:** los 10 usuarios de [01-modelo-dominio.md §8](../01-modelo-dominio.md#8-datos-semilla) tienen los Id 1 a 10, en el orden de la tabla.
 - **Alcance:** precisa la Enmienda 2 y la decisión 32. Las migraciones de EF Core siguen siendo la fuente del modelo físico; estas decisiones fijan solo lo que la convención de EF Core no resuelve o lo que afecta a otras capas.
+
+## Enmienda 4 · 30/10/2026
+
+Origen: decisiones 90 y 91 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (implementación de la capa Infrastructure).
+
+- **Límite del código:** la SEQUENCE `CodigoTicket` tiene `MAXVALUE` 999999 y no es cíclica, y `FormatoCodigoTicket` rechaza los números fuera de 1 a 999999. Al superar el máximo, la creación del ticket debe fallar con `500` `ERROR_INTERNO` (decisión 41) sin crear el ticket. Completa la Enmienda 2 y la decisión 35. La prueba `GenerarAsync_SecuenciaEnMaximo_DevuelveHD999999YLuegoFalla` comprueba que la SEQUENCE entrega `HD-999999` y que la llamada siguiente falla; el `500` y que no se cree el ticket se comprobarán al implementar RF-01, cuando existan el handler de crear y la Api.
+- **Base de las pruebas de integración:** precisa lo que dice la Enmienda 2 sobre el entorno de las pruebas de integración. Usan una base propia en LocalDB, distinta de `HelpDesk` (por convención, `HelpDesk_Pruebas`), que se recrea con la migración al empezar cada ejecución y se conserva al terminar. Su cadena de conexión se lee de los user-secrets del proyecto de pruebas, con la clave `ConnectionStrings:HelpDeskPruebas`, o de la variable de entorno `ConnectionStrings__HelpDeskPruebas` (RNF-02). Si la cadena apunta a la base de desarrollo `HelpDesk` o no nombra ninguna base, las pruebas fallan antes de conectarse.

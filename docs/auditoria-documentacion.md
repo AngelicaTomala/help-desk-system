@@ -9,7 +9,7 @@
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (89 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (91 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
@@ -490,13 +490,15 @@ Salen del plan de implementación de la capa Domain; no forman parte de H-01 a H
 
 Decisiones para la implementación de Infrastructure (30/10/2026):
 
-Las decisiones 87 y 88 salen de los hallazgos I-01 e I-02 de la revisión de solo lectura de la capa Infrastructure del 30/10/2026, y la 89 de la revisión de ese informe; no forman parte de H-01 a H-55 ni de D-01 a D-07.
+Las decisiones 87 y 88 salen de los hallazgos I-01 e I-02 de la revisión de solo lectura de la capa Infrastructure del 30/10/2026, la 89 de la revisión de ese informe, y la 90 y la 91 de la implementación de la capa; no forman parte de H-01 a H-55 ni de D-01 a D-07.
 
 | #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
 | -- | -------- | ---------------------- | --------------- |
 | 87 | Las claves foráneas `Ticket.SolicitanteId`, `Ticket.TecnicoId` y `Comentario.AutorId` usan `Restrict` al borrar. Solo `Comentario.TicketId` usa cascada (composición de `01-modelo-dominio.md` §3). El MVP no borra usuarios (no hay ningún RF para hacerlo; son datos semilla, S-01) ni tickets (decisión 18). | I-01 | `01-modelo-dominio.md` §3; Enmienda 3 de ADR-002 |
 | 88 | Las columnas que guardan enums como texto son `nvarchar(20)`: `Ticket.Estado`, `Ticket.Prioridad`, `Ticket.Categoria`, `Usuario.Rol` y `Comentario.Tipo`. | I-02 | `01-modelo-dominio.md` §2; Enmienda 3 de ADR-002 |
 | 89 | Los 10 usuarios semilla de `01-modelo-dominio.md` §8 tienen los Id 1 a 10, en el orden de la tabla, coherentes con los ejemplos de `03-contrato-api.md` §1.10. | Revisión del informe de Infrastructure (Id de los datos semilla) | `01-modelo-dominio.md` §8; Enmienda 3 de ADR-002 |
+| 90 | La SEQUENCE `CodigoTicket` tiene `MAXVALUE` 999999 y no es cíclica, y el formato del código (`FormatoCodigoTicket`) rechaza los números fuera de 1 a 999999. Al superar el máximo, la creación del ticket debe fallar con `500` `ERROR_INTERNO` (decisión 41) sin crear el ticket. Completa la decisión 35. La prueba `GenerarAsync_SecuenciaEnMaximo_DevuelveHD999999YLuegoFalla` comprueba que la SEQUENCE entrega `HD-999999` y que la llamada siguiente falla; el `500` `ERROR_INTERNO` y que no se cree el ticket se comprobarán al implementar RF-01, cuando existan el handler de crear y la Api. | Implementación de Infrastructure | `01-modelo-dominio.md` §1 (fila de `Codigo`) y §4 (RN-03); Enmienda 4 de ADR-002 |
+| 91 | Las pruebas de integración usan una base propia en LocalDB, distinta de `HelpDesk` (por convención, `HelpDesk_Pruebas`), que se recrea con la migración al empezar cada ejecución y se conserva al terminar. Su cadena de conexión se lee de los user-secrets del proyecto de pruebas, con la clave `ConnectionStrings:HelpDeskPruebas`, o de la variable de entorno `ConnectionStrings__HelpDeskPruebas` (RNF-02). Si la cadena apunta a la base de desarrollo `HelpDesk` o no nombra ninguna base, las pruebas fallan antes de conectarse. | Implementación de Infrastructure | Enmienda 4 de ADR-002 |
 
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 

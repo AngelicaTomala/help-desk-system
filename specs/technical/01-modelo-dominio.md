@@ -31,7 +31,7 @@ Se carga como dato semilla (S-01); no hay endpoint de registro.
 | Atributo         | Tipo             | Reglas                                                 |
 | ---------------- | ---------------- | ------------------------------------------------------ |
 | Id               | int              | PK                                                     |
-| Codigo           | string(9)        | `HD-` + 6 dígitos, único y creciente desde `HD-000001`; se aceptan huecos; límite `HD-999999` (RN-03, índice único) |
+| Codigo           | string(9)        | `HD-` + 6 dígitos, único y creciente desde `HD-000001`; se aceptan huecos; límite `HD-999999`: al superarlo, la creación debe fallar con `500` `ERROR_INTERNO` sin crear el ticket, comportamiento que se comprobará con RF-01 (RN-03, índice único, decisión 90) |
 | Titulo           | string           | 5–150 caracteres (RN-01)                               |
 | Descripcion      | string           | 10–2000 caracteres (RN-01)                             |
 | Categoria        | Categoria        | RN-02; reclasificable (RN-13)                          |
@@ -121,7 +121,7 @@ Criterio (ver [ADR-003](adr/ADR-003-fluentvalidation.md)): el formato de la entr
 | ----- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | RN-01 | Domain + Application | `Ticket.Crear` (invariante con constantes públicas: texto recortado, no en blanco y dentro de las longitudes medidas sobre ese texto; guarda el texto que recibe; `InvarianteVioladaException`) · `CrearTicketValidator` (mismas constantes; `400` con detalle, RNF-05) · Application recorta el título y la descripción antes de validar y de llamar a Domain (decisiones 79 y 83) |
 | RN-02 | Domain + Application | Enums `Categoria` y `Prioridad`; `Ticket.Crear`, `Ticket.CambiarPrioridad` y `Ticket.Reclasificar` rechazan un valor no definido en el enum con `InvarianteVioladaException` (decisión 84) · `CrearTicketValidator` |
-| RN-03 | Domain + Application | `Ticket.Crear` (`Abierto`, sin técnico) · `IGeneradorCodigoTicket` (único y creciente; en Infrastructure con una SEQUENCE de SQL Server)            |
+| RN-03 | Domain + Application | `Ticket.Crear` (`Abierto`, sin técnico) · `IGeneradorCodigoTicket` (único y creciente; en Infrastructure con la SEQUENCE `CodigoTicket` de SQL Server, con `MAXVALUE` 999999 y no cíclica; la prueba de integración comprueba que, tras `HD-999999`, la SEQUENCE falla; el `500` `ERROR_INTERNO` sin crear el ticket se comprobará al implementar RF-01, decisión 90) |
 | RN-04 | Application          | `ListarTicketsHandler` / `ObtenerTicketHandler` (filtro por rol; `403` si el ticket no le corresponde)                                        |
 | RN-05 | Application          | `ListarTicketsValidator` (`page` ≥ 1, por defecto 1; `pageSize` 1–100, por defecto 20; filtros válidos). Las constantes de paginación viven en Application · consulta paginada ordenada por FechaCreacion descendente                             |
 | RN-06 | Application + Domain | `AsignarTicketHandler` y `ReasignarTicketHandler` (actor supervisor, si no `403`; técnico existente y `Usuario.EsTecnicoActivo()`, si no `400` `TECNICO_NO_VALIDO`) · solo `ReasignarTicketHandler`: reasignar al mismo técnico, `400` `MISMO_TECNICO`, en el orden de la decisión 72 (decisión 81) · `Ticket.Reasignar` no rechaza al mismo técnico y aplica la reasignación (decisión 86) |
