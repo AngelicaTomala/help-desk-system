@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using HelpDesk.Api.Documentacion;
 using HelpDesk.Api.Errores;
 using HelpDesk.Api.Identificadores;
 using HelpDesk.Application.Tickets;
@@ -6,6 +7,7 @@ using HelpDesk.Application.Tickets.Crear;
 using HelpDesk.Application.Tickets.Listar;
 using HelpDesk.Application.Tickets.Obtener;
 using HelpDesk.Application.Tickets.Reclasificar;
+using HelpDesk.Domain.Enumeraciones;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HelpDesk.Api.Tickets;
@@ -62,7 +64,13 @@ public sealed class TicketsController : ControllerBase
         return await handler.ManejarAsync(new ReclasificarTicketComando(ticketId, cuerpo.Categoria), cancellationToken);
     }
 
+    // Respuestas documentadas (RNF-09): las de §2.2 y el 500 de §2.
     [HttpGet("{id}")]
+    [ProducesResponseType<TicketDetalleDto>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, CamposProblemDetails.TipoContenido)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, CamposProblemDetails.TipoContenido)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, CamposProblemDetails.TipoContenido)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError, CamposProblemDetails.TipoContenido)]
     public async Task<ActionResult<TicketDetalleDto>> Obtener(
         string id,
         [FromServices] ObtenerTicketHandler handler,
@@ -74,7 +82,25 @@ public sealed class TicketsController : ControllerBase
     }
 
     // Los parámetros de la URL llegan como texto, sin convertir: los valida Application después del 403 (decisión 101).
+    // Los atributos Parametro* solo los documentan (RNF-09); respuestas: las de §2.3 y el 500 de §2.
     [HttpGet]
+    [ParametroEnum("estado", typeof(EstadoTicket), Detalle = "Filtra por estado; sin filtro si falta.")]
+    [ParametroEnum("prioridad", typeof(Prioridad), Detalle = "Filtra por prioridad; sin filtro si falta.")]
+    [ParametroEntero("tecnicoId", 1, Maximo = int.MaxValue,
+        Detalle = "Filtra por técnico; sin filtro si falta. Un técnico solo puede usar su propio Id: otro valor, " +
+            "incluido uno mal formado, responde 403 FILTRO_NO_AUTORIZADO (decisión 100). Un Id que no es de un " +
+            "técnico responde 200 con lista vacía (decisión 69).")]
+    [ParametroBooleano("soloVencidos",
+        Detalle = "true devuelve solo los tickets con estado del SLA Vencido, sin Incumplido (CA-02.3).")]
+    [ParametroEntero("page", Paginacion.PaginaMinima, PorDefecto = Paginacion.PaginaPorDefecto,
+        Detalle = "Página, desde 1 (RN-05).")]
+    [ParametroEntero("pageSize", Paginacion.TamanoMinimo, Maximo = Paginacion.TamanoMaximo,
+        PorDefecto = Paginacion.TamanoPorDefecto, Detalle = "Tamaño de página, de 1 a 100 (RN-05).")]
+    [ProducesResponseType<PaginaDto<TicketResumenDto>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType<HttpValidationProblemDetails>(StatusCodes.Status400BadRequest, CamposProblemDetails.TipoContenido)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, CamposProblemDetails.TipoContenido)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden, CamposProblemDetails.TipoContenido)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError, CamposProblemDetails.TipoContenido)]
     public async Task<ActionResult<PaginaDto<TicketResumenDto>>> Listar(
         [FromServices] ListarTicketsHandler handler,
         CancellationToken cancellationToken) =>

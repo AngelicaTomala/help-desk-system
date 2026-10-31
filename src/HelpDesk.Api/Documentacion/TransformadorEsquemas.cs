@@ -19,6 +19,8 @@ public sealed class TransformadorEsquemas : IOpenApiSchemaTransformer
 {
     public const string TraceId = "traceId";
 
+    public const string DescripcionEnum = "No distingue mayúsculas y minúsculas; no admite valores numéricos (decisión 58).";
+
     /// <summary>
     /// Catálogo de <c>codigo</c> de ADR-004 (Enmienda 3), en el orden de la tabla del contrato §1.3.
     /// </summary>
@@ -51,7 +53,7 @@ public sealed class TransformadorEsquemas : IOpenApiSchemaTransformer
         if (valoresEnum is not null)
         {
             schema.Enum = [.. Enum.GetNames(valoresEnum.TipoEnum).Select(nombre => (JsonNode)nombre)];
-            schema.Description = "No distingue mayúsculas y minúsculas; no admite valores numéricos (decisión 58).";
+            schema.Description = DescripcionEnum;
         }
         else if (context.JsonPropertyInfo is null && typeof(ProblemDetails).IsAssignableFrom(context.JsonTypeInfo.Type))
         {

@@ -102,6 +102,7 @@ dotnet test                                                  # todas
 dotnet test --filter "FullyQualifiedName~Integracion"        # solo las de integración (LocalDB)
 dotnet test --filter "CA=CA-05.1"                            # las de un CA
 dotnet test --filter "RN=RN-03"                              # las de una RN
+$env:HELPDESK_RENDIMIENTO = '1'; dotnet test --filter "FullyQualifiedName~ListarTicketsRendimientoTests" --logger "console;verbosity=detailed"; Remove-Item Env:HELPDESK_RENDIMIENTO   # prueba explícita de rendimiento de RNF-06 (decisión 110)
 node scripts/verificar-enlaces.mjs                           # enlaces internos y anclas de los .md
 ```
 
