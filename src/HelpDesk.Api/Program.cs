@@ -9,8 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AgregarPresentacion();
 builder.Services.AgregarAplicacion();
 builder.Services.AgregarInfraestructura(builder.Configuration);
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Documento OpenAPI de RNF-09; Swagger UI lo lee en Development.
+builder.Services.AgregarDocumentacion();
 
 var app = builder.Build();
 
