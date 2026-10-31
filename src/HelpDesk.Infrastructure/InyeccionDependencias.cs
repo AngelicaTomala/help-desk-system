@@ -30,6 +30,12 @@ public static class InyeccionDependencias
         services.AddDbContext<HelpDeskDbContext>(options => options.UseSqlServer(cadenaConexion));
         services.AddScoped<IGeneradorCodigoTicket, GeneradorCodigoTicket>();
 
+        // Mismo tiempo de vida que el DbContext: comparten la instancia de la petición (decisión 97).
+        services.AddScoped<ITicketRepositorio, TicketRepositorio>();
+        services.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajo>();
+        services.AddScoped<IConsultasTicket, ConsultasTicket>();
+        services.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
+
         return services;
     }
 }
