@@ -9,7 +9,7 @@
 
 ## Resumen ejecutivo
 
-Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (86 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
+Se auditaron los 15 documentos del repositorio en cuatro fases (secciones 1 a 8) y se corrigieron con las decisiones de la sección 9 (89 en total). El estado de cada hallazgo está en la sección 10 y la revalidación en la sección 13.
 
 | Severidad | Total | Resueltos | Pendientes |
 | --------- | ----- | --------- | ---------- |
@@ -487,6 +487,16 @@ Salen del plan de implementación de la capa Domain; no forman parte de H-01 a H
 | -- | -------- | ---------------------- | --------------- |
 | 85 | En `Ticket.Resolver` y `Ticket.Reabrir`, el texto se valida antes que el estado. Un texto inválido sobre un estado no permitido lanza `InvarianteVioladaException` (`ERROR_INTERNO`), no `TRANSICION_INVALIDA`, con el mismo criterio que las decisiones 6 y 84. Lo cubren las pruebas `Resolver_TextoEnBlancoEnEstadoNoPermitido_LanzaInvarianteViolada` y `Reabrir_TextoEnBlancoEnEstadoNoPermitido_LanzaInvarianteViolada`. | Plan de implementación de Domain | `01-modelo-dominio.md` §1 (filas de `Resolver` y `Reabrir`) y §4 (RN-09); Enmienda 6 de ADR-003 |
 | 86 | `Ticket.Reasignar` no rechaza reasignar al mismo técnico, porque `MISMO_TECNICO` se valida en `ReasignarTicketHandler` (decisión 81). Domain aplica la reasignación y fija `FechaActualizacion`. Lo documenta la prueba `Reasignar_MismoTecnico_NoLanzaExcepcion`. | Plan de implementación de Domain | `01-modelo-dominio.md` §1 (fila de `Reasignar`) y §4 (RN-06); Enmienda 6 de ADR-003 |
+
+Decisiones para la implementación de Infrastructure (30/10/2026):
+
+Las decisiones 87 y 88 salen de los hallazgos I-01 e I-02 de la revisión de solo lectura de la capa Infrastructure del 30/10/2026, y la 89 de la revisión de ese informe; no forman parte de H-01 a H-55 ni de D-01 a D-07.
+
+| #  | Decisión | Hallazgos que resuelve | Dónde se aplicó |
+| -- | -------- | ---------------------- | --------------- |
+| 87 | Las claves foráneas `Ticket.SolicitanteId`, `Ticket.TecnicoId` y `Comentario.AutorId` usan `Restrict` al borrar. Solo `Comentario.TicketId` usa cascada (composición de `01-modelo-dominio.md` §3). El MVP no borra usuarios (no hay ningún RF para hacerlo; son datos semilla, S-01) ni tickets (decisión 18). | I-01 | `01-modelo-dominio.md` §3; Enmienda 3 de ADR-002 |
+| 88 | Las columnas que guardan enums como texto son `nvarchar(20)`: `Ticket.Estado`, `Ticket.Prioridad`, `Ticket.Categoria`, `Usuario.Rol` y `Comentario.Tipo`. | I-02 | `01-modelo-dominio.md` §2; Enmienda 3 de ADR-002 |
+| 89 | Los 10 usuarios semilla de `01-modelo-dominio.md` §8 tienen los Id 1 a 10, en el orden de la tabla, coherentes con los ejemplos de `03-contrato-api.md` §1.10. | Revisión del informe de Infrastructure (Id de los datos semilla) | `01-modelo-dominio.md` §8; Enmienda 3 de ADR-002 |
 
 Casos de uso agregados (H-53): HU-10 cambiar prioridad, HU-11 reasignar, HU-12 cierre por el supervisor, HU-13 consulta por el técnico y HU-14 consulta de técnicos activos. Totales: 14 HU y 45 CA (RNF-10 actualizado).
 

@@ -61,3 +61,12 @@ Origen: decisiones 32, 33, 35, 36 y 37 de [auditoria-documentacion.md §9](../..
 - **Código del ticket:** la SEQUENCE inicia en 1 (`HD-000001`). El límite `HD-999999` es una limitación conocida del MVP.
 - **Entorno:** el desarrollo y las pruebas de integración usan LocalDB.
 - **Justificación adicional:** la desarrolladora tiene más de 10 años de experiencia desarrollando software con .NET y con SQL Server.
+
+## Enmienda 3 · 30/10/2026
+
+Origen: decisiones 87, 88 y 89 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos I-01 e I-02 de la revisión de Infrastructure, y la revisión de ese informe).
+
+- **Claves foráneas:** `Ticket.SolicitanteId`, `Ticket.TecnicoId` y `Comentario.AutorId` usan `Restrict` al borrar; solo `Comentario.TicketId` usa cascada. Así no hay varios caminos de cascada hasta `Comentario`, que SQL Server no admite. El MVP no borra usuarios (no hay ningún RF para hacerlo; son datos semilla, S-01) ni tickets (decisión 18).
+- **Enums:** las columnas `Ticket.Estado`, `Ticket.Prioridad`, `Ticket.Categoria`, `Usuario.Rol` y `Comentario.Tipo` son `nvarchar(20)`. Al tener una longitud acotada, admiten el índice sobre `Estado` (RNF-06).
+- **Datos semilla:** los 10 usuarios de [01-modelo-dominio.md §8](../01-modelo-dominio.md#8-datos-semilla) tienen los Id 1 a 10, en el orden de la tabla.
+- **Alcance:** precisa la Enmienda 2 y la decisión 32. Las migraciones de EF Core siguen siendo la fuente del modelo físico; estas decisiones fijan solo lo que la convención de EF Core no resuelve o lo que afecta a otras capas.

@@ -2,7 +2,7 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.7                    |
+| Versión | 1.8                    |
 | Fecha   | 30/10/2026             |
 | Estado  | Aprobado               |
 
@@ -83,6 +83,7 @@ Resolver genera un comentario `Solucion` y reabrir uno `Reapertura` (RN-09). As�
 ## 2. Enumeraciones
 
 Se persisten como texto, coherente con RNF-09 (enums como texto en OpenAPI).
+En la base, cada columna de enum es `nvarchar(20)`: `Ticket.Estado`, `Ticket.Prioridad`, `Ticket.Categoria`, `Usuario.Rol` y `Comentario.Tipo` (decisión 88). `EstadoSla` no se persiste (RN-11).
 
 | Enum           | Valores                                          | Origen      |
 | -------------- | ------------------------------------------------ | ----------- |
@@ -95,14 +96,14 @@ Se persisten como texto, coherente con RNF-09 (enums como texto en OpenAPI).
 
 ## 3. Relaciones y cardinalidades
 
-| Relación                          | Cardinalidad                                |
-| --------------------------------- | ------------------------------------------- |
-| Usuario (Solicitante) crea Ticket | 1 — 0..\*                                   |
-| Usuario (Técnico) atiende Ticket  | 0..1 — 0..\*                                |
-| Ticket contiene Comentario        | 1 — 0..\* (composición, borrado en cascada) |
-| Usuario escribe Comentario        | 1 — 0..\*                                   |
+| Relación                          | Cardinalidad                                | Clave foránea           | Al borrar (decisión 87) |
+| --------------------------------- | ------------------------------------------- | ----------------------- | ----------------------- |
+| Usuario (Solicitante) crea Ticket | 1 — 0..\*                                   | `Ticket.SolicitanteId`  | `Restrict`              |
+| Usuario (Técnico) atiende Ticket  | 0..1 — 0..\*                                | `Ticket.TecnicoId`      | `Restrict`              |
+| Ticket contiene Comentario        | 1 — 0..\* (composición, borrado en cascada) | `Comentario.TicketId`   | Cascada                 |
+| Usuario escribe Comentario        | 1 — 0..\*                                   | `Comentario.AutorId`    | `Restrict`              |
 
-El MVP no elimina tickets ([00-vision.md §4](../functional/00-vision.md#4-alcance)); el borrado en cascada solo describe la composición.
+El MVP no borra usuarios (no hay ningún RF para hacerlo; son datos semilla, S-01) ni tickets ([00-vision.md §4](../functional/00-vision.md#4-alcance), decisión 18); el borrado en cascada solo describe la composición. Como las claves hacia `Usuario` usan `Restrict`, hay un solo camino de cascada hasta `Comentario`: el que viene de `Ticket` (decisión 87).
 
 ## 4. Ubicación de las reglas de negocio
 
@@ -271,11 +272,11 @@ Reclasificar (RN-13) y cambiar la prioridad (RN-12) no aparecen en el diagrama p
 
 ## 8. Datos semilla
 
-Las migraciones de EF Core son la fuente del modelo físico (tablas, columnas, índices y SEQUENCE); este documento no lo duplica ([ADR-002](adr/ADR-002-sqlserver-efcore.md)).
+Las migraciones de EF Core son la fuente del modelo físico (tablas, columnas, índices y SEQUENCE); este documento no lo duplica ([ADR-002](adr/ADR-002-sqlserver-efcore.md)). Solo fija las decisiones de esquema que la convención de EF Core no resuelve o que afectan a otras capas (decisiones 87, 88 y 89).
 
 Usuarios cargados como datos semilla (S-01): 5 solicitantes, 4 técnicos (uno inactivo) y 1 supervisor. Nombres y correos ficticios, con el dominio reservado para ejemplos `example.com`.
 
-| #  | Nombre            | Email                        | Rol         | Activo |
+| Id | Nombre            | Email                        | Rol         | Activo |
 | -- | ----------------- | ---------------------------- | ----------- | ------ |
 | 1  | Ana Solicitante   | ana.solicitante@example.com  | Solicitante | Sí     |
 | 2  | Bruno Solicitante | bruno.solicitante@example.com | Solicitante | Sí    |
@@ -288,4 +289,4 @@ Usuarios cargados como datos semilla (S-01): 5 solicitantes, 4 técnicos (uno in
 | 9  | Irene Técnico     | irene.tecnico@example.com    | Tecnico     | **No** |
 | 10 | Jorge Supervisor  | jorge.supervisor@example.com | Supervisor  | Sí     |
 
-La columna "#" solo numera las filas; los Id reales los fija la migración.
+La columna "Id" es el Id con que la migración carga cada usuario: del 1 al 10, en el orden de la tabla (decisión 89). Son los mismos que usan los ejemplos de [03-contrato-api.md §1.10](03-contrato-api.md#110-ids-de-los-ejemplos).
