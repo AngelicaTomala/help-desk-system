@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace HelpDesk.Api.Identificadores;
+namespace HelpDesk.Application.Identificadores;
 
 /// <summary>
 /// Formato de un Id en <c>X-Usuario-Id</c> y en <c>{id}</c> (decisión 95): solo dígitos ASCII, sin signo, sin

@@ -1,6 +1,6 @@
-using HelpDesk.Api.Identificadores;
+using HelpDesk.Application.Identificadores;
 
-namespace HelpDesk.Tests.Api;
+namespace HelpDesk.Tests.Application;
 
 /// <summary>
 /// Formato de un Id en <c>X-Usuario-Id</c> y en <c>{id}</c> (decisión 95).

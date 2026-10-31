@@ -56,4 +56,10 @@ public class ConsultasTicket(HelpDeskDbContext context) : IConsultasTicket
                 .Select(c => new ComentarioDto(c.Id, c.Tipo, c.Texto, Persona(c.AutorId), c.FechaCreacion))
                 .ToList());
     }
+
+    public Task<PaginaDto<TicketResumenDto>> ListarAsync(
+        FiltroListadoTickets filtro,
+        DateTime ahora,
+        CancellationToken cancellationToken) =>
+        throw new NotImplementedException("Se implementa en el subpaso de Infrastructure de RF-02.");
 }

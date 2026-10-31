@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using HelpDesk.Domain.Enumeraciones;
 using HelpDesk.Domain.Excepciones;
 
@@ -13,6 +14,17 @@ public class Ticket
     public const int TituloLongitudMaxima = 150;
     public const int DescripcionLongitudMinima = 10;
     public const int DescripcionLongitudMaxima = 2000;
+
+    /// <summary>
+    /// Condición "ticket vencido" de RN-11: no resuelto y <c>ahora</c> posterior al vencimiento (decisión 107). Es la
+    /// única definición; la usan <see cref="EstaVencido"/> y <see cref="CalcularEstadoSla"/>. Los árboles de expresión
+    /// no admiten patrones (CS8122), por eso compara el estado con <c>!=</c>.
+    /// </summary>
+    private static readonly Expression<Func<Ticket, DateTime, bool>> CondicionVencido = (ticket, ahora) =>
+        ((ticket.Estado != EstadoTicket.Resuelto && ticket.Estado != EstadoTicket.Cerrado) || ticket.FechaResolucion == null)
+        && ahora > ticket.FechaVencimiento;
+
+    private static readonly Func<Ticket, DateTime, bool> EsVencido = CondicionVencido.Compile();
 
     private readonly List<Comentario> _comentarios = [];
 
@@ -190,7 +202,19 @@ public class Ticket
             return resolucion <= FechaVencimiento ? EstadoSla.Cumplido : EstadoSla.Incumplido;
         }
 
-        return ahora <= FechaVencimiento ? EstadoSla.EnTiempo : EstadoSla.Vencido;
+        return EsVencido(this, ahora) ? EstadoSla.Vencido : EstadoSla.EnTiempo;
+    }
+
+    /// <summary>
+    /// Condición "ticket vencido" de RN-11 con la hora fijada, para filtrar en SQL (<c>soloVencidos</c>, RNF-06). La
+    /// hora queda como acceso a un miembro, no como constante, para que el proveedor la envíe como parámetro.
+    /// </summary>
+    public static Expression<Func<Ticket, bool>> EstaVencido(DateTime ahora)
+    {
+        var hora = Expression.Property(Expression.Constant(new HoraDeConsulta(ahora)), nameof(HoraDeConsulta.Valor));
+        var cuerpo = new ReemplazoDeParametro(CondicionVencido.Parameters[1], hora).Visit(CondicionVencido.Body);
+
+        return Expression.Lambda<Func<Ticket, bool>>(cuerpo, CondicionVencido.Parameters[0]);
     }
 
     private bool EstaAbiertoParaCambios() => Estado is not (EstadoTicket.Resuelto or EstadoTicket.Cerrado);
@@ -251,5 +275,12 @@ public class Ticket
         {
             throw new InvarianteVioladaException($"La prioridad {(int)prioridad} no está definida.");
         }
+    }
+
+    private sealed record HoraDeConsulta(DateTime Valor);
+
+    private sealed class ReemplazoDeParametro(ParameterExpression parametro, Expression reemplazo) : ExpressionVisitor
+    {
+        protected override Expression VisitParameter(ParameterExpression node) => node == parametro ? reemplazo : node;
     }
 }
