@@ -96,3 +96,10 @@ Origen: decisiones 39, 40 y 41 de [auditoria-documentacion.md §9](../../../docs
 - **Catálogo aprobado:** el catálogo de `codigo` de la Enmienda 3 queda aprobado tal como se propuso, con los códigos separados (decisión 39).
 - **Propiedad `Codigo` en las excepciones de dominio:** las excepciones de dominio exponen una propiedad `Codigo` con un valor del catálogo. `TransicionInvalidaException` se lanza con `TRANSICION_INVALIDA` (transición no permitida por RN-08) o con `TICKET_NO_MODIFICABLE` (reclasificar o cambiar la prioridad de un ticket `Resuelto` o `Cerrado`). El `IExceptionHandler` de la Api copia ese valor al campo `codigo` de Problem Details. Así, ambos casos comparten el `409` y la misma excepción, pero el cliente los distingue por `codigo` (decisión 40).
 - **Errores `500`:** la Api ignora el `Codigo` de la excepción, incluida `InvarianteVioladaException`, y responde siempre `ERROR_INTERNO`, sin exponer detalles internos. El detalle de la excepción se registra en el log (decisión 41).
+
+## Enmienda 5 · 29/10/2026
+
+Origen: decisiones 75, 80 y 82 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (revisión de Domain).
+
+- **`Codigo` de `InvarianteVioladaException`:** la excepción se lanza con el `Codigo` `ERROR_INTERNO`, un valor del catálogo, como pide la Enmienda 4. La Api sigue respondiendo `ERROR_INTERNO` en todos los `500`, sin exponer detalles internos (decisión 41).
+- **Casos cruzados de `TRANSICION_INVALIDA`:** además de asignar un ticket `Resuelto` o `Cerrado`, que ya figura en el catálogo, `TRANSICION_INVALIDA` incluye asignar un ticket que no está `Abierto` y reasignar uno que no está `Asignado` ni `En progreso` (decisiones 42 y 75).

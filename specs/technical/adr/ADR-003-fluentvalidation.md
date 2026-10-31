@@ -68,3 +68,30 @@ Origen: decisiones 31 y 34 de [auditoria-documentacion.md §9](../../../docs/aud
 
 - **Recorte de textos:** los textos se recortan antes de validar; si quedan vacíos, el validador responde `400` (RN-01, RN-09).
 - **Constantes de paginación:** viven en Application, junto a `ListarTicketsValidator`, y no en Domain. Las demás constantes (longitudes de RN-01 y RN-09) siguen en Domain.
+
+## Enmienda 3 · 29/10/2026
+
+Origen: decisión 79 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo D-05 de la revisión de Domain).
+
+- **Recorte y valor guardado:** Application recorta los textos antes de validar y de llamar a Domain. Domain no recorta: valida el texto que recibe (no vacío y dentro de las longitudes de RN-01 y RN-09) con las mismas constantes y guarda ese valor.
+
+## Enmienda 4 · 29/10/2026
+
+Origen: decisión 83 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo D-06 de la revisión de Domain).
+
+- **Texto recortado como invariante:** Domain exige que el texto llegue ya recortado. `Ticket.Crear`, `Ticket.Resolver` y `Ticket.Reabrir` lanzan `InvarianteVioladaException` si el texto está en blanco (vacío o solo espacios) o tiene espacios al inicio o al final. Las longitudes de RN-01 y RN-09 se miden sobre ese texto. Precisa el "no vacío" de la Enmienda 3.
+- **Definición de espacio:** "espacio" es cualquier carácter de espacio en blanco, con la misma definición que `string.Trim()` y `string.IsNullOrWhiteSpace()` de .NET (incluye tabuladores y saltos de línea), tanto en Domain como en Application. Los espacios y saltos de línea en medio del texto están permitidos; la regla solo aplica a los extremos y al texto completamente en blanco.
+
+## Enmienda 5 · 29/10/2026
+
+Origen: decisión 84 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo D-07 de la revisión de regresión de Domain).
+
+- **Valores de enum no definidos:** `Ticket.Crear`, `Ticket.CambiarPrioridad` y `Ticket.Reclasificar` lanzan `InvarianteVioladaException` (`Codigo` `ERROR_INTERNO`) si reciben un valor de `Categoria` o `Prioridad` que no está definido en el enum, y `PoliticaSla.HorasPara` lanza la misma excepción con una prioridad no definida. Así, las invariantes de Domain de la tabla de reparto se amplían a RN-02. Por un caso de uso no ocurre: el validador lo rechaza antes con `400` (decisión 58).
+- **Orden:** la comprobación del valor del enum se hace antes que la guarda de estado. Un valor no definido sobre un ticket `Resuelto` o `Cerrado` lanza `InvarianteVioladaException`, no `TICKET_NO_MODIFICABLE`, en el mismo orden que el `400` antes del `409` (decisión 6).
+
+## Enmienda 6 · 30/10/2026
+
+Origen: decisiones 85 y 86 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (plan de implementación de Domain).
+
+- **Orden en `Resolver` y `Reabrir`:** la invariante del texto (RN-09) se comprueba antes que la regla de estado (RN-08). Un texto inválido sobre un estado no permitido lanza `InvarianteVioladaException` (`Codigo` `ERROR_INTERNO`), no `TransicionInvalidaException` con `TRANSICION_INVALIDA`. Sigue el mismo orden que el `400` antes del `409` (decisión 6) y que la Enmienda 5. Por un caso de uso no ocurre: el validador rechaza antes el texto con `400` (CA-04.3, CA-04.8, CA-04.9).
+- **Reasignar al mismo técnico:** CA-03.8 responde `400` `MISMO_TECNICO` desde `ReasignarTicketHandler`, no desde un validador, porque necesita conocer el técnico actual del ticket (decisiones 81 y 86). `Ticket.Reasignar` no lo rechaza. Precisa lo que dice la Enmienda 1 sobre CA-03.8.

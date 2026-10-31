@@ -910,3 +910,527 @@ Mensaje posterior, tras modificar la bitácora antes de confirmar:
 
 - PR #1: https://github.com/AngelicaTomala/help-desk-system/pull/1
 - `2965cab` docs(bitacora): actualización de la bitácora
+
+---
+
+## E-013 · Revisiones del modelo de dominio y decisiones 75 a 84 (specs/technical/01-modelo-dominio.md)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+Varios prompts con la plantilla Contexto / Tarea / Restricciones / Formato / Verificación, cada uno con diff previo y sin commit hasta la revisión. Las fases fueron:
+
+1. **Revisión a ciegas de la capa Domain** (solo lectura): comprobar si las entidades y los métodos de `Ticket` (§1 y §4 del modelo) se pueden implementar tal como están escritos y cumplir el contrato y las decisiones 1 a 74. Para cada método se revisan los estados de origen, los parámetros para fijar todos los atributos (fechas y comentarios incluidos) y el `codigo` de error. Formato: tabla de hallazgos D-xx con cita textual y opciones sin recomendación.
+2. **Aplicación de decisiones:** registrar en la auditoría §9 las decisiones 75 a 80 y aplicarlas en el modelo y en RN-07. En rondas sucesivas, respondiendo a las preguntas de la IA, se agregaron las decisiones 81 y 82, la Enmienda 3 de ADR-003, la Enmienda 5 de ADR-004, la ampliación de CA-03.4 y los ajustes del resumen ejecutivo y del índice de ADR.
+3. **Primera revisión de regresión:** el mismo prompt de la fase 1, confirmando además que D-01 a D-05 quedaron resueltos. Encontró D-06; se registró y aplicó la decisión 83 (Enmienda 4 de ADR-003).
+4. **Segunda revisión de regresión:** confirma D-01 a D-06. Encontró D-07; se registró y aplicó la decisión 84 (Enmienda 5 de ADR-003 y `02-arquitectura-c4.md` §3).
+5. **Cierre:** antes de la segunda revisión de regresión se definió un criterio de salida: 0 hallazgos o solo menores → cerrar; un hallazgo que cambia una firma o un código → resolverlo. Tras la decisión 84 se cerró sin una cuarta revisión.
+
+**Resultado de la IA:**
+
+- Revisión a ciegas:
+  - 5 hallazgos, cada uno con su cita textual:
+    - D-01 (contradicción): un único `Asignar` frente a la decisión 42.
+    - D-02 (vacío): métodos sin `ahora`.
+    - D-03 (vacío): autor del comentario.
+    - D-04 (vacío): firma de `Crear`.
+    - D-05 (vacío): qué capa recorta los textos.
+  - Excluyó de forma explícita lo que ya resolvían las decisiones de §9 y lo que no era de Domain.
+- Decisiones 75 a 82:
+  - Commit `f120971`, 7 archivos (+66/−33).
+  - Modelo 1.6:
+    - §1: firmas nuevas, `Reasignar` y la nota sobre `ahora`, `autorId` y el recorte.
+    - §4: tabla de excepciones y filas RN-01 y RN-06 a RN-09.
+    - §5: diagrama con `Crear` y `Reasignar`.
+  - RN-07 alineada con la tabla de RN-08 (`02-reglas-negocio.md` 1.2) y CA-03.4 ampliado (`01-requisitos-funcionales.md` 1.2, siguen 45 CA).
+  - Enmienda 3 de ADR-003, Enmienda 5 de ADR-004 e índice de ADR actualizado.
+  - Validación de enlaces: 132 enlaces internos, 0 rotos.
+- Primera revisión de regresión:
+  - Revisó los 10 métodos de `Ticket` y confirmó D-01 a D-05 con citas del modelo.
+  - Encontró D-06 (vacío): sin recorte en Domain, no se define qué es un texto "vacío".
+  - Decisión 83: commit `b2bbf14`, 4 archivos (+17/−9). Validación de enlaces: 133, 0 rotos.
+- Segunda revisión de regresión:
+  - Revisó los 10 métodos y confirmó D-01 a D-06.
+  - Encontró D-07 (vacío): valores de enum no definidos en `Crear`, `CambiarPrioridad`, `Reclasificar` y `PoliticaSla.HorasPara`.
+  - Decisión 84: commit `496b0e4`, 4 archivos (+19/−11). Validación de enlaces: 134, 0 rotos.
+- En cada diff, la IA listó las decisiones propias que no estaban en el prompt y señaló sin resolverlos los textos desactualizados y las enmiendas de ADR que harían falta.
+
+**Revisión humana:**
+
+| Elemento propuesto                                                              | Decisión (✅/✏️/❌) | Justificación                                                                                                   |
+| ------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| D-01: un único `Asignar(tecnicoId)` contradice la decisión 42                   | ✅                  | Opción a: dos métodos, `Asignar` solo desde `Abierto` y `Reasignar` desde `Asignado` o `EnProgreso` (decisión 75). |
+| D-02: métodos que modifican el ticket sin la hora actual                        | ✅                  | Opción a: parámetro `ahora` (UTC) que Application obtiene de `TimeProvider` (decisión 76).                      |
+| D-03: `Resolver` y `Reabrir` sin el autor del comentario                        | ✅                  | Opción b: `autorId` como parámetro; el permiso lo valida Application (decisión 77).                             |
+| D-04: firma de `Crear(...)` sin definir                                         | ✅                  | Opción a: firma con `codigo`, `solicitanteId` y `ahora`; Domain no valida el formato del código (decisión 78).  |
+| D-05: qué capa recorta los textos y qué valor se guarda                         | ✅                  | Opción b: Application recorta y Domain guarda el texto que recibe (decisión 79).                                |
+| Observación: `Codigo` de `InvarianteVioladaException`                           | ✅                  | Lleva `ERROR_INTERNO`; complementa las decisiones 40 y 41 (decisión 80).                                        |
+| Observación: el texto de RN-07 contradice la tabla de RN-08                     | ✅                  | RN-07 se corrigió y la decisión 42 indica dónde se aplicó.                                                      |
+| Decisiones propias al registrar y aplicar 75 a 80 (9)                           | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Pregunta: un handler o dos para asignar y reasignar (fila RN-06)                | ✅                  | Dos handlers; `MISMO_TECNICO` solo en `ReasignarTicketHandler` (decisión 81).                                   |
+| Pregunta: CA-03.4 no cubre los casos cruzados de la decisión 42                 | ✅                  | Se amplió CA-03.4 sin cambiar el número de CA (decisión 82).                                                    |
+| Pregunta: la fila RN-01 del §4 no menciona la decisión 79                       | ✅                  | Se actualizó la fila.                                                                                           |
+| Propuesta: Enmienda 3 de ADR-003 (decisión 79)                                  | ✅                  | Precisa que Application recorta y Domain no.                                                                    |
+| Propuesta: Enmienda 5 de ADR-004 (decisión 80)                                  | ✅                  | Fija el `Codigo` de `InvarianteVioladaException`.                                                               |
+| Aviso: el resumen ejecutivo dice "las 41 decisiones de la sección 9"            | ✏️                  | Se corrigió el número y luego la redacción a "las decisiones de la sección 9 (N en total)".                     |
+| Decisiones propias en las decisiones 81 y 82 y las enmiendas (5)                | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Aviso: el índice de ADR no menciona las enmiendas del 29/10/2026                | ✅                  | Se actualizó el índice.                                                                                         |
+| Pregunta: la fila `TRANSICION_INVALIDA` del catálogo de ADR-004 no menciona los casos cruzados | ✅   | Se agregaron a la Enmienda 5 de ADR-004.                                                                        |
+| Aviso: dos documentos funcionales siguen en "Borrador para revisión"            | ✅                  | Se mantuvo; los prompts siguientes prohíben cambiar el campo Estado.                                           |
+| Decisiones propias en los ajustes del resumen, el índice y la Enmienda 5 (3)    | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Pregunta: la decisión 42 no menciona la Enmienda 5 de ADR-004                   | ✅                  | Se agregó en "Dónde se aplicó".                                                                                 |
+| D-06: no se define qué es un texto "vacío" si Domain no recorta                 | ✅                  | Opción b: Domain exige el texto ya recortado y mide las longitudes sobre él (decisión 83).                      |
+| Enmienda 4 de ADR-003 en lugar de ampliar la Enmienda 3                         | ✅                  | `git log` mostró que la Enmienda 3 ya tenía commit (`f120971`).                                                 |
+| Decisiones propias en la decisión 83 (4)                                        | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Aviso: la introducción del bloque de §9 solo menciona D-01 a D-05               | ✅                  | Se indicó que D-06 sale de la revisión de regresión.                                                            |
+| Aviso: el índice de ADR dice "una del 29/10/2026" para ADR-003                  | ✅                  | Se cambió a "enmiendas del 29/10/2026".                                                                         |
+| Pregunta: si "espacio" incluye tabuladores y saltos de línea                    | ✏️                  | Cualquier espacio en blanco, como `string.Trim()` y `string.IsNullOrWhiteSpace()`; se agregó que los del medio del texto están permitidos. |
+| Observación: un `\r\n` cuenta 2 caracteres en la longitud                       | ❌                  | No hace falta ningún cambio.                                                                                    |
+| Decisiones propias en los ajustes de la decisión 83 (3)                         | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| D-07: valores de enum no definidos en Domain                                    | ✅                  | Opción a: `InvarianteVioladaException` en `Crear`, `CambiarPrioridad`, `Reclasificar` y `PoliticaSla.HorasPara` (decisión 84). |
+| Decisiones propias en la decisión 84 (4)                                        | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Pregunta: la tabla de excepciones del §4 no menciona RN-02                      | ✅                  | La fila pasó a "(RN-01, RN-02, RN-09 y RN-10)".                                                                 |
+| Aviso: ADR-001 y `02-arquitectura-c4.md` §3 no mencionan RN-02                  | ✏️                  | Se actualizó C4 §3; ADR-001 no, porque la definición de las invariantes de Domain está en ADR-003.             |
+| Pregunta: orden entre el valor del enum y la guarda de estado                   | ✅                  | El enum se comprueba antes, igual que el `400` antes del `409` de la decisión 6.                                |
+| Decisiones propias en los ajustes de la decisión 84 (4)                         | ✅                  | Aprobadas al revisar los diffs.                                                                                 |
+| Aviso: fechas 29/10/2026 en cambios guardados el 30/10/2026                     | ✅                  | La decisión 84 se tomó y aprobó el 29/10/2026, y el bloque de §9 tiene esa fecha.                               |
+
+**Incidencias:**
+
+1. La herramienta de edición avisó tres veces que un archivo había cambiado en disco desde la última lectura: `02-reglas-negocio.md`, `adr/README.md` y `02-arquitectura-c4.md`. En los tres casos, `git diff` confirmó que solo contenían los cambios aprobados.
+2. Windows PowerShell 5.1 no admite `&&` ni `||`, así que la comprobación con `git merge-base --is-ancestor` se ejecutó con Bash.
+3. La IA agregó la línea `Co-Authored-By` a los tres mensajes de commit, aunque no estaba en el comando indicado.
+4. D-06 surgió de la propia decisión 79: al dejar Domain de recortar, quedó sin definir qué es un texto "vacío".
+5. Las fechas aprobadas (29/10/2026) quedaron en cambios que se guardaron el 30/10/2026. La IA lo avisó antes del commit `496b0e4`.
+
+**Aprendizaje:**
+
+- Una revisión de regresión después de aplicar decisiones encuentra huecos que crean las propias decisiones (D-06).
+- Las invariantes de Domain tienen que valer también fuera de los casos de uso, por ejemplo en las pruebas; D-06 y D-07 salieron de ese criterio.
+- Definir el criterio de salida antes de revisar evita encadenar revisiones sin fin.
+- Comprobar con `git log` si una enmienda ya tiene commit decide si se amplía o si se crea una nueva.
+- Pedir que la IA liste sus decisiones propias en cada diff hace visibles los cambios que no estaban en el prompt.
+
+**Commit relacionado:**
+
+- `f120971` docs: registrar y aplicar decisiones 75 a 82 para la implementación de Domain
+- `b2bbf14` docs: registrar y aplicar decisión 83 sobre el texto recortado en Domain
+- `496b0e4` docs: registrar y aplicar decisión 84 sobre valores de enum no definidos en Domain
+
+---
+
+## E-014 · Creación de la solución HelpDesk (HelpDesk.slnx)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+Un prompt principal con la plantilla Contexto / Tarea / Restricciones / Formato / Verificación y tres pedidos posteriores:
+
+1. **Crear la solución:** `HelpDesk` con `src/HelpDesk.Domain`, `src/HelpDesk.Application` y `src/HelpDesk.Infrastructure` (classlib), `src/HelpDesk.Api` (webapi con controladores) y `test/HelpDesk.Tests` (xUnit).
+   - Referencias según la regla de dependencias de RNF-07.
+   - Paquetes:
+     - Application: FluentValidation.
+     - Infrastructure: EF Core SqlServer.
+     - Api: EF Core Design y OpenAPI/Swagger UI.
+     - Tests: Mvc.Testing, TimeProvider.Testing y NetArchTest.Rules u otra librería de pruebas de arquitectura.
+   - Restricciones:
+     - Domain sin referencias ni paquetes.
+     - Sin entidades, controladores ni lógica de negocio, y borrando el código de ejemplo.
+     - Sin modificar `specs/` ni `docs/`.
+     - Detenerse si algún paquete no es compatible con .NET 10.
+   - Verificación: `dotnet build` sin errores ni advertencias, y `dotnet test` ejecutándose.
+2. **`CLAUDE.md`:** reemplazar las referencias a la solución ".sln" por "HelpDesk.slnx", sin modificar nada más.
+3. **`CLAUDE.md`:** actualizar las dos frases desactualizadas que señaló la IA: el estado del proyecto (línea 7) y la introducción de los comandos (línea 36).
+4. **Comandos de Git y de .NET:** `git add .`, `git commit`, `git commit --amend` para corregir el mensaje, `dotnet build` y `dotnet test`.
+
+**Resultado de la IA:**
+
+- Creó `HelpDesk.slnx` y los 5 proyectos, sobre .NET SDK 10.0.301.
+- Referencias según RNF-07:
+  - Domain: ninguna.
+  - Application → Domain.
+  - Infrastructure → Application y Domain.
+  - Api → Application e Infrastructure.
+  - Tests → los cuatro proyectos.
+- Paquetes:
+  - Application: FluentValidation 12.2.0.
+  - Infrastructure: Microsoft.EntityFrameworkCore.SqlServer 10.0.14 y System.Security.Cryptography.Pkcs 10.0.14.
+  - Api: Microsoft.AspNetCore.OpenApi 10.0.14, Microsoft.EntityFrameworkCore.Design 10.0.14 y Swashbuckle.AspNetCore.SwaggerUI 10.3.1.
+  - Tests: Microsoft.AspNetCore.Mvc.Testing 10.0.14, Microsoft.Extensions.TimeProvider.Testing 10.11.0 y NetArchTest.Rules 1.3.2, además de los paquetes de xUnit de la plantilla.
+- Borró el código de ejemplo de las plantillas: los tres `Class1.cs`, `WeatherForecast.cs`, `WeatherForecastController.cs`, `HelpDesk.Api.http` y `UnitTest1.cs`.
+- En `Program.cs` agregó `UseSwaggerUI` en Development, apuntando a `/openapi/v1.json`. En `launchSettings.json` cambió el puerto HTTP de 5230 a 3001.
+- Verificación:
+  - `dotnet build`: 0 advertencias, 0 errores.
+  - `dotnet test`: se ejecuta y responde "No hay ninguna prueba disponible".
+  - `dotnet list package --vulnerable --include-transitive`: ningún proyecto con paquetes vulnerables.
+- `CLAUDE.md`:
+  - Línea 36: "La solución es `HelpDesk.slnx`. Los comandos habituales son:".
+  - Línea 7: la solución ya está creada con los 5 proyectos, todavía sin entidades, controladores ni lógica de negocio.
+- Señaló como desactualizadas las dos frases de `CLAUDE.md` y el identificador "(E-013)" del primer mensaje de commit.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una decisión que la IA tomó por iniciativa propia y **[Desarrolladora]**, una que tomó la desarrolladora.
+
+| Elemento propuesto                                                              | Decisión (✅/✏️/❌) | Justificación                                                                                                   |
+| ------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [IA] Formato de solución `.slnx`, el que crea por defecto el SDK 10             | ✅                  | Se mantuvo, y la desarrolladora actualizó `CLAUDE.md` para nombrar `HelpDesk.slnx`.                             |
+| [IA] NetArchTest.Rules como librería de pruebas de arquitectura                 | ✅                  | Es la opción nombrada en el prompt.                                                                             |
+| [IA] Swagger UI con Swashbuckle.AspNetCore.SwaggerUI sobre el documento de `Microsoft.AspNetCore.OpenApi` | ✅ | Aceptado al hacer commit sin cambios; cumple RNF-09.                                                            |
+| [IA] Actualizar `Microsoft.AspNetCore.OpenApi` de 10.0.9 a 10.0.14              | ✅                  | Corrige la vulnerabilidad alta de `Microsoft.OpenApi` 2.0.0 y quita la advertencia del build.                   |
+| [IA] Referencia directa a `System.Security.Cryptography.Pkcs` 10.0.14 en Infrastructure | ✅          | Corrige las vulnerabilidades de la versión 9.0.11, que trae `Microsoft.Data.SqlClient` 6.1.7.                   |
+| [IA] Puerto de desarrollo 3001 en `launchSettings.json`                         | ✅                  | Lo indica `CLAUDE.local.md`; aceptado al hacer commit.                                                         |
+| [IA] Tests referencia Domain, Application, Infrastructure y Api                 | ✅                  | Las pruebas de arquitectura (RNF-07) y de integración necesitan esos ensamblados.                               |
+| [IA] Sin `public partial class Program`                                         | ✅                  | En ASP.NET Core 10 la clase se hace pública automáticamente. [PENDIENTE] comprobarlo con la primera prueba de integración. |
+| [IA] Conservar la carpeta `Controllers/` vacía, `UseHttpsRedirection()` y `UseAuthorization()` | ✅   | Aceptado al hacer commit sin cambios.                                                                           |
+| [Desarrolladora] Nombrar la solución como `HelpDesk.slnx` en `CLAUDE.md`         | ✅                  | Refleja el formato por defecto de .NET 10.                                                                      |
+| [IA] Aviso: dos frases de `CLAUDE.md` desactualizadas (líneas 7 y 36)           | ✏️                  | La desarrolladora pidió actualizarlas e indicó el contenido de cada una.                                        |
+| [IA] Nombres completos de los proyectos y su carpeta en la línea 7 de `CLAUDE.md` | ✅                | Aceptado al revisar el diff y hacer commit.                                                                     |
+| [IA] Aviso: el mensaje de commit dice "(E-013)", que es otra entrada            | ✏️                  | La desarrolladora corrigió el mensaje con `--amend` y quitó el identificador en lugar de usar E-014.           |
+| [IA] Línea `Co-Authored-By` agregada a los mensajes de commit                   | ✅                  | No se objetó; es la misma convención que los commits anteriores.                                               |
+
+**Incidencias:**
+
+1. Al restaurar los paquetes, NuGet avisó de dos vulnerabilidades en dependencias transitivas:
+   - `Microsoft.OpenApi` 2.0.0, de gravedad alta, a través de `Microsoft.AspNetCore.OpenApi` 10.0.9, la versión que fija la plantilla.
+   - `System.Security.Cryptography.Pkcs` 9.0.11, de gravedad alta y moderada, a través de `Microsoft.Data.SqlClient` 6.1.7.
+
+   Las advertencias impedían cumplir "sin advertencias". No eran incompatibilidades con .NET 10, así que la IA las corrigió sin detenerse y lo informó.
+2. El primer commit (`7776163`) llevaba "(E-013)" en el mensaje. Se corrigió con `git commit --amend` antes del push, y el commit pasó a ser `8db87ac`.
+3. `dotnet test` responde "No hay ninguna prueba disponible" porque `HelpDesk.Tests` todavía no tiene pruebas. Es el resultado esperado.
+
+**Aprendizaje:**
+
+- Las plantillas de `dotnet new` pueden fijar paquetes con vulnerabilidades conocidas; conviene ejecutar `dotnet list package --vulnerable --include-transitive` justo después de crear los proyectos.
+- El SDK de .NET 10 crea la solución en formato `.slnx`; los documentos que hablan de `.sln` deben actualizarse.
+- Antes del push conviene revisar los identificadores de trazabilidad del mensaje de commit; `--amend` es seguro mientras el commit no esté subido.
+
+**Commit relacionado:**
+
+- `8db87ac` chore: crear solución HelpDesk con Clean Architecture
+
+---
+
+## E-015 · Paso 2: /init, CLAUDE.md con imports y reglas por capa (.claude/rules/)
+
+**Herramienta:** Claude Code (VS Code)
+
+**Prompt:**
+
+Varios prompts, cada uno con diff o contenido previo y sin commit:
+
+1. **`/init`:** analizar el repositorio y crear `CLAUDE.md`, o sugerir mejoras si ya existe. Al existir, la IA propuso un diff sin guardarlo.
+2. **Selección de la propuesta:**
+   - el encabezado se queda en español;
+   - se corrigen las dos frases desactualizadas de `README.md`;
+   - de `CLAUDE.md`, se aplican solo la sección de Comandos y la línea "Referencias entre proyectos (RNF-07)", porque las demás reglas se cargarán por import desde las specs.
+3. **Comprobación de las specs a importar:** `ls` de `02-reglas-negocio.md`, `01-modelo-dominio.md` y `trazabilidad.md`.
+4. **Reglas por capa:** crear en `.claude/rules/` cinco archivos con frontmatter `paths` (`domain.md`, `application.md`, `infrastructure.md`, `api.md` y `tests.md`) con los puntos indicados para cada capa.
+   - Cada regla en una viñeta corta e imperativa, con su fuente.
+   - Lo que no tenga respaldo, marcado `[VERIFICAR]`.
+   - Sin copiar párrafos de las specs ni repetir `CLAUDE.md`.
+   - `api.md` importa el contrato.
+5. **Ajustes:**
+   - reemplazar los `[VERIFICAR]` por "(convención del proyecto, E-015)";
+   - dejar "y/o" en los `[Trait]`;
+   - agregar `.claude/settings.local.json` a `.gitignore`.
+
+   Este prompt se envió dos veces.
+6. **Verificación:** leer `HelpDesk.Domain.csproj`, `Program.cs` y `HelpDesk.Tests.csproj` sin cambiar nada.
+
+**Resultado de la IA:**
+
+- `/init`:
+  - No encontró reglas de Cursor ni de Copilot, ni configuración de Codex o Gemini.
+  - Propuso cambios en el encabezado, los comandos, las referencias entre proyectos y las reglas de Domain (decisiones 75 a 84), y señaló dos frases desactualizadas en `README.md`.
+- `CLAUDE.md`:
+  - Comandos con las rutas reales: filtro por `CA`/`RN`, `dotnet run` con el puerto 3001 y Swagger UI, `dotnet ef` y la comprobación de paquetes vulnerables.
+  - Nota sobre `dotnet-ef` y PowerShell 5.1.
+  - Línea de referencias entre proyectos, con la nota sobre `Pkcs`.
+- `README.md`: `HelpDesk.slnx` en lugar de "Todavía no hay una solución `.sln`", y la fila de `src/`/`test/` actualizada. Validación de enlaces: 134, 0 rotos.
+- `.claude/rules/`:
+  - 5 archivos con `paths`: `src/HelpDesk.Domain/**`, `src/HelpDesk.Application/**`, `src/HelpDesk.Infrastructure/**`, `src/HelpDesk.Api/**` y `test/**`.
+  - `api.md` importa el contrato con `@../../specs/technical/03-contrato-api.md`.
+  - `git check-ignore` confirmó que no están ignorados.
+- Marcó tres puntos sin respaldo en las specs como `[VERIFICAR]`:
+  - setters privados en Domain;
+  - `IEntityTypeConfiguration<T>` por entidad en Infrastructure;
+  - nombres `Metodo_Escenario_Resultado` en Tests.
+- Al leer los tres archivos de la verificación se cargaron solas las reglas de `domain.md`, `api.md` y `tests.md`, y no las de `application.md` ni `infrastructure.md`. Esto confirma que el filtro `paths` funciona.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de la IA y **[Desarrolladora]**, una decisión de la desarrolladora.
+
+| Elemento propuesto                                                              | Decisión (✅/✏️/❌) | Justificación                                                                                                   |
+| ------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [IA] `/init`: encabezado en inglés (prefijo de `/init`)                         | ❌                  | El encabezado se queda en español.                                                                              |
+| [IA] `/init`: sección de Comandos con rutas reales, filtro `CA`/`RN`, puerto 3001, `dotnet ef` y paquetes vulnerables | ✅ | Aplicada completa, con la nota de `dotnet-ef` y PowerShell.                                                      |
+| [IA] `/init`: línea "Referencias entre proyectos (RNF-07)" con la nota de `Pkcs` | ✅                 | Aplicada.                                                                                                       |
+| [IA] `/init`: "Estado del proyecto" con las decisiones 1 a 84                   | ❌                  | No se aplicó: esas reglas se cargarán por import desde las specs.                                               |
+| [IA] `/init`: "Ubicación de las reglas" con RN-02, RN-10 y los `Codigo`         | ❌                  | Mismo motivo.                                                                                                   |
+| [IA] `/init`: "Firmas de Domain" (decisiones 75 a 78)                           | ❌                  | Mismo motivo.                                                                                                   |
+| [IA] `/init`: "Textos" (decisiones 79, 83 y 84)                                 | ❌                  | Mismo motivo.                                                                                                   |
+| [IA] Aviso: dos frases desactualizadas en `README.md`                           | ✅                  | Corregidas; la redacción de la fila de la tabla es de la IA.                                                    |
+| [Desarrolladora] Imports en `CLAUDE.md`: `02-reglas-negocio.md`, `01-modelo-dominio.md` y `trazabilidad.md` | ✅ | Sección "Fuentes de verdad". Quedan bajo demanda, sin importar: `01-requisitos-funcionales.md`, `03-contrato-api.md`, ADR-001 a ADR-004 y la auditoría §9. |
+| [Desarrolladora] Cinco archivos de reglas por capa con frontmatter `paths`      | ✅                  | Cargan solo al trabajar en la carpeta de cada capa.                                                             |
+| [IA] Import del contrato en `api.md` con la ruta `@../../specs/technical/03-contrato-api.md` | ✅     | Los imports se resuelven respecto al archivo que los contiene (`.claude/rules/`), no a la raíz.                 |
+| [IA] Reglas agregadas con fuente en las specs o en §9 (p. ej. decisiones 65, 67, 70, 72, 75 a 84; RNF-01 a RNF-06) | ✅ | Aceptadas al revisar el contenido.                                                                              |
+| [IA] El orden de errores `401 → 404 → 403 → 400 → 409` queda solo en `CLAUDE.md` | ✅                 | Para no repetirlo; `api.md` dice cómo implementarlo (middleware de `X-Usuario-Id` antes de resolver el recurso). |
+| [IA] `[VERIFICAR]` en setters privados, `IEntityTypeConfiguration<T>` y `Metodo_Escenario_Resultado` | ✏️ | Se reemplazaron por "(convención del proyecto, E-015)": convenciones adoptadas desde la guía del curso.          |
+| [IA] `FakeTimeProvider` sin `[VERIFICAR]`                                       | ✅                  | RNF-08 y ADR-001 piden un reloj falso, y el paquete se instaló en E-014.                                        |
+| [Desarrolladora] "`[Trait("CA", …)]` y/o `[Trait("RN", …)]`" en `tests.md`      | ✅                  | Se deja como está, por indicación de la desarrolladora.                                                         |
+| [IA] Aviso: `.claude/settings.local.json` se subiría con `git add .`            | ❌                  | Aviso incorrecto: el archivo ya estaba ignorado (línea 491 de `.gitignore`).                                   |
+| [IA] Comprobar con `/memory` si el contrato se carga en `api.md`                | ✅                  | Resultado de `/memory`: `specs\functional\02-reglas-negocio.md`, `specs\technical\01-modelo-dominio.md`, `specs\trazabilidad.md`, `specs\technical\03-contrato-api.md` y `CLAUDE.local.md`. |
+
+**Incidencias:**
+
+1. La IA avisó que `.claude/settings.local.json` se subiría con `git add .`, pero ya estaba ignorado en la línea 491 de `.gitignore`. Al pedir que se agregara, la IA no lo duplicó y corrigió su aviso.
+2. El prompt de ajustes se envió dos veces; la segunda vez la IA comprobó que los cambios ya estaban aplicados y no modificó nada.
+3. Al cargarse `api.md`, el recordatorio de contexto mostró la línea `@../../specs/technical/03-contrato-api.md` como texto, sin confirmar que se hubiera importado el contrato (unas 1140 líneas). `/memory` confirmó que sí: `specs\technical\03-contrato-api.md` aparece cargado junto a los tres imports de `CLAUDE.md` y `CLAUDE.local.md`, así que la ruta relativa del import funciona.
+
+**Aprendizaje:**
+
+- Las reglas con frontmatter `paths` se cargan solo al leer archivos de su carpeta, así que mantienen `CLAUDE.md` corto.
+- Un import `@` se resuelve respecto al archivo que lo contiene, no a la raíz del repositorio.
+- Antes de avisar de un riesgo con Git conviene comprobarlo con `git check-ignore -v`.
+- Separar lo transversal (`CLAUDE.md`) de lo propio de cada capa (`.claude/rules/`) evita repetir reglas.
+
+**Commit relacionado:**
+
+- docs: CLAUDE.md con imports y reglas por capa en .claude/rules (E-015)
+
+---
+
+## E-016 · Implementación de la capa Domain (entidades, reglas y pruebas)
+
+**Herramienta:** Claude Code (VS Code) en modo Plan para el plan; la implementación, al aprobarlo.
+
+**Prompt:**
+
+Varios prompts, por fases:
+
+1. **Implementación en modo Plan:** implementar Domain según el modelo 1.6 y las decisiones de la auditoría §9:
+   - los 6 enums;
+   - `Usuario`, `Ticket` y `Comentario`;
+   - `PoliticaSla`;
+   - las dos excepciones con `Codigo`;
+   - las constantes de RN-01 y RN-09;
+   - pruebas unitarias en `test/HelpDesk.Tests/Domain/`.
+
+   Restricciones:
+   - firmas exactas del modelo;
+   - setters privados;
+   - sin recortar textos en Domain (decisión 83);
+   - sin `DateTime.Now` ni `DateTime.UtcNow`;
+   - Domain sin referencias (RNF-07);
+   - cada prueba con `[Trait("RN", …)]`;
+   - no inventar reglas;
+   - no tocar otras capas ni la documentación.
+
+   La salida pedida: una tabla de métodos y pruebas, y una lista de las decisiones no previstas.
+2. **Corrección del plan:** rechazo del primer plan con cuatro correcciones:
+   - 23 transiciones inválidas, no 28;
+   - ninguna prueba de Domain menciona códigos HTTP;
+   - una prueba de reasignar al mismo técnico;
+   - separar las decisiones que cambian el comportamiento de Domain de las que son solo de implementación.
+3. **Implementación** del plan aprobado.
+4. **Verificación:**
+   - `dotnet build`;
+   - `dotnet test`;
+   - filtros `RN=RN-08` y `CA=CA-04.6`;
+   - búsqueda de `DateTime.Now`, `DateTime.UtcNow` y `Trim(` en Domain;
+   - búsqueda de las pruebas con `"RN-06"`.
+5. **Corrección del Trait RN-06:** quitarlo de `Reasignar_MismoTecnico_NoLanzaExcepcion` y dejar un comentario de una línea.
+6. **Registro de las decisiones 85 y 86:** auditoría §9, `01-modelo-dominio.md` §1 y §4, Enmienda 6 de ADR-003 y resumen ejecutivo. Después se agregó una viñeta sobre CA-03.8 a la Enmienda 6 y se citó la decisión 85 en los comentarios de dos pruebas.
+
+**Resultado de la IA:**
+
+- **Domain (13 archivos):**
+  - `Enumeraciones/`: `EstadoTicket`, `Prioridad`, `Rol`, `EstadoSla`, `Categoria` y `TipoComentario`.
+  - `Entidades/`: `Usuario`, `Ticket` y `Comentario`.
+  - `Excepciones/`: `TransicionInvalidaException`, `InvarianteVioladaException` y `CodigosError`.
+  - `PoliticaSla.cs`.
+- **Pruebas (8 archivos en `test/HelpDesk.Tests/Domain/`):**
+  - El ayudante `TicketsDePrueba`.
+  - `TicketCrearTests`, `TicketTransicionesTests`, `TicketResolverReabrirTests`, `TicketReclasificarCambiarPrioridadTests`, `TicketSlaTests`, `PoliticaSlaTests` y `UsuarioTests`.
+- **128 pruebas.** Las 23 transiciones inválidas de RN-08 comprueban la excepción, el `Codigo` y que no cambiaron `Estado`, `TecnicoId` ni `FechaActualizacion`.
+- **Verificación:**
+  - `dotnet build HelpDesk.slnx`: 0 advertencias y 0 errores.
+  - `dotnet test`: 128 superadas, 0 con error.
+  - Filtros: `RN=RN-08` → 46, `CA=CA-04.6` → 23, `CA=CA-03.4` → 7 y `RN=RN-06` → 4 (tras la corrección, solo `EsTecnicoActivo_SegunRolYActivo_DevuelveSoloTecnicoActivo`).
+  - `DateTime.Now` y `DateTime.UtcNow` en Domain: 0 coincidencias.
+  - `Trim(` en Domain: 2 coincidencias en `Ticket.cs`, el comentario XML y la comparación de longitudes de `ValidarTexto`. Ninguna recorta el texto (decisión 83).
+  - `HelpDesk.Domain.csproj` sin `ProjectReference` ni `PackageReference`.
+  - Enlaces de la documentación: 135, 0 rotos (los 134 anteriores más el de la Enmienda 6).
+- **Documentación:**
+  - Decisiones 85 y 86 en la auditoría §9, que pasa a la versión 1.4 con "(86 en total)".
+  - `01-modelo-dominio.md` en la versión 1.7, con las filas de `Reasignar`, `Resolver` y `Reabrir` (§1) y RN-06 y RN-09 (§4).
+  - Enmienda 6 de ADR-003.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de la IA y **[Desarrolladora]**, una decisión de la desarrolladora.
+
+| Elemento propuesto | Decisión (✅/✏️/❌) | Justificación |
+| ------------------ | ------------------- | ------------- |
+| [Desarrolladora] Respuesta a la pregunta del plan: `Comentarios` como `IReadOnlyCollection<Comentario>`, respaldada por una lista privada | ✅ | Elegida al responder la pregunta del plan. |
+| [Desarrolladora] Respuesta a la pregunta del plan: en `Resolver` y `Reabrir`, la invariante del texto se comprueba antes que el estado | ✅ | Registrada después como decisión 85. |
+| [Desarrolladora] Respuesta a la pregunta del plan: `Usuario` con un constructor público sin validaciones, más uno privado sin parámetros para EF Core | ✅ | Elegida al responder la pregunta del plan. |
+| [IA] Plan: 28 transiciones inválidas | ✏️ | Son 23: 6 acciones × 5 estados − 7 transiciones válidas. |
+| [IA] Plan: pruebas de Domain que mencionaban códigos HTTP | ✏️ | Ninguna prueba de Domain menciona códigos HTTP; comprueban el tipo de excepción, el `Codigo` y que el ticket no cambió. |
+| [IA] Plan sin prueba de reasignar al mismo técnico | ✏️ | Se agregó `Reasignar_MismoTecnico_NoLanzaExcepcion`. |
+| [IA] Plan: decisiones no previstas en una sola lista | ✏️ | Se separaron las que cambian el comportamiento de Domain, para registrarlas en la auditoría, de las que son solo de implementación. |
+| [Desarrolladora] Decisión 85: el texto se valida antes que el estado en `Resolver` y `Reabrir` | ✅ | Registrada en la auditoría §9, `01-modelo-dominio.md` §1 y §4 y la Enmienda 6 de ADR-003. |
+| [IA] Decisión 86: `Ticket.Reasignar` no rechaza al mismo técnico | ✅ | Registrada en la auditoría §9, `01-modelo-dominio.md` §1 y §4 y la Enmienda 6 de ADR-003. |
+| [IA] Carpetas y espacios de nombres en español (`Enumeraciones`, `Entidades`, `Excepciones`) | ✅ | Aprobada con el plan. |
+| [IA] Clase `CodigosError` con los tres códigos; excepciones sin base común | ✅ | Aprobada con el plan. |
+| [IA] Constructores privados sin parámetros en las tres entidades, para EF Core | ✅ | Aprobada con el plan. |
+| [IA] Texto `null` tratado como texto en blanco | ✅ | Aprobada con el plan. |
+| [IA] Pruebas con instantes UTC fijos, sin `FakeTimeProvider` | ✅ | Aprobada con el plan: Domain no lee el reloj; `FakeTimeProvider` se usará en Application. |
+| [IA] Mensajes de las excepciones en español | ✅ | Aprobada con el plan: el contrato solo fija el `Codigo`. |
+| [IA] Textos con espacios en los extremos que cumplen la longitud una vez recortados (`"\tWi-Fi"`, `"Wi-Fi "`) | ✅ | Sin objeciones; incluido en `7a04a34`. |
+| [IA] Teoría aparte para los 7 casos cruzados de asignar y reasignar (RN-07, CA-03.4), que también están en la teoría de las 23 | ✅ | Sin objeciones; incluido en `7a04a34`. |
+| [IA] Observación: el Trait RN-06 de `Reasignar_MismoTecnico_NoLanzaExcepcion` da una cobertura falsa; opciones: quitarlo o aclararlo con un comentario | ✅ | Se eligió quitarlo (opción 1) y dejar un comentario de una línea. |
+| [IA] Reemplazar el comentario que ya tenía la prueba en lugar de agregar otro | ✅ | Sin objeciones. |
+| [IA] Las dos coincidencias de `Trim(` en `Ticket.cs` no recortan el texto | ✅ | Son el comentario XML y la comparación de longitudes; Domain cumple la decisión 83. |
+| [IA] Sugerencia: crear una rama propia (`feat/dominio`) antes del commit de Domain | ❌ | La solución, la capa Domain y su documentación forman parte del mismo arranque del código y se revisarán en un solo PR. |
+| [IA] Aviso: el mensaje del commit de Domain estaba en español y sin IDs de RN o RF | ❌ | Todos los commits del proyecto están en español, y los IDs de RN y CA se trazan en la bitácora y en `specs/trazabilidad.md`, no en el mensaje. |
+| [IA] Decisiones propias al registrar 85 y 86: la línea introductoria del bloque, citar las decisiones 81 y 86 en `Reasignar`, comas en la fila RN-09, la frase "Por un caso de uso no ocurre…" en la Enmienda 6 y la nota de §1 sin cambios | ✅ | Aprobadas al revisar los diffs. |
+| [IA] Observación: la Enmienda 1 de ADR-003 ubica `MISMO_TECNICO` (CA-03.8) en los validadores, pero la decisión 81 lo ubica en `ReasignarTicketHandler` | ✅ | Se precisó con una viñeta en la Enmienda 6, sin modificar la Enmienda 1. |
+| [IA] Observación: los comentarios de dos pruebas decían "decisión de la desarrolladora en el plan de Domain" | ✅ | Se cambiaron por "decisión 85". |
+| [IA] "Origen" de la Enmienda 6 con las decisiones 85 y 86, y la frase "`Ticket.Reasignar` no lo rechaza" | ✅ | Aprobadas al revisar los diffs. |
+| [IA] Con la API en ejecución, ejecutar las pruebas compilando solo el proyecto de pruebas (`-p:BuildProjectReferences=false`) | ✏️ | Se confirmó después con una compilación completa de la solución. |
+| [IA] El PID 9148 ya no existía: no se detuvo ningún proceso y se pidió confirmación antes de seguir | ✅ | La desarrolladora indicó continuar. |
+
+**Incidencias:**
+
+1. El prompt original del paso decía "Los textos se recortan antes de validar (decisión 31)", que contradecía la decisión 83. Se reemplazó por "Domain no recorta textos: exige el texto ya recortado (decisión 83)" antes de enviarlo.
+2. El plan contaba 28 transiciones inválidas en lugar de 23 (6 acciones × 5 estados − 7 válidas). Se corrigió al rechazar el plan.
+3. La prueba `Reasignar_MismoTecnico_NoLanzaExcepcion` llevaba `[Trait("RN", "RN-06")]`, aunque documenta lo contrario de la regla: Domain no rechaza al mismo técnico. Se quitó para que el filtro `RN=RN-06` no la contara como cobertura; ahora ejecuta solo los 4 casos de `EsTecnicoActivo`.
+4. `Select-String -Path … -Recurse` no existe en Windows PowerShell 5.1. Se usó `Get-ChildItem -Recurse -Filter *.cs | Select-String`.
+5. La API en ejecución (`HelpDesk.Api`, PID 9148) bloqueó `HelpDesk.Api.exe` y `HelpDesk.Api.dll`, y `dotnet test` falló, también con `-p:UseAppHost=false`. Se ejecutaron las pruebas compilando solo el proyecto de pruebas. Después se confirmó con una compilación completa (0 advertencias, 0 errores, 128 pruebas), sin detener ningún proceso: el PID 9148 ya no existía.
+6. La Enmienda 1 de ADR-003 era ambigua sobre CA-03.8: decía que responde `400` "desde los validadores". Se precisó en la Enmienda 6: lo responde `ReasignarTicketHandler`, porque necesita conocer el técnico actual del ticket.
+
+**Aprendizaje:**
+
+- Esta fue la primera vez que la documentación se comprobó contra el código real. Al implementar Domain aparecieron dos decisiones que el modelo no fijaba (85 y 86) y una ambigüedad en la Enmienda 1 de ADR-003.
+- Un `Trait` mal puesto da una cobertura falsa en la trazabilidad: el filtro `RN=RN-06` contaba como cobertura una prueba que documenta lo contrario de la regla.
+- Un proceso de la API en ejecución bloquea la compilación de la solución completa. Las pruebas pueden ejecutarse compilando solo el proyecto de pruebas, pero la confirmación final necesita la compilación completa.
+
+**Commit relacionado:**
+
+- `7a04a34` feat(domain): entidades, enumeraciones y reglas del dominio con sus pruebas
+- `ebec49c` docs: registrar y aplicar decisiones 85 y 86 de la implementación de Domain
+- `7577e08` test(domain): citar la decisión 85 en las pruebas de orden de validación
+
+---
+
+## E-017 · Implementación de la capa Infrastructure (DbContext, SEQUENCE, migración y pruebas)
+
+**Herramienta:** Claude Code (VS Code), en modo Plan para los subpasos de código; Claude (chat) para diseñar los prompts, revisar cada plan y resultado, y proponer opciones.
+
+**Prompt:**
+
+Un prompt por subpaso, cada uno en una sesión nueva y con la plantilla Contexto / Tarea / Restricciones / Formato / Verificación. Ninguna sesión tenía el historial completo. Cada subpaso terminó con una pausa de revisión y, si había cambios que versionar, con un commit.
+
+- **4.0 Preparación:** comprobar el entorno (SDK, `dotnet-ef` y EF Core 10.0.14, LocalDB y referencias entre proyectos), el origen del paquete `System.Security.Cryptography.Pkcs` y que no hay paquetes vulnerables.
+- **4.1 Revisión de solo lectura** de lo que Infrastructure necesitaba, con el criterio de salida definido antes de revisar.
+- **4.2 DbContext y configuraciones**, con pruebas que leen el modelo sin conectarse a la base.
+- **4.3 Código del ticket:** la interfaz `IGeneradorCodigoTicket` en Application, y la SEQUENCE y el generador en Infrastructure.
+- **4.4.a Cadena de conexión de la Api** en user-secrets, hecha con comandos, sin el agente.
+- **4.4.b Registro de dependencias.**
+- **4.5 Migración `Inicial`** y revisión de su script SQL antes de aplicarla.
+- **4.6.a Aplicación de la migración** a la base de desarrollo y comprobación con consultas.
+- **4.6.b Pruebas de integración** contra una base de pruebas separada.
+- **4.7 Cierre:** (a) decisiones 90 y 91; (b) puesta en marcha en el README; (c) script de enlaces versionado.
+
+**Resultado de la IA:**
+
+- **4.1:**
+  - Hallazgos I-01 (comportamiento al borrar de las claves foráneas) e I-02 (tipo de las columnas de enums).
+  - Se registraron como decisiones 87 a 89 en `7ace41a`.
+  - Enlaces de la documentación: 138, 0 rotos.
+- **4.2:**
+  - `DbContext`, configuraciones y datos semilla (`98a59f4`).
+  - Las pruebas leen el modelo sin conectarse a la base.
+  - Pruebas: 128 → 176.
+- **4.3:**
+  - `IGeneradorCodigoTicket` en Application.
+  - SEQUENCE `dbo.CodigoTicket` y `GeneradorCodigoTicket` en Infrastructure (`21b7d41`).
+  - Pruebas: 189.
+- **4.4:**
+  - `UserSecretsId` de la Api (`f8b7ec5`).
+  - Registro del `DbContext` y del generador (`54d1f7e`).
+  - Pruebas: 194.
+- **4.5:**
+  - Migración `Inicial` con tablas, índices, SEQUENCE y usuarios semilla (`e94bc8f`).
+  - Revisión del script SQL: 16 comprobaciones.
+- **4.6.a:** base de desarrollo `HelpDesk` creada con la migración, con la SEQUENCE en `dbo` y sin valores consumidos.
+- **4.6.b:**
+  - 8 pruebas de integración contra LocalDB: generador, unicidad del código, fechas UTC y restricciones (`8cb8f55`).
+  - Pruebas: 202.
+- **4.7:**
+  - (a) Decisiones 90 y 91 (`74f2afa`) y comentario del generador con las decisiones 13 y 90 (`00943b8`). Enlaces: 139, 0 rotos.
+  - (b) Puesta en marcha en el README (`31da275`). Enlaces: 145, 0 rotos.
+  - (c) `scripts/verificar-enlaces.mjs`, con 22 pruebas de `node --test` (`849d6a0`). Enlaces: 145, 0 rotos.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de la IA y **[Desarrolladora]**, una decisión de la desarrolladora.
+
+| Elemento propuesto | Decisión (✅/✏️/❌) | Justificación |
+| ------------------ | ------------------- | ------------- |
+| [IA] I-01: comportamiento al borrar de las claves foráneas | ✅ | Opción A: `Restrict` hacia `Usuario`; cascada solo de `Ticket` a `Comentario` (decisión 87). |
+| [IA] I-02: tipo de las columnas que guardan enums como texto | ✅ | Opción B: `nvarchar(20)` (decisión 88). |
+| [Desarrolladora] Ids de los usuarios semilla | ✏️ | El agente lo dejaba a la convención; se subió a decisión porque lo usan `X-Usuario-Id`, Swagger y las pruebas (decisión 89). |
+| [IA] Observación: contradicción con la decisión 32 (`01-modelo-dominio.md` §8) | ✏️ | Opción C: la frase expresa el criterio, sin lista de excepciones. |
+| [IA] Observación: S-01 no dice que no se borren usuarios | ✅ | Se justificó con "no hay ningún RF para hacerlo" (decisión 87). |
+| [IA] Escritura de fechas sin cambios; solo se marca UTC al leer | ✅ | Aprobada con el plan. |
+| [IA] Firma del generador, SEQUENCE `dbo.CodigoTicket` de tipo `int` y doble protección del límite | ✅ | Aprobada con el plan. |
+| [IA] Constante `ConsultaSiguienteValor` condicionada a `InternalsVisibleTo` | ✏️ | Pasó a `public`. |
+| [IA] `DbContext` y generador `Scoped`; fallo al arrancar si falta la cadena de conexión | ✅ | Aprobada con el plan. |
+| [IA] Marca BOM en los `.csproj` de la Api y de las pruebas | ✏️ | Se quitó. |
+| [IA] Nombre de la base de pruebas | ✏️ | `HelpDesk_Pruebas` por convención, no como regla (decisión 91). |
+| [IA] Decisión 90 | ✏️ | Se separó lo comprobado (la SEQUENCE falla tras `HD-999999`) de lo esperado (`500` `ERROR_INTERNO`, que se comprobará con RF-01). |
+| [IA] Comentario de `GeneradorCodigoTicket.cs` | ✅ | Opción b del agente: "decisiones 13 y 90". |
+| [IA] Cambiar el enlace al contrato por uno sin ancla, para que el script no lo marcara roto | ❌ | El enlace era correcto; el error estaba en el script. |
+| [IA] Ejemplo `CA=CA-01.1` del README cambiado a `CA-05.1` | ✅ | RF-01 aún no tiene pruebas. |
+| [IA] Script de enlaces en Node.js | ✏️ | Sin `import.meta.main`, con comparación de rutas sin distinguir mayúsculas en Windows y con Node.js en los requisitos del README. |
+| [IA] Limitación: el script no comprueba las mayúsculas de los nombres de archivo | ✏️ | Se decidió corregirla: como en GitHub, cada parte de la ruta debe coincidir con sus mayúsculas. |
+
+**Incidencias:**
+
+1. 4.2: ninguna, salvo que las pruebas de los datos semilla necesitaron el modelo de diseño (`IDesignTimeModel`), porque el de ejecución descarta `HasData`.
+2. 4.3: el primer build falló por un `using` que faltaba y una advertencia xUnit2000; se corrigió.
+3. 4.4.b: el prompt se envió dos veces. La segunda sesión encontró la implementación sin versionar y la conservó. Al verificarla, una prueba fallaba porque EF Core agrega `Application Name` a la cadena; se corrigió comparando solo el `DataSource`.
+4. 4.5: `has-pending-model-changes` dio un falso positivo al ejecutarse con `--no-build` sobre un ensamblado que no tenía la migración recién creada.
+5. 4.6.b: `ALTER SEQUENCE ... RESTART WITH 999999` cambia también el valor inicial de la SEQUENCE, así que un `RESTART` sin valor no la devolvía a 1. Dos pruebas fallaron y se usó `RESTART WITH 1`.
+6. 4.7: el script de enlaces nunca había estado en el repositorio. Dos scripts temporales fallaron: uno no manejaba CRLF y marcó 70 anclas como rotas; otro quitaba el código de los títulos y marcó como roto un enlace correcto. Se versionó un script probado.
+7. Dos conteos de enlaces anticipados en la revisión fueron incorrectos (137 y 143). Los reales (138 y 145) se explicaron por enlaces que no se habían contado.
+
+**Aprendizaje:**
+
+- La revisión de solo lectura antes del código evitó una migración que SQL Server habría rechazado (I-01).
+- Probar contra la base real reveló comportamientos que las pruebas del modelo no podían ver: el `RESTART` de la SEQUENCE y el `Application Name` de la cadena.
+- Una verificación solo es reproducible si su herramienta está versionada.
+
+**Pendientes:**
+
+- RF-01: comprobar que, con la SEQUENCE agotada, crear un ticket responde `500` `ERROR_INTERNO` y no lo crea (decisión 90).
+
+**Commit relacionado:**
+
+- `7ace41a` docs: registrar y aplicar decisiones 87 a 89 para la implementación de Infrastructure
+- `98a59f4` feat(infrastructure): DbContext, configuraciones y datos semilla con pruebas del modelo
+- `21b7d41` feat(infrastructure): generador del código del ticket con SEQUENCE
+- `f8b7ec5` chore(api): inicializar user-secrets para la cadena de conexión (RNF-02)
+- `54d1f7e` feat(infrastructure): registrar DbContext y generador en DI (RNF-02, RNF-07)
+- `e94bc8f` feat(infrastructure): migración inicial con tablas, índices, SEQUENCE y usuarios semilla
+- `8cb8f55` test(integracion): pruebas contra LocalDB del generador, la unicidad del código, las fechas UTC y las restricciones
+- `74f2afa` docs: registrar y aplicar decisiones 90 y 91 de la implementación de Infrastructure
+- `00943b8` docs(infrastructure): citar las decisiones 13 y 90 en el generador del código
+- `31da275` docs: agregar la puesta en marcha al README (user-secrets, migración, Api y pruebas)
+- `849d6a0` chore(scripts): verificación de enlaces versionada, con pruebas

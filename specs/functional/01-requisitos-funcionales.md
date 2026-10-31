@@ -2,8 +2,8 @@
 
 | Campo   | Valor                  |
 | ------- | ---------------------- |
-| Versión | 1.1                    |
-| Fecha   | 28/10/2026             |
+| Versión | 1.2                    |
+| Fecha   | 29/10/2026             |
 | Estado  | Borrador para revisión |
 
 Convención de IDs:
@@ -90,7 +90,7 @@ Convenciones de respuesta de la API (decisiones de la auditoría, [auditoria-doc
 | CA-03.1 | **Dado** un ticket `Abierto` y un técnico activo, **cuando** el supervisor lo asigna, **entonces** el ticket queda con ese técnico, pasa a estado `Asignado` y se responde `200 OK` con el ticket actualizado (detalle). |
 | CA-03.2 | **Dado** un ticket `Asignado` o `En progreso`, **cuando** el supervisor lo reasigna a otro técnico, **entonces** cambia el técnico, el ticket queda en `Asignado` y se responde `200 OK` con el ticket actualizado (detalle). |
 | CA-03.3 | **Dado** un usuario que no existe, no tiene rol Técnico o no está activo, **cuando** se intenta asignar, **entonces** se responde `400 Bad Request`.                 |
-| CA-03.4 | **Dado** un ticket `Resuelto` o `Cerrado`, **cuando** se intenta asignar, **entonces** se responde `409 Conflict`.                                                  |
+| CA-03.4 | **Dado** un ticket que no está `Abierto` al asignar, o que no está `Asignado` ni `En progreso` al reasignar, **cuando** el supervisor intenta la operación, **entonces** se responde `409 Conflict` y el ticket no cambia. |
 | CA-03.5 | **Dado** un usuario que no es supervisor, **cuando** intenta asignar, **entonces** se responde `403 Forbidden`.                                                     |
 | CA-03.6 | **Dado** un supervisor, **cuando** consulta los técnicos activos, **entonces** se responde `200 OK` con la lista completa (sin paginar) de técnicos activos, cada uno como `{ id, nombre }`. |
 | CA-03.7 | **Dado** un usuario que no es supervisor, **cuando** consulta los técnicos activos, **entonces** se responde `403 Forbidden`.                                       |
