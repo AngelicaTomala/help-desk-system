@@ -11,5 +11,6 @@ paths:
 - Usa LocalDB en las pruebas de integración, no el proveedor InMemory, que no aplica índices únicos ni SEQUENCE (ADR-002).
 - Para cada `409`, comprueba que el estado del ticket no cambió (RNF-04).
 - Por cada endpoint: sin encabezado → `401`, usuario inexistente → `401` y rol no autorizado → `403`; además, Id no numérico, `0`, negativo y fuera de `int` → `401` (RNF-01).
-- Verifica `Content-Type` y los campos `type`, `title`, `status` y `codigo` de los errores, y que un `500` no incluye stack trace (RNF-03).
+- Verifica `Content-Type` y los campos `type`, `title` y `status` de los errores, `codigo` en los errores de negocio (las respuestas de la decisión 94 llevan `traceId`, sin `codigo`), y que un `500` no incluye stack trace (RNF-03).
 - Prueba cada validador con los valores frontera de RNF-05 (RNF-05).
+- En las pruebas de extremo a extremo usa la base de pruebas de la decisión 91 en una colección serializada: antes y después de cada prueba borra los tickets y comentarios y reinicia la SEQUENCE con `RESTART WITH 1`. La factory sobrescribe `ConnectionStrings:HelpDesk` con la cadena de pruebas, conserva la guarda contra la base `HelpDesk` y usa `FakeTimeProvider` (decisiones 99 y 118, Enmiendas 5 y 6 de ADR-002).

@@ -1,6 +1,7 @@
 using HelpDesk.Infrastructure.Persistencia;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace HelpDesk.Tests.Integracion;
 
@@ -29,10 +30,10 @@ public sealed class TransaccionDePrueba : IAsyncDisposable
         return new TransaccionDePrueba(conexion, transaccion);
     }
 
-    public HelpDeskDbContext NuevoContexto()
+    public HelpDeskDbContext NuevoContexto(params IInterceptor[] interceptores)
     {
         var context = new HelpDeskDbContext(
-            new DbContextOptionsBuilder<HelpDeskDbContext>().UseSqlServer(_conexion).Options);
+            new DbContextOptionsBuilder<HelpDeskDbContext>().UseSqlServer(_conexion).AddInterceptors(interceptores).Options);
         context.Database.UseTransaction(_transaccion);
 
         return context;

@@ -49,6 +49,24 @@ public class InyeccionDependenciasTests
     }
 
     [Theory]
+    [InlineData(typeof(ITicketRepositorio), typeof(TicketRepositorio))]
+    [InlineData(typeof(IUnidadDeTrabajo), typeof(UnidadDeTrabajo))]
+    [InlineData(typeof(IConsultasTicket), typeof(ConsultasTicket))]
+    [InlineData(typeof(IUsuarioRepositorio), typeof(UsuarioRepositorio))]
+    public void AgregarInfraestructura_ConCadenaConexion_RegistraPersistenciaScoped(Type servicio, Type implementacion)
+    {
+        var services = Registrar(CadenaConexionFicticia);
+
+        // Mismo tiempo de vida que el DbContext, para compartir la instancia de la petición.
+        Assert.Equal(ServiceLifetime.Scoped, Assert.Single(services, d => d.ServiceType == servicio).Lifetime);
+
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+        using var scope = provider.CreateScope();
+
+        Assert.IsType(implementacion, scope.ServiceProvider.GetRequiredService(servicio));
+    }
+
+    [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]

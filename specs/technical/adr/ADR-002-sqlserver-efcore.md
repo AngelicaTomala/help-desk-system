@@ -77,3 +77,15 @@ Origen: decisiones 90 y 91 de [auditoria-documentacion.md §9](../../../docs/aud
 
 - **Límite del código:** la SEQUENCE `CodigoTicket` tiene `MAXVALUE` 999999 y no es cíclica, y `FormatoCodigoTicket` rechaza los números fuera de 1 a 999999. Al superar el máximo, la creación del ticket debe fallar con `500` `ERROR_INTERNO` (decisión 41) sin crear el ticket. Completa la Enmienda 2 y la decisión 35. La prueba `GenerarAsync_SecuenciaEnMaximo_DevuelveHD999999YLuegoFalla` comprueba que la SEQUENCE entrega `HD-999999` y que la llamada siguiente falla; el `500` y que no se cree el ticket se comprobarán al implementar RF-01, cuando existan el handler de crear y la Api.
 - **Base de las pruebas de integración:** precisa lo que dice la Enmienda 2 sobre el entorno de las pruebas de integración. Usan una base propia en LocalDB, distinta de `HelpDesk` (por convención, `HelpDesk_Pruebas`), que se recrea con la migración al empezar cada ejecución y se conserva al terminar. Su cadena de conexión se lee de los user-secrets del proyecto de pruebas, con la clave `ConnectionStrings:HelpDeskPruebas`, o de la variable de entorno `ConnectionStrings__HelpDeskPruebas` (RNF-02). Si la cadena apunta a la base de desarrollo `HelpDesk` o no nombra ninguna base, las pruebas fallan antes de conectarse.
+
+## Enmienda 5 · 30/10/2026
+
+Origen: decisión 99 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgo R-08 de la revisión de RF-01).
+
+- **Pruebas de extremo a extremo:** usan la base de pruebas de la Enmienda 4 (decisión 91) en una colección serializada. Antes de cada prueba se borran los tickets y comentarios y se reinicia la SEQUENCE `CodigoTicket` con `RESTART WITH 1`, porque la SEQUENCE no se revierte con una transacción. La factory de pruebas sobrescribe `ConnectionStrings:HelpDesk` con la cadena de pruebas, conserva la guarda que impide usar la base `HelpDesk` y usa `FakeTimeProvider`.
+
+## Enmienda 6 · 31/10/2026
+
+Origen: decisión 118 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (implementación de RF-01).
+
+- **Limpieza después de cada prueba:** las pruebas de extremo a extremo borran los tickets y comentarios y reinician la SEQUENCE `CodigoTicket` con `RESTART WITH 1` antes **y después** de cada prueba, no solo antes (Enmienda 5). Así no dejan datos que choquen con el índice único del código en las pruebas de integración que usan la misma base.

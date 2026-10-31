@@ -4,7 +4,7 @@ paths:
 ---
 # Reglas de la capa Application
 
-- Crea un validador de FluentValidation por comando o consulta e invócalo explícitamente antes del handler; no uses la autovalidación de `FluentValidation.AspNetCore` (ADR-003).
+- Crea un validador de FluentValidation por comando o consulta e invócalo desde el handler, en el orden de la decisión 6: existencia del recurso de la ruta (`404`), permiso (`403`), validador (`400`) y Domain (`409`); no uses la autovalidación de `FluentValidation.AspNetCore` (ADR-003, decisión 92).
 - Reutiliza en los validadores las constantes públicas de Domain; no repitas los números (ADR-003).
 - Declara aquí las constantes de paginación, junto a `ListarTicketsValidator` (decisión 34).
 - Recorta los textos antes de validar y pasa a Domain el texto ya recortado (decisiones 79 y 83, Enmienda 3 de ADR-003).

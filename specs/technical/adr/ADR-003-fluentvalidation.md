@@ -95,3 +95,12 @@ Origen: decisiones 85 y 86 de [auditoria-documentacion.md §9](../../../docs/aud
 
 - **Orden en `Resolver` y `Reabrir`:** la invariante del texto (RN-09) se comprueba antes que la regla de estado (RN-08). Un texto inválido sobre un estado no permitido lanza `InvarianteVioladaException` (`Codigo` `ERROR_INTERNO`), no `TransicionInvalidaException` con `TRANSICION_INVALIDA`. Sigue el mismo orden que el `400` antes del `409` (decisión 6) y que la Enmienda 5. Por un caso de uso no ocurre: el validador rechaza antes el texto con `400` (CA-04.3, CA-04.8, CA-04.9).
 - **Reasignar al mismo técnico:** CA-03.8 responde `400` `MISMO_TECNICO` desde `ReasignarTicketHandler`, no desde un validador, porque necesita conocer el técnico actual del ticket (decisiones 81 y 86). `Ticket.Reasignar` no lo rechaza. Precisa lo que dice la Enmienda 1 sobre CA-03.8.
+
+## Enmienda 7 · 30/10/2026
+
+Origen: decisiones 92, 93 y 96 de [auditoria-documentacion.md §9](../../../docs/auditoria-documentacion.md#9-decisiones-tomadas) (hallazgos R-01, R-02 y R-05 de la revisión de RF-01).
+
+- **Quién invoca el validador:** donde la Decisión dice "Se invoca explícitamente antes del handler", léase que **el handler** invoca el validador, en el orden de la decisión 6. Primero comprueba la existencia del recurso de la ruta (`404`), después el permiso (`403`), después invoca el validador (`400`) y al final llama a Domain (`409`). El validador sigue siendo una clase de FluentValidation, y sigue sin usarse la autovalidación de `FluentValidation.AspNetCore`.
+- **Errores de lectura del cuerpo:** un campo con un tipo JSON incorrecto se rechaza al leer el cuerpo, antes del handler y del validador, y solo se informa el error de ese campo, porque la lectura del JSON se detiene en el primer error de tipo. Es una excepción a "Devuelve todos los errores a la vez" de las Consecuencias (decisión 93).
+- **Enums de entrada como texto:** los DTO de petición reciben `categoria` y `prioridad` como texto. El validador los convierte sin distinguir mayúsculas y rechaza los textos numéricos con `400` (decisión 58). El esquema OpenAPI de esos campos se anota con los valores del enum (RNF-09).
+- **`{id}` de la ruta:** llega a Application como `int`, ya validado por la Api con el formato de la decisión 95.

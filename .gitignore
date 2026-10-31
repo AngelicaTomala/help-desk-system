@@ -489,3 +489,7 @@ snap.db*
 
 # Claude Code (configuración personal)
 .claude/settings.local.json
+
+# Presentación generada (se regenera con presentacion/generar.py)
+presentacion/*.pptx
+presentacion/preview/

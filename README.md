@@ -93,7 +93,7 @@ Según el supuesto S-02 y el [contrato de la API](specs/technical/03-contrato-ap
 | 9 | Irene | Técnico (inactiva) |
 | 10 | Jorge | Supervisor |
 
-> **Estado actual:** todavía no existen el middleware que valida `X-Usuario-Id` ni los controladores, así que Swagger UI aún no muestra operaciones.
+> **Estado actual:** están implementadas las dos operaciones de RF-01, `POST /api/v1/tickets` (crear ticket) y `POST /api/v1/tickets/{id}/reclasificar`, con el middleware que valida `X-Usuario-Id`; son las que muestra Swagger UI. Las otras 11 operaciones del [contrato](specs/technical/03-contrato-api.md) están especificadas, pero aún no implementadas.
 
 ### 6. Ejecutar las pruebas
 

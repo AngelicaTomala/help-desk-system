@@ -1,7 +1,6 @@
+using HelpDesk.Domain.Entidades;
 using HelpDesk.Infrastructure.Persistencia;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace HelpDesk.Tests.Integracion;
 
@@ -11,15 +10,18 @@ namespace HelpDesk.Tests.Integracion;
 /// </summary>
 public class BaseDePruebasFixture : IAsyncLifetime
 {
-    public const string NombreCadenaConexion = "HelpDeskPruebas";
+    // SQL constante, sin concatenación ni interpolación (RNF-02). La SEQUENCE no se revierte con una transacción, así
+    // que se reinicia con RESTART WITH explícito (decisión 99).
+    private const string BorrarTickets =
+        "DELETE FROM dbo.Comentarios; DELETE FROM dbo.Tickets; ALTER SEQUENCE dbo.CodigoTicket RESTART WITH 1";
 
-    private const string BaseDeDesarrollo = "HelpDesk";
+    private const string ReiniciarSecuenciaEnMaximo = "ALTER SEQUENCE dbo.CodigoTicket RESTART WITH 999999";
 
     public string CadenaConexion { get; private set; } = string.Empty;
 
     public async Task InitializeAsync()
     {
-        CadenaConexion = LeerCadenaConexion();
+        CadenaConexion = CadenaConexionPruebas.Leer();
 
         await using var context = CrearContexto();
         await context.Database.EnsureDeletedAsync();
@@ -34,31 +36,32 @@ public class BaseDePruebasFixture : IAsyncLifetime
     public Task<TransaccionDePrueba> IniciarTransaccionAsync() => TransaccionDePrueba.IniciarAsync(CadenaConexion);
 
     /// <summary>
-    /// La cadena se lee de los user-secrets del proyecto de pruebas o de una variable de entorno, nunca del
-    /// repositorio (RNF-02). La guarda impide borrar o migrar la base de desarrollo.
+    /// Aislamiento de las pruebas de extremo a extremo: sin tickets ni comentarios y la SEQUENCE en 1 (decisión 99).
     /// </summary>
-    private static string LeerCadenaConexion()
+    public async Task ReiniciarTicketsAsync()
     {
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<BaseDePruebasFixture>()
-            .AddEnvironmentVariables()
-            .Build();
+        await using var context = CrearContexto();
+        await context.Database.ExecuteSqlRawAsync(BorrarTickets);
+    }
 
-        var cadenaConexion = configuration.GetConnectionString(NombreCadenaConexion);
-        if (string.IsNullOrWhiteSpace(cadenaConexion))
-        {
-            throw new InvalidOperationException(
-                $"Falta la cadena de conexión 'ConnectionStrings:{NombreCadenaConexion}'. " +
-                "Configúrala con user-secrets del proyecto de pruebas o con una variable de entorno (RNF-02).");
-        }
+    /// <summary>
+    /// Deja la SEQUENCE en su último valor, <c>HD-999999</c> (decisión 90).
+    /// </summary>
+    public async Task ReiniciarSecuenciaEnMaximoAsync()
+    {
+        await using var context = CrearContexto();
+        await context.Database.ExecuteSqlRawAsync(ReiniciarSecuenciaEnMaximo);
+    }
 
-        var catalogo = new SqlConnectionStringBuilder(cadenaConexion).InitialCatalog;
-        if (string.IsNullOrWhiteSpace(catalogo) || string.Equals(catalogo, BaseDeDesarrollo, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                $"La cadena 'ConnectionStrings:{NombreCadenaConexion}' debe indicar una base de pruebas distinta de '{BaseDeDesarrollo}'.");
-        }
+    /// <summary>
+    /// Guarda un ticket preparado con Domain, fuera de la Api, y devuelve su Id.
+    /// </summary>
+    public async Task<int> GuardarAsync(Ticket ticket)
+    {
+        await using var context = CrearContexto();
+        context.Tickets.Add(ticket);
+        await context.SaveChangesAsync();
 
-        return cadenaConexion;
+        return ticket.Id;
     }
 }
