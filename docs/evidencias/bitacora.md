@@ -1325,3 +1325,112 @@ En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de 
 - `7a04a34` feat(domain): entidades, enumeraciones y reglas del dominio con sus pruebas
 - `ebec49c` docs: registrar y aplicar decisiones 85 y 86 de la implementación de Domain
 - `7577e08` test(domain): citar la decisión 85 en las pruebas de orden de validación
+
+---
+
+## E-017 · Implementación de la capa Infrastructure (DbContext, SEQUENCE, migración y pruebas)
+
+**Herramienta:** Claude Code (VS Code), en modo Plan para los subpasos de código; Claude (chat) para diseñar los prompts, revisar cada plan y resultado, y proponer opciones.
+
+**Prompt:**
+
+Un prompt por subpaso, cada uno en una sesión nueva y con la plantilla Contexto / Tarea / Restricciones / Formato / Verificación. Ninguna sesión tenía el historial completo. Cada subpaso terminó con una pausa de revisión y, si había cambios que versionar, con un commit.
+
+- **4.0 Preparación:** comprobar el entorno (SDK, `dotnet-ef` y EF Core 10.0.14, LocalDB y referencias entre proyectos), el origen del paquete `System.Security.Cryptography.Pkcs` y que no hay paquetes vulnerables.
+- **4.1 Revisión de solo lectura** de lo que Infrastructure necesitaba, con el criterio de salida definido antes de revisar.
+- **4.2 DbContext y configuraciones**, con pruebas que leen el modelo sin conectarse a la base.
+- **4.3 Código del ticket:** la interfaz `IGeneradorCodigoTicket` en Application, y la SEQUENCE y el generador en Infrastructure.
+- **4.4.a Cadena de conexión de la Api** en user-secrets, hecha con comandos, sin el agente.
+- **4.4.b Registro de dependencias.**
+- **4.5 Migración `Inicial`** y revisión de su script SQL antes de aplicarla.
+- **4.6.a Aplicación de la migración** a la base de desarrollo y comprobación con consultas.
+- **4.6.b Pruebas de integración** contra una base de pruebas separada.
+- **4.7 Cierre:** (a) decisiones 90 y 91; (b) puesta en marcha en el README; (c) script de enlaces versionado.
+
+**Resultado de la IA:**
+
+- **4.1:**
+  - Hallazgos I-01 (comportamiento al borrar de las claves foráneas) e I-02 (tipo de las columnas de enums).
+  - Se registraron como decisiones 87 a 89 en `7ace41a`.
+  - Enlaces de la documentación: 138, 0 rotos.
+- **4.2:**
+  - `DbContext`, configuraciones y datos semilla (`98a59f4`).
+  - Las pruebas leen el modelo sin conectarse a la base.
+  - Pruebas: 128 → 176.
+- **4.3:**
+  - `IGeneradorCodigoTicket` en Application.
+  - SEQUENCE `dbo.CodigoTicket` y `GeneradorCodigoTicket` en Infrastructure (`21b7d41`).
+  - Pruebas: 189.
+- **4.4:**
+  - `UserSecretsId` de la Api (`f8b7ec5`).
+  - Registro del `DbContext` y del generador (`54d1f7e`).
+  - Pruebas: 194.
+- **4.5:**
+  - Migración `Inicial` con tablas, índices, SEQUENCE y usuarios semilla (`e94bc8f`).
+  - Revisión del script SQL: 16 comprobaciones.
+- **4.6.a:** base de desarrollo `HelpDesk` creada con la migración, con la SEQUENCE en `dbo` y sin valores consumidos.
+- **4.6.b:**
+  - 8 pruebas de integración contra LocalDB: generador, unicidad del código, fechas UTC y restricciones (`8cb8f55`).
+  - Pruebas: 202.
+- **4.7:**
+  - (a) Decisiones 90 y 91 (`74f2afa`) y comentario del generador con las decisiones 13 y 90 (`00943b8`). Enlaces: 139, 0 rotos.
+  - (b) Puesta en marcha en el README (`31da275`). Enlaces: 145, 0 rotos.
+  - (c) `scripts/verificar-enlaces.mjs`, con 22 pruebas de `node --test` (`849d6a0`). Enlaces: 145, 0 rotos.
+
+**Revisión humana:**
+
+En la columna "Elemento propuesto", **[IA]** marca una propuesta o decisión de la IA y **[Desarrolladora]**, una decisión de la desarrolladora.
+
+| Elemento propuesto | Decisión (✅/✏️/❌) | Justificación |
+| ------------------ | ------------------- | ------------- |
+| [IA] I-01: comportamiento al borrar de las claves foráneas | ✅ | Opción A: `Restrict` hacia `Usuario`; cascada solo de `Ticket` a `Comentario` (decisión 87). |
+| [IA] I-02: tipo de las columnas que guardan enums como texto | ✅ | Opción B: `nvarchar(20)` (decisión 88). |
+| [Desarrolladora] Ids de los usuarios semilla | ✏️ | El agente lo dejaba a la convención; se subió a decisión porque lo usan `X-Usuario-Id`, Swagger y las pruebas (decisión 89). |
+| [IA] Observación: contradicción con la decisión 32 (`01-modelo-dominio.md` §8) | ✏️ | Opción C: la frase expresa el criterio, sin lista de excepciones. |
+| [IA] Observación: S-01 no dice que no se borren usuarios | ✅ | Se justificó con "no hay ningún RF para hacerlo" (decisión 87). |
+| [IA] Escritura de fechas sin cambios; solo se marca UTC al leer | ✅ | Aprobada con el plan. |
+| [IA] Firma del generador, SEQUENCE `dbo.CodigoTicket` de tipo `int` y doble protección del límite | ✅ | Aprobada con el plan. |
+| [IA] Constante `ConsultaSiguienteValor` condicionada a `InternalsVisibleTo` | ✏️ | Pasó a `public`. |
+| [IA] `DbContext` y generador `Scoped`; fallo al arrancar si falta la cadena de conexión | ✅ | Aprobada con el plan. |
+| [IA] Marca BOM en los `.csproj` de la Api y de las pruebas | ✏️ | Se quitó. |
+| [IA] Nombre de la base de pruebas | ✏️ | `HelpDesk_Pruebas` por convención, no como regla (decisión 91). |
+| [IA] Decisión 90 | ✏️ | Se separó lo comprobado (la SEQUENCE falla tras `HD-999999`) de lo esperado (`500` `ERROR_INTERNO`, que se comprobará con RF-01). |
+| [IA] Comentario de `GeneradorCodigoTicket.cs` | ✅ | Opción b del agente: "decisiones 13 y 90". |
+| [IA] Cambiar el enlace al contrato por uno sin ancla, para que el script no lo marcara roto | ❌ | El enlace era correcto; el error estaba en el script. |
+| [IA] Ejemplo `CA=CA-01.1` del README cambiado a `CA-05.1` | ✅ | RF-01 aún no tiene pruebas. |
+| [IA] Script de enlaces en Node.js | ✏️ | Sin `import.meta.main`, con comparación de rutas sin distinguir mayúsculas en Windows y con Node.js en los requisitos del README. |
+| [IA] Limitación: el script no comprueba las mayúsculas de los nombres de archivo | ✏️ | Se decidió corregirla: como en GitHub, cada parte de la ruta debe coincidir con sus mayúsculas. |
+
+**Incidencias:**
+
+1. 4.2: ninguna, salvo que las pruebas de los datos semilla necesitaron el modelo de diseño (`IDesignTimeModel`), porque el de ejecución descarta `HasData`.
+2. 4.3: el primer build falló por un `using` que faltaba y una advertencia xUnit2000; se corrigió.
+3. 4.4.b: el prompt se envió dos veces. La segunda sesión encontró la implementación sin versionar y la conservó. Al verificarla, una prueba fallaba porque EF Core agrega `Application Name` a la cadena; se corrigió comparando solo el `DataSource`.
+4. 4.5: `has-pending-model-changes` dio un falso positivo al ejecutarse con `--no-build` sobre un ensamblado que no tenía la migración recién creada.
+5. 4.6.b: `ALTER SEQUENCE ... RESTART WITH 999999` cambia también el valor inicial de la SEQUENCE, así que un `RESTART` sin valor no la devolvía a 1. Dos pruebas fallaron y se usó `RESTART WITH 1`.
+6. 4.7: el script de enlaces nunca había estado en el repositorio. Dos scripts temporales fallaron: uno no manejaba CRLF y marcó 70 anclas como rotas; otro quitaba el código de los títulos y marcó como roto un enlace correcto. Se versionó un script probado.
+7. Dos conteos de enlaces anticipados en la revisión fueron incorrectos (137 y 143). Los reales (138 y 145) se explicaron por enlaces que no se habían contado.
+
+**Aprendizaje:**
+
+- La revisión de solo lectura antes del código evitó una migración que SQL Server habría rechazado (I-01).
+- Probar contra la base real reveló comportamientos que las pruebas del modelo no podían ver: el `RESTART` de la SEQUENCE y el `Application Name` de la cadena.
+- Una verificación solo es reproducible si su herramienta está versionada.
+
+**Pendientes:**
+
+- RF-01: comprobar que, con la SEQUENCE agotada, crear un ticket responde `500` `ERROR_INTERNO` y no lo crea (decisión 90).
+
+**Commit relacionado:**
+
+- `7ace41a` docs: registrar y aplicar decisiones 87 a 89 para la implementación de Infrastructure
+- `98a59f4` feat(infrastructure): DbContext, configuraciones y datos semilla con pruebas del modelo
+- `21b7d41` feat(infrastructure): generador del código del ticket con SEQUENCE
+- `f8b7ec5` chore(api): inicializar user-secrets para la cadena de conexión (RNF-02)
+- `54d1f7e` feat(infrastructure): registrar DbContext y generador en DI (RNF-02, RNF-07)
+- `e94bc8f` feat(infrastructure): migración inicial con tablas, índices, SEQUENCE y usuarios semilla
+- `8cb8f55` test(integracion): pruebas contra LocalDB del generador, la unicidad del código, las fechas UTC y las restricciones
+- `74f2afa` docs: registrar y aplicar decisiones 90 y 91 de la implementación de Infrastructure
+- `00943b8` docs(infrastructure): citar las decisiones 13 y 90 en el generador del código
+- `31da275` docs: agregar la puesta en marcha al README (user-secrets, migración, Api y pruebas)
+- `849d6a0` chore(scripts): verificación de enlaces versionada, con pruebas
