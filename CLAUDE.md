@@ -52,6 +52,7 @@ dotnet test --filter "CA=CA-01.1"                             # pruebas de un CA
 dotnet run --project src/HelpDesk.Api                         # http://localhost:3001, Swagger UI en /swagger
 dotnet ef migrations add <Nombre> --project src/HelpDesk.Infrastructure --startup-project src/HelpDesk.Api
 dotnet list package --vulnerable --include-transitive         # comprobar paquetes tras agregar o actualizar
+node scripts/verificar-enlaces.mjs                            # enlaces internos y anclas de los .md
 ```
 
 `dotnet ef` requiere la herramienta global `dotnet-ef`. En Windows PowerShell 5.1 no existen `&&` ni `||`.

@@ -28,6 +28,7 @@ Los comandos son para Windows PowerShell 5.1 y se ejecutan desde la raíz del re
 | SDK de .NET 10 | 10.0.x (probado con 10.0.301) | `dotnet --version` |
 | SQL Server LocalDB, instancia `MSSQLLocalDB` | La que trae SQL Server Express LocalDB | `sqllocaldb info MSSQLLocalDB` |
 | Herramienta global `dotnet-ef` | 10.0.14, la misma versión que los paquetes de EF Core | `dotnet tool list -g` |
+| Node.js, solo para `scripts/verificar-enlaces.mjs` | Probado con v26.3.0 | `node --version` |
 
 Para instalar `dotnet-ef` en esa versión:
 
@@ -101,6 +102,7 @@ dotnet test                                                  # todas
 dotnet test --filter "FullyQualifiedName~Integracion"        # solo las de integración (LocalDB)
 dotnet test --filter "CA=CA-05.1"                            # las de un CA
 dotnet test --filter "RN=RN-03"                              # las de una RN
+node scripts/verificar-enlaces.mjs                           # enlaces internos y anclas de los .md
 ```
 
 Los filtros por CA y RN usan los `[Trait("CA", …)]` y `[Trait("RN", …)]` de cada prueba ([RNF-10](specs/functional/03-requisitos-no-funcionales.md)). Las pruebas de integración necesitan la cadena del paso 3; las demás no usan base de datos.
