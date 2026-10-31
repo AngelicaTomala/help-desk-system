@@ -5,7 +5,7 @@ namespace HelpDesk.Infrastructure.Persistencia;
 
 /// <summary>
 /// Obtiene el siguiente valor de la SEQUENCE <c>dbo.CodigoTicket</c>, que garantiza códigos sin
-/// duplicados aunque con huecos (RN-03, Enmienda de ADR-002).
+/// duplicados aunque con huecos (RN-03, decisiones 13 y 90).
 /// </summary>
 public class GeneradorCodigoTicket(HelpDeskDbContext context) : IGeneradorCodigoTicket
 {
